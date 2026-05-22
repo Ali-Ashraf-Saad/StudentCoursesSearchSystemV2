@@ -393,6 +393,7 @@ input:-webkit-autofill:active {
     </footer>
 
     <script>
+      let suppressBlurCommit = false;
       // ═══════════════════════════════════════════
       //  وضع المحاكاة الزمنية للاختبار
       // ═══════════════════════════════════════════
@@ -558,20 +559,25 @@ input:-webkit-autofill:active {
         clearBtn.style.display = searchInput.value.trim() ? 'block' : 'none';
       }
 
-      clearBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        toggleClearButton();
-        lastPolledValue = '';
-        committedQuery = '';
-        resultsDiv.innerHTML = '';
-        exportContainer.style.display = 'none';
-        currentStudentData = null;
-        clearTimeout(remainingTimer);
-        searchInput.focus();
-        clearAutoCommit();
-      });
+clearBtn.addEventListener('mousedown', function() {
+  suppressBlurCommit = true;   // ← تفعيل المنع قبل فقدان التركيز
+});
 
-      searchInput.addEventListener('input', toggleClearButton);
+clearBtn.addEventListener('click', function() {
+  searchInput.value = '';
+  toggleClearButton();
+  lastPolledValue = '';
+  committedQuery = '';
+  resultsDiv.innerHTML = '';
+  exportContainer.style.display = 'none';
+  currentStudentData = null;
+  clearTimeout(remainingTimer);
+  searchInput.focus();
+  clearAutoCommit();
+
+  // إعادة تفعيل commit العادي بعد انتهاء دورة الأحداث
+  setTimeout(() => { suppressBlurCommit = false; }, 0);
+});      searchInput.addEventListener('input', toggleClearButton);
       toggleClearButton();
 
       // ═══════════════════════════════════════════
@@ -742,29 +748,29 @@ function doCommitSearch(query) {
   fetch(`search.php?q=${encodeURIComponent(query)}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`)
     .then(r => r.json())
     .then(data => {
-      // إذا كانت النتيجة المعروضة حالياً تطابق أول نتيجة في الـ commit
+      // 1. نضيف السجل أولًا (بغض النظر عن تطابق النتائج)
+      addToHistory(query);
+
+      // 2. إن كانت النتيجة المعروضة بالفعل هي نفسها القادمة من الخادم
       if (currentStudentData && data.results.length > 0) {
         const newFirst = data.results[0];
-        if (newFirst.number === currentStudentData.number && 
+        if (newFirst.number === currentStudentData.number &&
             newFirst.name   === currentStudentData.name) {
-          // نفس الطالب معروض بالفعل، لا نعيد الرسم
-          committedQuery = query;
-          loadCounter();                     // تحديث العداد فوراً
+          committedQuery = query;        // تحديث committedQuery
+          loadCounter();                 // تحديث العداد
           setTimeout(() => { commitBlocked = false; }, 500);
-          return;                            // خروج بدون renderResults
+          return;                        // خروج بدون إعادة رسم
         }
       }
 
-      // في حالة عدم التطابق أو عدم وجود نتائج سابقة – نعرض البيانات
+      // 3. وإلا نعرض النتائج الجديدة
       renderResults(data);
-      addToHistory(query);
       committedQuery = query;
       loadCounter();
       setTimeout(() => { commitBlocked = false; }, 500);
     })
     .catch(() => { commitBlocked = false; });
-}
-      // ═══════════════════════════════════════════
+}      // ═══════════════════════════════════════════
       //  عرض النتائج (مع الوقت المتبقي)
       // ═══════════════════════════════════════════
       function renderResults(data) {
@@ -850,13 +856,14 @@ function doCommitSearch(query) {
       });
 
       // Blur -> commit إذا كان النص قد تغير
-      searchInput.addEventListener('blur', function() {
-        const val = this.value.trim();
-        if (val && val !== committedQuery && !commitBlocked) {
-          doCommitSearch(val);
-        }
-      });
+searchInput.addEventListener('blur', function() {
+  if (suppressBlurCommit) return;   // ← امنع commit لو الزر هو السبب
 
+  const val = this.value.trim();
+  if (val && val !== committedQuery && !commitBlocked) {
+    doCommitSearch(val);
+  }
+});
       // ═══════════════════════════════════════════
       //  تصدير صورة (بدون الوقت المتبقي)
       // ═══════════════════════════════════════════
