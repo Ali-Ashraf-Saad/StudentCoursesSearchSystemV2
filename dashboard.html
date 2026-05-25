@@ -1116,7 +1116,7 @@ let allCourseNames = [];
    2) Object: { "ID": {name, courses}, … }
 ═══════════════════════════════════════════════ */
 function normalise(raw) {
-  if (Array.isArray(raw)) return raw;                    // already array
+  if (Array.isArray(raw)) return raw;
   return Object.entries(raw).map(([id, obj]) => ({
     id,
     name:    obj.name    || id,
@@ -1129,7 +1129,6 @@ function normalise(raw) {
 ═══════════════════════════════════════════════ */
 async function init() {
   try {
-    // Load both students and courses JSON files
     const [resStudents, resCourses] = await Promise.all([
       fetch('data/students.json'),
       fetch('data/courses.json')
@@ -1139,51 +1138,57 @@ async function init() {
     const rawStudents = await resStudents.json();
     const rawCourses = await resCourses.json();
 
-    // Build course code → course name mapping
+    // ✅ بناء خريطة أسماء المواد مع تنظيف المفاتيح من النقاط والمسافات
     const courseNameMap = {};
     for (const [code, details] of Object.entries(rawCourses)) {
-      courseNameMap[code] = details.name || code;
+      const cleanCode = code.replace(/^[.\s]+|[.\s]+$/g, '');
+      courseNameMap[cleanCode] = details.name || code;
     }
-    // Expose globally if needed later
     window._courseNameMap = courseNameMap;
 
-    // Normalise student data (expects an array from the file)
-    allStudents = normalise(rawStudents);
+    
 
-    // Process frequencies using course names
+    allStudents = normalise(rawStudents);
     processData(courseNameMap);
     renderStats();
     renderCharts();
     renderPopularity();
 
-    // Hide loader
     document.getElementById('loading-overlay')?.classList.add('hidden');
   } catch (err) {
     console.error('Error loading data:', err);
-    // Show a message or fallback if needed
   }
 }
 
 /* ═══════════════════════════════════════════════
    DATA PROCESSING (uses course names from map)
 ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   DATA PROCESSING – مع استثناء المواد التي تحتوي على "482"
+═══════════════════════════════════════════════ */
 function processData(courseNameMap) {
   courseFreq = {};
-  // Store original code for possible reference
   window._courseOrigMap = {};
   allStudents.forEach(s => {
     (s.courses || []).forEach(code => {
-      const name = courseNameMap[code] || code;   // fallback to code if missing
+      // تنظيف الكود من النقاط والمسافات
+      const cleanCode = code.replace(/^[.\s]+|[.\s]+$/g, '');
+
+      // ❌ استثناء أي كود يحتوي على الرقم 482 (مثل CS482، IS482، CS482. إلخ)
+      if (cleanCode.includes('482')) {
+        return; // تخطي هذه المادة تماماً
+      }
+
+      const name = courseNameMap[cleanCode] || code; // استخدم الاسم العربي إذا وجد
       courseFreq[name] = (courseFreq[name] || 0) + 1;
       if (!window._courseOrigMap[name]) {
-        window._courseOrigMap[name] = code;
+        window._courseOrigMap[name] = cleanCode;
       }
     });
   });
-  // Sort by frequency descending
+  // ترتيب المواد تنازلياً حسب عدد الطلاب
   allCourseNames = Object.keys(courseFreq).sort((a, b) => courseFreq[b] - courseFreq[a]);
 }
-
 /* ═══════════════════════════════════════════════
    STATS
 ═══════════════════════════════════════════════ */
@@ -1215,7 +1220,7 @@ function animateCounter(id, target) {
   const step = timestamp => {
     if (!start) start = timestamp;
     const progress = Math.min((timestamp - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3); // ease-out-cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
     el.textContent = Math.round(eased * target);
     if (progress < 1) requestAnimationFrame(step);
   };
@@ -1259,11 +1264,11 @@ function renderBar() {
 
 /* ── PIE CHART ─── */
 function renderPie() {
-  const top12 = allCourseNames.slice(0, 12);
-  const others = allCourseNames.slice(12).reduce((s, c) => s + courseFreq[c], 0);
+  const top30 = allCourseNames.slice(0, 20);
+  const others = allCourseNames.slice(20).reduce((s, c) => s + courseFreq[c], 0);
 
-  const labels = [...top12];
-  const values = top12.map(c => courseFreq[c]);
+  const labels = [...top30];
+  const values = top30.map(c => courseFreq[c]);
   if (others > 0) { labels.push('Others'); values.push(others); }
 
   const trace = {
@@ -1343,10 +1348,10 @@ function renderBox() {
 function renderPopularity() {
   const list = document.getElementById('popularityList');
   list.innerHTML = '';
-  const top10 = allCourseNames.slice(0, 10);
-  const max   = courseFreq[top10[0]] || 1;
+  const allCourses = allCourseNames;
+  const max   = courseFreq[allCourses[0]] || 1;
 
-  top10.forEach((course, idx) => {
+  allCourses.forEach((course, idx) => {
     const count = courseFreq[course];
     const pct   = Math.round((count / max) * 100);
     const color = CHART_COLORS[idx % CHART_COLORS.length];
@@ -1364,7 +1369,6 @@ function renderPopularity() {
     list.appendChild(div);
   });
 
-  // Animate bars after short delay
   setTimeout(() => {
     document.querySelectorAll('.pop-bar-fill').forEach(el => {
       el.style.width = el.dataset.pct + '%';
@@ -1373,7 +1377,7 @@ function renderPopularity() {
 }
 
 /* ═══════════════════════════════════════════════
-   SIDEBAR TOGGLE (mobile) – kept for compatibility
+   SIDEBAR TOGGLE (mobile)
 ═══════════════════════════════════════════════ */
 function toggleSidebar() {
   const sidebar  = document.getElementById('sidebar');

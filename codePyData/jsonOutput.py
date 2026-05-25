@@ -14,10 +14,21 @@ rooms_set = set()   # جميع أسماء الغرف فريدة (لـ rooms.json
 
 def parse_room_info(room_text):
     """
-    تستقبل النص الكامل مثل "لجنة 1 مدرج 3" أو "لجنة 5 معمل 301"
-    وتعيد اسم الغرفة بعد تطبيق قاعدة (الرقم > 100 => معمل)
-    مع استخراج الرقم الصحيح.
+    تستقبل النص مثل "لجنة 1 مدرج 3" أو "لجنة 5 معمل 301" أو
+    "لجنة 1 الصالة أعلى مدرج 5" (رقم اللجنة -1) أو 
+    "لجنة 1 الصالة أمام الخزينة" (رقم اللجنة 0)
+    وتعيد اسم الغرفة ورقمها بعد تطبيق القواعد.
     """
+    # التعامل مع الصالات الخاصة أولاً
+    match_special = re.match(r'لجنة\s+\d+\s+(الصالة أعلى مدرج 5)', room_text)
+    if match_special:
+        return match_special.group(1), -1
+
+    match_special0 = re.match(r'لجنة\s+\d+\s+(الصالة أمام الخزينة)', room_text)
+    if match_special0:
+        return match_special0.group(1), 0
+
+    # الحالة العادية: مدرج أو معمل + رقم
     match = re.search(r'(مدرج|معمل)\s*(\d+)', room_text)
     if match:
         room_type = match.group(1)
@@ -27,6 +38,7 @@ def parse_room_info(room_text):
         else:
             return f"{room_type} {room_number}", room_number
     else:
+        # نص غير معروف (نادر)
         return room_text, None
 
 for folder in folders:
@@ -55,14 +67,15 @@ for folder in folders:
             continue
 
         # السطر الأول: ( CS321 ) المقرر  الذكاء الاصطناعي
-        m = re.match(r'\(\s*(\w+)\s*\)\s*المقرر\s*(.+)', lines[0])
+        # السماح بوجود نقطة في كود المادة مثل IS482.
+        m = re.match(r'\(\s*([A-Za-z0-9.]+)\s*\)\s*المقرر\s*(.+)', lines[0])
         if not m:
             continue
 
         code = m.group(1)
         course_name = m.group(2).strip()
 
-        # السطر الثاني: لجنة 1 مدرج 3 (نطبق القاعدة)
+        # السطر الثاني: معالجة الغرفة (يدعم -1 و 0)
         room_name, room_number = parse_room_info(lines[1])
         rooms_set.add(room_name)
 
@@ -118,7 +131,7 @@ for folder in folders:
             'students': exam_student_ids
         })
 
-        # تحديث المادة: نضيف رقم الغرفة (بالتكرار) إلى قائمة
+        # تحديث المادة: نضيف رقم الغرفة (بما في ذلك -1 أو 0)
         if code not in courses:
             courses[code] = {
                 'name': course_name,

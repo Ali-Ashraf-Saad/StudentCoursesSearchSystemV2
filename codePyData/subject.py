@@ -7,8 +7,8 @@ folder_path = "txtData"
 # الملفات المطلوبة
 files = ["CS.txt", "IT.txt", "IS.txt", "gen.txt"]
 
-# Regex لاستخراج سطر المادة
-pattern = re.compile(r"\(\s*[A-Za-z0-9xX]+\s*\).*")
+# Regex لاستخراج سطر المادة - الآن يسمح بنقطة في الكود مثل IS482.
+pattern = re.compile(r"\(\s*[A-Za-z0-9xX.]+\s*\).*")
 
 # ملف الإخراج
 output_path = os.path.join(folder_path, "subjects.txt")
