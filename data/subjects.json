@@ -1,0 +1,662 @@
+[
+  {
+    "semester": "مواد سنة أولى الترم الأول عام",
+    "courses": [
+      {
+        "name": "Discrete Mathematics",
+        "arabic_name": "تراكيب محددة",
+        "code": "OD111",
+        "prerequisites": []
+      },
+      {
+        "name": "Professional Ethics",
+        "arabic_name": "أخلاقيات المهنة",
+        "code": "GN140",
+        "prerequisites": []
+      },
+      {
+        "name": "Computer Introduction",
+        "arabic_name": "مقدمة في الحاسبات",
+        "code": "CS111",
+        "prerequisites": []
+      },
+      {
+        "name": "Mathematics-1",
+        "arabic_name": "رياضيات - 1",
+        "code": "MA111",
+        "prerequisites": []
+      },
+      {
+        "name": "Semiconductors",
+        "arabic_name": "أشباه الموصلات",
+        "code": "CS110",
+        "prerequisites": []
+      },
+      {
+        "name": "Scientific & Technical Report Writing",
+        "arabic_name": "صياغة التقارير العلمية والفنية",
+        "code": "GN170",
+        "prerequisites": []
+      },
+      {
+        "name": "Quality",
+        "arabic_name": "الجودة",
+        "code": "GN160",
+        "prerequisites": []
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة أولى الترم الثاني عام",
+    "courses": [
+      {
+        "name": "Logic Design-1",
+        "arabic_name": "تصميم منطقي - 1",
+        "code": "IT181",
+        "prerequisites": ["CS110"]
+      },
+      {
+        "name": "Fundamentals of Management",
+        "arabic_name": "مبادئ إدارة",
+        "code": "OD112",
+        "prerequisites": []
+      },
+      {
+        "name": "Fundamentals of Programming",
+        "arabic_name": "مبادئ برمجة",
+        "code": "CS131",
+        "prerequisites": ["CS111"]
+      },
+      {
+        "name": "Introduction to IS",
+        "arabic_name": "مقدمة نظم معلومات",
+        "code": "IS111",
+        "prerequisites": []
+      },
+      {
+        "name": "Mathematics-2",
+        "arabic_name": "رياضيات - 2",
+        "code": "MA112",
+        "prerequisites": ["MA111"]
+      },
+      {
+        "name": "Statistics & Probabilities",
+        "arabic_name": "إحصاء واحتمالات",
+        "code": "ST190",
+        "prerequisites": ["MA111"]
+      },
+      {
+        "name": "Human Rights",
+        "arabic_name": "حقوق إنسان",
+        "code": "HM110",
+        "prerequisites": []
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثانية الترم الأول عام",
+    "courses": [
+      {
+        "name": "Computer Architecture",
+        "arabic_name": "معمارية الحاسب",
+        "code": "IT282",
+        "prerequisites": ["IT181"]
+      },
+      {
+        "name": "E-Business",
+        "arabic_name": "الأعمال الإلكترونية",
+        "code": "IS372",
+        "prerequisites": ["IS111"]
+      },
+      {
+        "name": "Multimedia-1",
+        "arabic_name": "وسائط متعددة - 1",
+        "code": "IT261",
+        "prerequisites": ["CS131"]
+      },
+      {
+        "name": "Computer Programming - 1",
+        "arabic_name": "برمجة حاسبات - 1",
+        "code": "CS132",
+        "prerequisites": ["CS131"]
+      },
+      {
+        "name": "Introduction to Operation Research & Decision Support",
+        "arabic_name": "مقدمة في بحوث العمليات ودعم القرار",
+        "code": "OD213",
+        "prerequisites": ["MA112"]
+      },
+      {
+        "name": "Systems Analysis & Design-1",
+        "arabic_name": "تحليل وتصميم نظم - 1",
+        "code": "IS212",
+        "prerequisites": ["IS111"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثانية الترم الثاني عام",
+    "courses": [
+      {
+        "name": "Data Structure",
+        "arabic_name": "هياكل البيانات",
+        "code": "CS212",
+        "prerequisites": ["CS131"]
+      },
+      {
+        "name": "Modeling & Simulation",
+        "arabic_name": "النمذجة والمحاكاة",
+        "code": "OD241",
+        "prerequisites": ["OD213"]
+      },
+      {
+        "name": "Computer Networks-1",
+        "arabic_name": "شبكات الحاسبات - 1",
+        "code": "IT211",
+        "prerequisites": ["IT181"]
+      },
+      {
+        "name": "Operating Systems-1",
+        "arabic_name": "نظم تشغيل - 1",
+        "code": "CS261",
+        "prerequisites": ["CS132"]
+      },
+      {
+        "name": "Computer Programming-2",
+        "arabic_name": "برمجة حاسبات - 2",
+        "code": "CS233",
+        "prerequisites": ["CS132"]
+      },
+      {
+        "name": "Web Design and Development",
+        "arabic_name": "تصميم وتطوير الويب",
+        "code": "IS251",
+        "prerequisites": ["CS131"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الأول عام",
+    "courses": [
+      {
+        "name": "Database Systems-1",
+        "arabic_name": "نظم قواعد البيانات - 1",
+        "code": "IS221",
+        "prerequisites": ["CS212"]
+      },
+      {
+        "name": "Software Engineering-1",
+        "arabic_name": "هندسة البرمجيات - 1",
+        "code": "CS251",
+        "prerequisites": ["CS233"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الثاني عام",
+    "courses": [
+      {
+        "name": "Analysis and Design of Algorithms",
+        "arabic_name": "تحليل وتصميم الخوارزميات",
+        "code": "CS313",
+        "prerequisites": ["IS212"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الأول CS",
+    "courses": [
+      {
+        "name": "Artificial Intelligence",
+        "arabic_name": "الذكاء الاصطناعي",
+        "code": "CS321",
+        "prerequisites": ["CS233"]
+      },
+      {
+        "name": "Cloud Computing",
+        "arabic_name": "حوسبة سحابية",
+        "code": "IS433",
+        "prerequisites": ["CS261"]
+      },
+      {
+        "name": "Database Systems-1",
+        "arabic_name": "نظم قواعد البيانات - 1",
+        "code": "IS221",
+        "prerequisites": ["CS212"]
+      },
+      {
+        "name": "Software Engineering-1",
+        "arabic_name": "هندسة البرمجيات - 1",
+        "code": "CS251",
+        "prerequisites": ["CS233"]
+      },
+      {
+        "name": "Operating Systems-2",
+        "arabic_name": "نظم تشغيل - 2",
+        "code": "CS362",
+        "prerequisites": ["CS261"]
+      },
+      {
+        "name": "Computer Programming-3",
+        "arabic_name": "برمجة حاسبات - 3",
+        "code": "CS334",
+        "prerequisites": ["CS233"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الأول IT",
+    "courses": [
+      {
+        "name": "Artificial Intelligence",
+        "arabic_name": "الذكاء الاصطناعي",
+        "code": "CS321",
+        "prerequisites": ["CS233"]
+      },
+      {
+        "name": "Cloud Computing",
+        "arabic_name": "حوسبة سحابية",
+        "code": "IS433",
+        "prerequisites": ["CS261"]
+      },
+      {
+        "name": "Database Systems-1",
+        "arabic_name": "نظم قواعد البيانات - 1",
+        "code": "IS221",
+        "prerequisites": ["CS212"]
+      },
+      {
+        "name": "Software Engineering-1",
+        "arabic_name": "هندسة البرمجيات - 1",
+        "code": "CS251",
+        "prerequisites": ["CS233"]
+      },
+      {
+        "name": "Computer Networks-2",
+        "arabic_name": "شبكات الحاسبات - 2",
+        "code": "IT312",
+        "prerequisites": ["IT211"]
+      },
+      {
+        "name": "Digital Signal Processing",
+        "arabic_name": "معالجة الإشارات الرقمية",
+        "code": "IT371",
+        "prerequisites": ["MA112"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الأول IS",
+    "courses": [
+      {
+        "name": "Artificial Intelligence",
+        "arabic_name": "الذكاء الاصطناعي",
+        "code": "CS321",
+        "prerequisites": ["CS233"]
+      },
+      {
+        "name": "Cloud Computing",
+        "arabic_name": "حوسبة سحابية",
+        "code": "IS433",
+        "prerequisites": ["CS261"]
+      },
+      {
+        "name": "Database Systems-1",
+        "arabic_name": "نظم قواعد البيانات - 1",
+        "code": "IS221",
+        "prerequisites": ["CS212"]
+      },
+      {
+        "name": "Software Engineering-1",
+        "arabic_name": "هندسة البرمجيات - 1",
+        "code": "CS251",
+        "prerequisites": ["CS233"]
+      },
+      {
+        "name": "Systems Analysis and Design-2",
+        "arabic_name": "تحليل وتصميم نظم - 2",
+        "code": "IS313",
+        "prerequisites": ["IS212"]
+      },
+      {
+        "name": "Enterprise Architecture",
+        "arabic_name": "بنية الشركات",
+        "code": "IS449",
+        "prerequisites": ["IS111"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الثاني CS",
+    "courses": [
+      {
+        "name": "Analysis and Design of Algorithms",
+        "arabic_name": "تحليل وتصميم الخوارزميات",
+        "code": "CS313",
+        "prerequisites": ["IS212"]
+      },
+      {
+        "name": "Computer Security",
+        "arabic_name": "أمن الحاسب",
+        "code": "CS415",
+        "prerequisites": ["IT211"]
+      },
+      {
+        "name": "Mobile Application Programming",
+        "arabic_name": "برمجة تطبيقات المحمول",
+        "code": "CS438",
+        "prerequisites": ["CS334"]
+      },
+      {
+        "name": "Knowledge Based Systems",
+        "arabic_name": "نظم قواعد المعرفة",
+        "code": "CS424",
+        "prerequisites": ["CS321"]
+      },
+      {
+        "name": "Machine Learning",
+        "arabic_name": "تعليم الآلة",
+        "code": "CS323",
+        "prerequisites": ["CS321"]
+      },
+      {
+        "name": "Software Engineering-2",
+        "arabic_name": "هندسة البرمجيات - 2",
+        "code": "CS352",
+        "prerequisites": ["CS251"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الثاني IT",
+    "courses": [
+      {
+        "name": "Analysis and Design of Algorithms",
+        "arabic_name": "تحليل وتصميم الخوارزميات",
+        "code": "CS313",
+        "prerequisites": ["IS212"]
+      },
+      {
+        "name": "Network Security",
+        "arabic_name": "تأمين الشبكات",
+        "code": "IT418",
+        "prerequisites": ["IT312"]
+      },
+      {
+        "name": "Image Processing-1",
+        "arabic_name": "معالجة الصور - 1",
+        "code": "IT321",
+        "prerequisites": ["IT371"]
+      },
+      {
+        "name": "Computer Networks-3",
+        "arabic_name": "شبكات الحاسبات - 3",
+        "code": "IT313",
+        "prerequisites": ["IT312"]
+      },
+      {
+        "name": "Speech Recognition-1",
+        "arabic_name": "التعرف على الكلام - 1",
+        "code": "IT472",
+        "prerequisites": ["IT371"]
+      },
+      {
+        "name": "Computer Graphics-1",
+        "arabic_name": "الرسم بالحاسب - 1",
+        "code": "IT341",
+        "prerequisites": ["MA112"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة ثالثة الترم الثاني IS",
+    "courses": [
+      {
+        "name": "Analysis and Design of Algorithms",
+        "arabic_name": "تحليل وتصميم الخوارزميات",
+        "code": "CS313",
+        "prerequisites": ["IS212"]
+      },
+      {
+        "name": "Information Security",
+        "arabic_name": "أمان المعلومات",
+        "code": "IS463",
+        "prerequisites": ["MA112"]
+      },
+      {
+        "name": "Selected Topics in IS-1 / Mobile Application Programming",
+        "arabic_name": "موضوعات مختارة - 1",
+        "code": "IS381",
+        "prerequisites": []
+      },
+      {
+        "name": "IS Strategy, Management & Acquisition",
+        "arabic_name": "استراتيجيات وإدارة واكتساب نظم المعلومات",
+        "code": "IS342",
+        "prerequisites": ["IS111"]
+      },
+      {
+        "name": "Information Retrieval",
+        "arabic_name": "استرجاع المعلومات",
+        "code": "IS352",
+        "prerequisites": ["IS221"]
+      },
+      {
+        "name": "Database Systems-2",
+        "arabic_name": "نظم قواعد البيانات - 2",
+        "code": "IS322",
+        "prerequisites": ["IS221"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة رابعة الترم الأول CS",
+    "courses": [
+      {
+        "name": "Compiler Design",
+        "arabic_name": "بناء المترجمات",
+        "code": "CS471",
+        "prerequisites": ["CS334"]
+      },
+      {
+        "name": "Data Mining",
+        "arabic_name": "تنقيب البيانات",
+        "code": "IS465",
+        "prerequisites": ["CS334"]
+      },
+      {
+        "name": "Embedded Systems",
+        "arabic_name": "الأنظمة المدمجة",
+        "code": "CS463",
+        "prerequisites": ["CS362"]
+      },
+      {
+        "name": "Human Computer Interaction",
+        "arabic_name": "اتصال الإنسان بالحاسب",
+        "code": "CS473",
+        "prerequisites": ["CS352"]
+      },
+      {
+        "name": "Parallel Programming",
+        "arabic_name": "البرمجة المتوازية",
+        "code": "CS443",
+        "prerequisites": ["CS334"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة رابعة الترم الثاني CS",
+    "courses": [
+      {
+        "name": "Distributed Systems",
+        "arabic_name": "النظم الموزعة",
+        "code": "CS442",
+        "prerequisites": ["CS362"]
+      },
+      {
+        "name": "Game Programming",
+        "arabic_name": "برمجة الألعاب",
+        "code": "CS425",
+        "prerequisites": ["CS334"]
+      },
+      {
+        "name": "Information Retrieval",
+        "arabic_name": "استرجاع المعلومات",
+        "code": "IS355",
+        "prerequisites": ["IS221"]
+      },
+      {
+        "name": "Natural Language Processing",
+        "arabic_name": "معالجة اللغات الطبيعية",
+        "code": "CS472",
+        "prerequisites": ["CS321"]
+      },
+      {
+        "name": "Robotics",
+        "arabic_name": "الكائنات الآلية",
+        "code": "CS426",
+        "prerequisites": ["CS321"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة رابعة الترم الأول IT",
+    "courses": [
+      {
+        "name": "Information Technology Applications",
+        "arabic_name": "تطبيقات تكنولوجيا المعلومات",
+        "code": "IT487",
+        "prerequisites": ["IT321"]
+      },
+      {
+        "name": "Multimedia-2",
+        "arabic_name": "الوسائط المتعددة - 2",
+        "code": "IT362",
+        "prerequisites": ["IT261"]
+      },
+      {
+        "name": "Network Management and Analysis",
+        "arabic_name": "إدارة وتحليل الشبكات",
+        "code": "IT315",
+        "prerequisites": ["IT312"]
+      },
+      {
+        "name": "Pattern Recognition-1",
+        "arabic_name": "التعرف على الأنماط - 1",
+        "code": "IT431",
+        "prerequisites": ["IT321"]
+      },
+      {
+        "name": "Virtual Reality-1",
+        "arabic_name": "الواقع الافتراضي - 1",
+        "code": "IT444",
+        "prerequisites": ["IT341"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة رابعة الترم الثاني IT",
+    "courses": [
+      {
+        "name": "Computer Vision-1",
+        "arabic_name": "الرؤية بالحاسب - 1",
+        "code": "IT422",
+        "prerequisites": ["IT431"]
+      },
+      {
+        "name": "Wireless and Mobile Networks",
+        "arabic_name": "الشبكات اللاسلكية والمحمولة",
+        "code": "IT416",
+        "prerequisites": ["IT312"]
+      },
+      {
+        "name": "Information Retrieval",
+        "arabic_name": "استرجاع المعلومات",
+        "code": "IS355",
+        "prerequisites": ["IS221"]
+      },
+      {
+        "name": "Machine Learning",
+        "arabic_name": "تعليم الآلة",
+        "code": "CS323",
+        "prerequisites": ["CS321"]
+      },
+      {
+        "name": "Advanced Web Development",
+        "arabic_name": "التطوير المتقدم للويب",
+        "code": "IT451",
+        "prerequisites": ["IS251"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة رابعة الترم الأول IS",
+    "courses": [
+      {
+        "name": "Human Computer Interaction",
+        "arabic_name": "اتصال الإنسان بالحاسب",
+        "code": "CS473",
+        "prerequisites": ["CS251"]
+      },
+      {
+        "name": "Business Intelligence",
+        "arabic_name": "ذكاء الأعمال",
+        "code": "IS331",
+        "prerequisites": ["IS322"]
+      },
+      {
+        "name": "Modern Database Systems",
+        "arabic_name": "نظم قواعد بيانات حديثة",
+        "code": "IS426",
+        "prerequisites": ["IS322"]
+      },
+      {
+        "name": "Data Mining",
+        "arabic_name": "تنقيب البيانات",
+        "code": "IS465",
+        "prerequisites": ["IS322"]
+      },
+      {
+        "name": "Enterprise Resource Planning",
+        "arabic_name": "أنظمة الشركات",
+        "code": "IS344",
+        "prerequisites": ["IS372"]
+      }
+    ]
+  },
+  {
+    "semester": "مواد سنة رابعة الترم الثاني IS",
+    "courses": [
+      {
+        "name": "Geographic IS",
+        "arabic_name": "نظم المعلومات الجغرافية",
+        "code": "IS464",
+        "prerequisites": ["IS322"]
+      },
+      {
+        "name": "IS Innovation and New Technologies",
+        "arabic_name": "نظم معلومات مبتكرة وتكنولوجيا جديدة",
+        "code": "IS479",
+        "prerequisites": ["IS465"]
+      },
+      {
+        "name": "Knowledge Management",
+        "arabic_name": "إدارة المعرفة",
+        "code": "IS444",
+        "prerequisites": ["IS465"]
+      },
+      {
+        "name": "Big Data",
+        "arabic_name": "البيانات الضخمة",
+        "code": "IS485",
+        "prerequisites": ["IS322"]
+      },
+      {
+        "name": "Distributed Data Management",
+        "arabic_name": "إدارة البيانات الموزعة",
+        "code": "IS432",
+        "prerequisites": ["IS322"]
+      }
+    ]
+  }
+]

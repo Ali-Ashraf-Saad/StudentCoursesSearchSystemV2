@@ -1,0 +1,33 @@
+RewriteEngine On
+Options -MultiViews
+
+# حذف أي Query String من الصفحة الرئيسية
+RewriteCond %{REQUEST_URI} ^/$
+RewriteCond %{QUERY_STRING} .+
+RewriteRule ^$ /? [R=301,L]
+
+DirectoryIndex index.php index.html
+
+# /index أو /index.html أو /index.php -> /
+RewriteCond %{THE_REQUEST} \s/+index(?:\.(?:php|html))?[\s?] [NC]
+RewriteRule ^index(?:\.(?:php|html))?$ / [R=301,L]
+
+# /courses.html أو /courses.php -> /courses
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.(php|html)[\s?] [NC]
+RewriteRule ^(.+?)\.(php|html)$ /%1 [R=301,L]
+
+# السماح بالملفات الثابتة
+RewriteRule \.(json|css|js|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf)$ - [L,NC]
+
+# لا تلمس الملفات والمجلدات الحقيقية
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# تشغيل صفحات PHP النظيفة
+RewriteCond %{DOCUMENT_ROOT}/$1.php -f
+RewriteRule ^(.+?)/?$ $1.php [L]
+
+# تشغيل صفحات HTML النظيفة
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.+?)/?$ $1.html [L]
