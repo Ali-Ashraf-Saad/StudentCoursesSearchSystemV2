@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 
-$file = "counter.txt";
+$file = "counterFiles/counter.txt";
 
 
 if (!file_exists($file)) {

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
-    <link rel="icon" href="/favicon.ico?v=2" />
+    <link rel="icon" href="/images/favicon.ico?v=2" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>الاستعلام عن المقررات الدراسية</title>
@@ -556,7 +556,7 @@
       const MAX_HISTORY = 10;
 
       function goCourses() {
-        fetch("course_counter.php?action=increment", { method: "GET", keepalive: true })
+        fetch("counterFiles/course_counter.php?action=increment", { method: "GET", keepalive: true })
           .catch(() => {})
           .finally(() => {
             window.location.href = "/courses";
@@ -658,7 +658,7 @@
       let remainingTimer = null;
 
       function loadCounter() {
-        fetch("counter.php?action=get")
+        fetch("counterFiles/counter.php?action=get")
           .then((r) => r.json())
           .then((d) => {
             const el = document.getElementById("visitCount");
