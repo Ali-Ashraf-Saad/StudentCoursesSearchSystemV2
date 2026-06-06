@@ -556,7 +556,7 @@
       const MAX_HISTORY = 10;
 
       function goCourses() {
-        fetch("counterFiles/course_counter.php?action=increment", { method: "GET", keepalive: true })
+        fetch("/counterFiles/course_counter.php?action=increment", { method: "GET", keepalive: true })
           .catch(() => {})
           .finally(() => {
             window.location.href = "/courses";
@@ -658,7 +658,7 @@
       let remainingTimer = null;
 
       function loadCounter() {
-        fetch("counterFiles/counter.php?action=get")
+        fetch("/counterFiles/counter.php?action=get")
           .then((r) => r.json())
           .then((d) => {
             const el = document.getElementById("visitCount");
