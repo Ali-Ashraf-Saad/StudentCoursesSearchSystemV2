@@ -1,3 +1,8 @@
+<?php
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+?>
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
@@ -33,6 +38,11 @@
         min-height: 100vh;
         padding-top: 70px;
       }
+          body.no-scroll { overflow: hidden; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1e293b; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 8px; transition: background 0.2s; }
+    ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
 
       .top-nav {
         position: fixed;
@@ -542,6 +552,18 @@
       // ══════════════════════════════════════════════════
       const DEFAULT_EXAM_DURATION_HOURS = 2;
 
+      // ════════ محاكاة الوقت للتجارب (احذف هذا القسم بالكامل بعد الاختبار) ════════
+      const SIMULATION_ENABLED = false; // ⚠️ سطر محاكاة - احذف بعد الاختبار
+      // const SIMULATION_START = new Date("2026-06-08T11:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
+      const SIMULATION_START = new Date("2026-06-08T13:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
+      const SIMULATION_PAGE_LOAD_REAL_TIME = Date.now(); // ⚠️ سطر محاكاة - احذف بعد الاختبار
+      function getSimulatedNow() { // ⚠️ دالة محاكاة - احذف بعد الاختبار
+          if (!SIMULATION_ENABLED) return new Date();
+          const elapsed = Date.now() - SIMULATION_PAGE_LOAD_REAL_TIME; // ⚠️ سطر محاكاة - احذف بعد الاختبار
+          return new Date(SIMULATION_START.getTime() + elapsed); // ⚠️ سطر محاكاة - احذف بعد الاختبار
+      }
+      // ════════ نهاية قسم المحاكاة ════════
+
       function refreshPage() {
         location.reload(true);
       }
@@ -556,7 +578,11 @@
       const MAX_HISTORY = 10;
 
       function goCourses() {
-        fetch("/counterFiles/course_counter.php?action=increment", { method: "GET", keepalive: true })
+        fetch("/counterFiles/course_counter.php?action=increment", { 
+          method: "GET", 
+          keepalive: true,
+          cache: "no-store" // ← أضيف
+        })
           .catch(() => {})
           .finally(() => {
             window.location.href = "/courses";
@@ -658,7 +684,7 @@
       let remainingTimer = null;
 
       function loadCounter() {
-        fetch("/counterFiles/counter.php?action=get")
+        fetch("/counterFiles/counter.php?action=get", { cache: "no-store" }) // ← أضيف
           .then((r) => r.json())
           .then((d) => {
             const el = document.getElementById("visitCount");
@@ -771,43 +797,95 @@
         return { start: startDate, end: endDate };
       }
 
+      // تنسيق الوقت المتبقي مع تحديد فترة التحديث الذكية
+      function formatTimeRemaining(diffMs) {
+        if (diffMs <= 0) return { text: "انتهى", interval: null };
+        const seconds = Math.floor(diffMs / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        let text = "متبقي ";
+        let interval;
+        if (days > 0) {
+          const remainingHours = hours % 24;
+          text += `${days} ${days === 1 ? "يوم" : "أيام"}`;
+          if (remainingHours > 0) {
+            text += ` و ${remainingHours} ${remainingHours === 1 ? "ساعة" : "ساعات"}`;
+          }
+          interval = 3600000; // تحديث كل ساعة
+        } else if (hours > 0) {
+          const remainingMinutes = minutes % 60;
+          text += `${hours} ${hours === 1 ? "ساعة" : "ساعات"}`;
+          if (remainingMinutes > 0) {
+            text += ` و ${remainingMinutes} ${remainingMinutes === 1 ? "دقيقة" : "دقائق"}`;
+          }
+          interval = 60000; // تحديث كل دقيقة
+        } else if (minutes > 0) {
+          const remainingSeconds = seconds % 60;
+          text += `${minutes} ${minutes === 1 ? "دقيقة" : "دقائق"}`;
+          if (remainingSeconds > 0) {
+            text += ` و ${remainingSeconds} ${remainingSeconds === 1 ? "ثانية" : "ثواني"}`;
+          }
+          interval = 1000; // تحديث كل ثانية
+        } else {
+          text += `${seconds} ${seconds === 1 ? "ثانية" : "ثواني"}`;
+          interval = 1000; // تحديث كل ثانية
+        }
+        return { text, interval };
+      }
+
       function getExamStatusText(examStart, examEnd) {
-        const now = new Date();
+        const now = getSimulatedNow(); // ⚠️ تم التعديل للمحاكاة - احذف بعد الاختبار
         if (now >= examEnd) {
           return '<span class="status ended">منتهي</span>';
         }
         if (now >= examStart && now < examEnd) {
-          return '<span class="status live">الامتحان الآن</span>';
+          const diffMs = examEnd - now;
+          const { text } = formatTimeRemaining(diffMs);
+          return `<span class="status live">الامتحان الآن - ${text}</span>`;
         }
         const diffMs = examStart - now;
-        if (diffMs <= 0) return '<span class="status ended">منتهي</span>';
-        const diffDays = Math.floor(diffMs / 86400000);
-        const diffHours = Math.floor((diffMs % 86400000) / 3600000);
-        const diffMinutes = Math.floor((diffMs % 3600000) / 60000);
-        const diffSeconds = Math.floor((diffMs % 60000) / 1000);
-        let res = "متبقي ";
-        if (diffDays > 0) {
-          res += `${diffDays} يوم`;
-          if (diffHours > 0) res += ` و ${diffHours} ساعة`;
-        } else if (diffHours > 0) {
-          res += `${diffHours} ساعة`;
-          if (diffMinutes > 0) res += ` و ${diffMinutes} دقيقة`;
-          else if (diffSeconds > 0) res += ` و ${diffSeconds} ثانية`;
-        } else if (diffMinutes > 0) {
-          res += `${diffMinutes} دقيقة`;
-          if (diffSeconds > 0) res += ` و ${diffSeconds} ثانية`;
-        } else {
-          res += `${diffSeconds} ثانية`;
+        const { text } = formatTimeRemaining(diffMs);
+        return `<span class="status upcoming">${text}</span>`;
+      }
+
+      // دالة جديدة: تحديث تظليل "upcoming" لبطاقة طالب بعد انتهاء امتحان
+      function refreshCardUpcoming(card) {
+        const studentData = card.__studentData;
+        const examEntries = card.__examEntries;
+        if (!studentData || !examEntries) return;
+
+        const now = getSimulatedNow();
+        const activeExam = examEntries.find(e => now >= e.start && now < e.end);
+        const futureExams = examEntries.filter(e => e.start > now).sort((a, b) => a.start - b.start);
+        const newUpcoming = activeExam || futureExams[0] || null;
+
+        // إزالة كلاس upcoming من جميع المواد
+        card.querySelectorAll('.course-item').forEach(el => el.classList.remove('upcoming'));
+
+        if (newUpcoming) {
+          // البحث عن عنصر المادة المطابق وإضافة التظليل
+          const courseItems = card.querySelectorAll('.course-item');
+          courseItems.forEach(item => {
+            const codeEl = item.querySelector('.course-name');
+            if (codeEl) {
+              const codeText = codeEl.textContent || codeEl.innerText;
+              if (codeText.includes(newUpcoming.course.code)) {
+                item.classList.add('upcoming');
+              }
+            }
+          });
         }
-        return `<span class="status upcoming">${res.trim()}</span>`;
       }
 
       function updateAllRemainingTimes() {
+        clearTimeout(remainingTimer);
         const elements = document.querySelectorAll(".remaining-time[data-exam-start]");
-        let nextTickMs = Infinity;
-        const now = new Date().getTime();
+        const now = getSimulatedNow().getTime();
+        let nextUpdateInterval = Infinity;
+        let anyChange = false;
 
-        elements.forEach((el) => {
+        elements.forEach(el => {
           const startStr = el.dataset.examStart;
           const endStr = el.dataset.examEnd;
           if (!startStr || !endStr) return;
@@ -815,20 +893,48 @@
           const end = new Date(endStr);
           if (isNaN(start) || isNaN(end)) return;
 
-          el.innerHTML = getExamStatusText(start, end);
-
-          if (now < start.getTime()) {
-            const diff = start.getTime() - now;
-            if (diff > 0 && diff < nextTickMs) nextTickMs = diff;
-          } else if (now >= start.getTime() && now < end.getTime()) {
-            const diff = end.getTime() - now;
-            if (diff > 0 && diff < nextTickMs) nextTickMs = diff;
+          let diffMs, statusHtml, interval;
+          if (now >= end) {
+            statusHtml = '<span class="status ended">منتهي</span>';
+            interval = null;
+          } else if (now >= start && now < end) {
+            diffMs = end - now;
+            const { text, interval: intv } = formatTimeRemaining(diffMs);
+            statusHtml = `<span class="status live">الامتحان الآن - ${text}</span>`;
+            interval = intv;
+          } else {
+            diffMs = start - now;
+            const { text, interval: intv } = formatTimeRemaining(diffMs);
+            statusHtml = `<span class="status upcoming">${text}</span>`;
+            interval = intv;
+          }
+          el.innerHTML = statusHtml;
+          if (interval && interval < nextUpdateInterval) {
+            nextUpdateInterval = interval;
           }
         });
 
-        clearTimeout(remainingTimer);
-        if (nextTickMs !== Infinity && nextTickMs > 0) {
-          remainingTimer = setTimeout(updateAllRemainingTimes, nextTickMs);
+        // التحقق من الامتحانات المنتهية التي كانت مُظللة ونقل التظليل تلقائياً
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+          const upcomingItem = card.querySelector('.course-item.upcoming');
+          if (upcomingItem) {
+            const remainingEl = upcomingItem.querySelector('.remaining-time');
+            if (remainingEl && remainingEl.innerText.includes('منتهي')) {
+              refreshCardUpcoming(card);
+              anyChange = true;
+            }
+          }
+        });
+
+        if (anyChange) {
+          // بعد النقل، نُعيد جدولة التحديث لالتقاط الحالة الجديدة
+          updateAllRemainingTimes();
+          return;
+        }
+
+        if (nextUpdateInterval !== Infinity && nextUpdateInterval > 0) {
+          remainingTimer = setTimeout(updateAllRemainingTimes, nextUpdateInterval);
         }
       }
 
@@ -862,7 +968,10 @@
           return;
         }
         activeFetchCtrl = new AbortController();
-        fetch(`search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, { signal: activeFetchCtrl.signal })
+        fetch(`search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, { 
+          signal: activeFetchCtrl.signal,
+          cache: "no-store" // ← أضيف
+        })
           .then((r) => r.json())
           .then((data) => {
             activeFetchCtrl = null;
@@ -885,7 +994,8 @@
         }
         clearTimeout(debounceTimer);
         fetch(
-          `search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`
+          `search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`,
+          { cache: "no-store" } // ← أضيف
         )
           .then((r) => r.json())
           .then((data) => {
@@ -918,7 +1028,7 @@
           return;
         }
         currentStudentData = limited[0];
-        const now = new Date();
+        const now = getSimulatedNow();
 
         const fragment = document.createDocumentFragment();
 
@@ -938,6 +1048,9 @@
 
           const card = document.createElement("div");
           card.className = "card";
+          // تخزين بيانات الطالب ومصفوفة الامتحانات على العنصر للاستخدام التلقائي لاحقاً
+          card.__studentData = item;
+          card.__examEntries = studentExamEntries;
 
           const coursesHtml = item.courses
             .map((course) => {

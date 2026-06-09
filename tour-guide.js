@@ -1,4 +1,4 @@
-// tour-guide.js - جولة تعريفية تفاعلية (سريعة التتبع)
+// tour-guide.js - جولة تعريفية تفاعلية (مُحسَّنة)
 (function() {
   // ========== 1. حقن التنسيقات ==========
   const style = document.createElement('style');
@@ -23,7 +23,7 @@
       background: #1e293b; color: #e2e8f0;
       border: 2px solid rgba(59,130,246,0.6);
       border-radius: 20px; padding: 22px 24px;
-      max-width: 360px; text-align: right;
+      max-width: 380px; text-align: right;
       direction: rtl; font-family: 'Cairo', sans-serif;
       box-shadow: 0 25px 60px rgba(0,0,0,0.8);
       pointer-events: auto;
@@ -56,11 +56,67 @@
       color: #f87171; margin-left: 0; margin-right: auto;
     }
     .tour-btn.skip:hover { background: rgba(239,68,68,0.25); }
+
+    /* زر الرجوع إلى الأعلى */
+    .back-to-top {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(59,130,246,0.15);
+      border: 2px solid rgba(59,130,246,0.7);
+      color: #60a5fa;
+      border-radius: 50%;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.35s, transform 0.35s, background 0.2s;
+      pointer-events: none;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+    .back-to-top.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .back-to-top:hover {
+      background: rgba(59,130,246,0.35);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(59,130,246,0.3);
+    }
   `;
   document.head.appendChild(style);
 
-  // ========== 2. منطق الجولة ==========
-  const pageKey = location.pathname.includes('/courses') ? 'tour_courses_final4' : 'tour_index_final4';
+  // ========== 2. إنشاء زر الرجوع للأعلى ==========
+  if (!document.querySelector('.back-to-top')) {
+    const backToTopBtn = document.createElement('div');
+    backToTopBtn.className = 'back-to-top';
+    backToTopBtn.innerHTML = '⬆';
+    backToTopBtn.title = 'الرجوع إلى أعلى الصفحة';
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.body.appendChild(backToTopBtn);
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 500) {
+        backToTopBtn.classList.add('show');
+      } else {
+        backToTopBtn.classList.remove('show');
+      }
+    });
+  }
+
+  // ========== 3. منطق الجولة ==========
+  const pageKey = location.pathname.includes('/courses') ? 'tour_courses_final6' : 'tour_index_final6';
   if (localStorage.getItem(pageKey)) return;
 
   const isIndex = !location.pathname.includes('/courses');
@@ -69,19 +125,20 @@
   let steps = [];
   if (isIndex) {
     steps = [
-      { selector: '#search', title: '🔍 ابحث باسمك', desc: 'أفضل طريقة هي كتابة <b>الاسم</b> (أو جزء منه). يدعم أيضاً الرقم الأكاديمي.', position: 'bottom' },
-      { selector: '.nav-btn[onclick*="goCourses"]', title: '📘 صفحة المقررات', desc: 'اضغط هنا للانتقال إلى متابعة مواد الفرق وتحديد ما أنجزته.', position: 'bottom' },
-      { selector: 'footer a', title: '📬 تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا للتواصل مع المطور مباشرة.', position: 'top' }
+      { selector: '#search', title: 'ابحث باسمك', desc: 'اكتب <b>الاسم</b> (أو جزء منه). يدعم أيضاً الرقم الأكاديمي.', position: 'bottom' },
+      { selector: '.nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'اضغط هنا للانتقال إلى متابعة مواد الفرق وتحديد ما أنجزته.', position: 'bottom' },
+      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
     ];
   } else if (isCourses) {
     steps = [
-      { selector: '.filters', title: '⚙️ اختر الفرقة والقسم', desc: 'حدد الفرقة والقسم والترم لتصفية المواد التي تهمك.', position: 'bottom' },
-      { selector: '#fillPreviousBtn', title: '📥 المواد السابقة تلقائياً', desc: 'بنقرة واحدة تُكمل كل مواد السنوات الماضية لتوفير الوقت.', position: 'bottom' },
-      { selector: '.course-card:first-child', title: '✅ أكمل المواد', desc: 'بعد اختيار الفلتر، ستظهر المواد هنا. <b>اضغط على أي مادة</b> لتحديدها كمكتملة (ستتحول للخضراء).', position: 'top', fallbackSelector: '#coursesContainer' },
-      { selector: '.select-all-btn:first-child', title: '✅ تحديد الكل', desc: 'اضغط هذا الزر لتحديد جميع مواد هذا الترم كمكتملة دفعة واحدة (أو مسحها إن كانت مكتملة).', position: 'bottom', fallbackSelector: '.semester-block:first-child .select-all-btn' },
-      { selector: '.open-courses-btn:first-child', title: '🔗 زر "يفتح"', desc: 'اضغط هذا الزر لترى جميع المواد التي تعتمد على هذه المادة كمتطلب سابق.', position: 'left', fallbackSelector: '.open-courses-btn' },
-      { selector: '#reminderSection', title: '📋 تذكير المواد المتبقية', desc: 'ملخص سريع للمواد غير المكتملة في كل فرقة، يساعدك على التخطيط.', position: 'top' },
-      { selector: 'footer a', title: '📬 تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين.', position: 'top' }
+      { selector: '.search-section', title: 'البحث السريع', desc: 'ابحث عن أي مادة بالاسم العربي، الإنجليزي، أو الكود. البحث مرن ويتجاهل الأخطاء الإملائية الشائعة.', position: 'bottom' },
+      { selector: '.filters', title: 'اختر الفرقة والقسم', desc: 'حدد الفرقة والقسم والترم لتصفية المواد التي تهمك.', position: 'bottom' },
+      { selector: '#fillPreviousBtn', title: 'المواد السابقة تلقائياً', desc: 'بنقرة واحدة تُكمل كل مواد السنوات الماضية لتوفير الوقت.', position: 'bottom' },
+      { selector: '.course-card:first-child', title: 'أكمل المواد', desc: 'بعد اختيار الفلتر، ستظهر المواد هنا. <b>اضغط على أي مادة</b> لتحديدها كمكتملة (ستتحول للخضراء).', position: 'top', fallbackSelector: '#coursesContainer' },
+      { selector: '.select-all-btn:first-child', title: 'تحديد الكل', desc: 'اضغط هذا الزر لتحديد جميع مواد هذا الترم كمكتملة دفعة واحدة (أو مسحها إن كانت مكتملة).', position: 'top', fallbackSelector: '.semester-block:first-child .select-all-btn' },
+      { selector: '.open-courses-btn:first-child', title: 'زر "يفتح"', desc: 'اضغط هذا الزر لترى جميع المواد التي تعتمد على هذه المادة كمتطلب سابق.', position: 'left', fallbackSelector: '.open-courses-btn' },
+      { selector: '#reminderSection', title: 'تذكير المواد المتبقية', desc: 'ملخص سريع للمواد غير المكتملة في كل فرقة، يساعدك على التخطيط.', position: 'top' },
+      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
     ];
   }
 
@@ -112,14 +169,22 @@
   let rafId = null;
 
   function scrollToElement(el) {
-    el.scrollIntoView({ behavior: 'instant', block: 'center' });
+    // ضمان ظهور العنصر كاملاً وعدم تغطيته بالتولتيب
+    const tooltipHeight = 250;
+    const rect = el.getBoundingClientRect();
+    if (rect.top < tooltipHeight || rect.bottom > window.innerHeight - tooltipHeight) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      // فقط للتأكد من أنه مرئي
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
 
   function smartPosition(targetEl, preferred) {
     const rect = targetEl.getBoundingClientRect();
-    const margin = 18;
-    const tipWidth = tooltip.offsetWidth || 330;
-    const tipHeight = tooltip.offsetHeight || 170;
+    const margin = 20;
+    const tipWidth = tooltip.offsetWidth || 350;
+    const tipHeight = tooltip.offsetHeight || 190;
 
     const placements = {
       top:    { top: rect.top - tipHeight - margin, left: rect.left + rect.width/2 - tipWidth/2 },
@@ -128,6 +193,7 @@
       right:  { top: rect.top + rect.height/2 - tipHeight/2, left: rect.right + margin }
     };
 
+    // ترتيب المحاولات
     const order = [preferred, ...Object.keys(placements).filter(p => p !== preferred)];
     let best = null, bestScore = -Infinity;
 
@@ -137,10 +203,11 @@
       const constrainedLeft = Math.max(margin, Math.min(p.left, innerWidth - tipWidth - margin));
       const topDiff = Math.abs(constrainedTop - p.top);
       const leftDiff = Math.abs(constrainedLeft - p.left);
-      const score = 1000 - (topDiff + leftDiff) * 2;
+      // نفضل الموضع الذي لم يُضطر للتعديل
+      const score = 2000 - (topDiff + leftDiff) * 2;
       if (constrainedTop === p.top && constrainedLeft === p.left) {
         best = { top: p.top, left: p.left, pos };
-        break;
+        break; // وجدنا موضعاً مثالياً
       }
       if (score > bestScore) {
         bestScore = score;
@@ -197,8 +264,12 @@
     let target = document.querySelector(step.selector);
     if (!target && step.fallbackSelector) target = document.querySelector(step.fallbackSelector);
     if (!target) {
-      if (index < steps.length - 1) showStep(index + 1);
-      else endTour();
+      // تخطي الخطوة إذا لم يوجد العنصر
+      if (index < steps.length - 1) {
+        showStep(index + 1);
+      } else {
+        endTour();
+      }
       return;
     }
 
@@ -209,6 +280,7 @@
 
     scrollToElement(target);
 
+    // انتظار قليل حتى يستقر التمرير ثم تحديث الموضع
     setTimeout(() => {
       updatePositions();
       tooltip.querySelector('.tour-content').innerHTML = `<h4>${step.title}</h4><p>${step.desc}</p>`;
@@ -220,7 +292,7 @@
         else endTour();
       };
       tooltip.querySelector('.skip').onclick = endTour;
-    }, 100);
+    }, 150);
   }
 
   function endTour() {
@@ -229,6 +301,7 @@
     overlay.remove();
     highlight.remove();
     tooltip.remove();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     localStorage.setItem(pageKey, '1');
   }
 
@@ -238,13 +311,18 @@
   let attempts = 0;
   function tryStartTour() {
     if (location.pathname.includes('/courses')) {
+      // انتظار ظهور العناصر المهمة في صفحة المقررات
       const firstCard = document.querySelector('.course-card:first-child');
       if (!firstCard) {
-        if (attempts < 10) { attempts++; setTimeout(tryStartTour, 200); return; }
+        if (attempts < 20) { attempts++; setTimeout(tryStartTour, 200); return; }
       }
     }
     showStep(0);
   }
 
-  tryStartTour();
+  // تأخير بداية الجولة لضمان تحميل DOM بالكامل
+  window.addEventListener('load', () => {
+    setTimeout(tryStartTour, 300);
+  });
+
 })();
