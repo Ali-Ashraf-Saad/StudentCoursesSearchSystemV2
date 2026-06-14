@@ -535,6 +535,21 @@ header("Expires: 0");
         font-weight: 600;
         margin-bottom: 8px;
         color: #f1f5f9;
+        line-height: 1.7;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      #export-card .export-course-title {
+        direction: rtl;
+        unicode-bidi: isolate;
+      }
+      #export-card .export-course-code {
+        direction: ltr;
+        unicode-bidi: isolate;
+        color: #93c5fd;
+        font-size: 16px;
       }
       #export-card .export-exam-row {
         display: flex;
@@ -561,70 +576,6 @@ header("Expires: 0");
         font-size: 12px;
         color: #475569;
       }
-      #course-share-card {
-        position: absolute;
-        left: -9999px;
-        top: -9999px;
-        width: 560px;
-        padding: 28px;
-        background: linear-gradient(145deg, #0b1120 0%, #182033 100%);
-        border-radius: 22px;
-        color: #e2e8f0;
-        font-family: "Cairo", sans-serif;
-        direction: rtl;
-        border: 2px solid rgba(96, 165, 250, 0.42);
-        box-shadow: 0 22px 45px rgba(0, 0, 0, 0.55);
-      }
-      #course-share-card .share-header {
-        border-bottom: 2px solid rgba(96, 165, 250, 0.22);
-        padding-bottom: 16px;
-        margin-bottom: 18px;
-      }
-      #course-share-card .share-course-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #f8fafc;
-        margin-bottom: 6px;
-      }
-      #course-share-card .share-code {
-        display: inline-block;
-        color: #93c5fd;
-        background: rgba(59, 130, 246, 0.15);
-        border-radius: 999px;
-        padding: 3px 12px;
-        font-weight: 700;
-      }
-      #course-share-card .share-student {
-        color: #cbd5e1;
-        font-size: 15px;
-        margin-top: 12px;
-      }
-      #course-share-card .share-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-      }
-      #course-share-card .share-row span {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(148, 163, 184, 0.16);
-        border-radius: 999px;
-        padding: 6px 12px;
-        color: #dbeafe;
-        font-size: 14px;
-      }
-      #course-share-card .share-note {
-        color: #fcd34d;
-        font-size: 14px;
-        margin-top: 14px;
-      }
-      #course-share-card .watermark {
-        text-align: center;
-        margin-top: 20px;
-        color: #64748b;
-        font-size: 12px;
-      }
-
       @media (max-width: 600px) {
         .course-topline,
         .pinned-header {
@@ -729,7 +680,6 @@ header("Expires: 0");
     </div>
 
     <div id="export-card"></div>
-    <div id="course-share-card"></div>
     <div class="toast" id="toast"></div>
 
     <footer>
@@ -745,8 +695,8 @@ header("Expires: 0");
 
       // ════════ محاكاة الوقت للتجارب (احذف هذا القسم بالكامل بعد الاختبار) ════════
       const SIMULATION_ENABLED = false; // ⚠️ سطر محاكاة - احذف بعد الاختبار
-      // const SIMULATION_START = new Date("2026-06-08T11:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
-      const SIMULATION_START = new Date("2026-06-08T13:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
+      // const SIMULATION_START = new Date("2026-06-29T9:29:00"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
+      const SIMULATION_START = new Date("2026-06-29T09:29:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
       const SIMULATION_PAGE_LOAD_REAL_TIME = Date.now(); // ⚠️ سطر محاكاة - احذف بعد الاختبار
       function getSimulatedNow() { // ⚠️ دالة محاكاة - احذف بعد الاختبار
           if (!SIMULATION_ENABLED) return new Date();
@@ -770,10 +720,10 @@ header("Expires: 0");
       const PINNED_COURSE_KEY = "pinned_course_card_v1";
 
       function goCourses() {
-        fetch("/counterFiles/course_counter.php?action=increment", { 
-          method: "GET", 
+        fetch("/counterFiles/course_counter.php?action=increment", {
+          method: "GET",
           keepalive: true,
-          cache: "no-store" // ← أضيف
+          cache: "no-store"
         })
           .catch(() => {})
           .finally(() => {
@@ -878,7 +828,7 @@ header("Expires: 0");
       let remainingTimer = null;
 
       function loadCounter() {
-        fetch("/counterFiles/counter.php?action=get", { cache: "no-store" }) // ← أضيف
+        fetch("/counterFiles/counter.php?action=get", { cache: "no-store" })
           .then((r) => r.json())
           .then((d) => {
             const el = document.getElementById("visitCount");
@@ -899,6 +849,16 @@ header("Expires: 0");
       function escapeHTML(value) {
         const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
         return String(value ?? "").replace(/[&<>"']/g, (char) => map[char]);
+      }
+
+      function formatCourseDisplayName(name) {
+        return String(name || "")
+          .replace(/المشروع\s*([0-9٠-٩]+)/g, "المشروع $1")
+          .trim();
+      }
+
+      function formatCourseCodeDisplay(code) {
+        return String(code || "").replace(/[.\s]+$/g, "").trim();
       }
 
       function showToast(message) {
@@ -964,91 +924,32 @@ header("Expires: 0");
           lines.push("لم تحدد اللجنة بعد");
         }
 
-        const safeFileName = `course_${student?.number || "student"}_${course.code || "course"}.png`.replace(/[^\w.-]+/g, "_");
-        return { title, text: lines.filter(Boolean).join("\n"), fileName: safeFileName };
-      }
-
-      function renderCourseShareCard(student, course) {
-        const shareCard = document.getElementById("course-share-card");
-        if (!shareCard) return null;
-        const examRows = course.exam
-          ? `
-            <div class="share-row">
-              <span>اللجنة: ${escapeHTML(course.exam.committee || "-")}</span>
-              <span>المكان: ${escapeHTML(course.exam.room || "-")}</span>
-              <span>${escapeHTML(course.exam.day || "")} ${escapeHTML(course.exam.date || "")}</span>
-              <span>${escapeHTML(course.exam.period || "")} (${escapeHTML(course.exam.time || "")})</span>
-              <span>${escapeHTML(getExamPlainStatus(course))}</span>
-            </div>`
-          : `<div class="share-note">لم تحدد اللجنة بعد</div>`;
-
-        shareCard.innerHTML = `
-          <div class="share-header">
-            <div class="share-course-title">${escapeHTML(course.name || "مادة")}</div>
-            <span class="share-code">${escapeHTML(course.code || "")}</span>
-            <div class="share-student">
-              ${escapeHTML(student?.name || "")}
-              ${student?.number ? ` - ${escapeHTML(student.number)}` : ""}
-            </div>
-          </div>
-          ${examRows}
-          ${course.driveLink ? `<div class="share-note">رابط المادة: ${escapeHTML(course.driveLink)}</div>` : ""}
-          <div class="watermark">StudentsCourses V2 &middot; Developed by Ali Ashraf</div>`;
-        return shareCard;
-      }
-
-      function canShareImageFiles() {
-        try {
-          return !!(
-            window.html2canvas &&
-            navigator.share &&
-            navigator.canShare &&
-            typeof File !== "undefined" &&
-            navigator.canShare({ files: [new File([""], "course.png", { type: "image/png" })] })
-          );
-        } catch (_) {
-          return false;
-        }
+        return { title, text: lines.filter(Boolean).join("\n") };
       }
 
       async function shareCourse(student, course) {
         if (!course) return;
         const payload = buildCourseSharePayload(student, course);
-        const canTryImageShare = canShareImageFiles();
 
         try {
-          if (canTryImageShare) {
-            const shareCard = renderCourseShareCard(student, course);
-            const canvas = shareCard
-              ? await html2canvas(shareCard, { backgroundColor: null, scale: 2, useCORS: true, allowTaint: true })
-              : null;
-            const blob = canvas
-              ? await new Promise((resolve) => canvas.toBlob(resolve, "image/png"))
-              : null;
-
-            if (blob) {
-              const file = new File([blob], payload.fileName, { type: "image/png" });
-              await navigator.share({ title: payload.title, text: payload.text, files: [file] });
-              showToast("تم فتح المشاركة كصورة");
-              return;
-            }
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(payload.text);
+          } else {
+            const textarea = document.createElement("textarea");
+            textarea.value = payload.text;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "fixed";
+            textarea.style.top = "-9999px";
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            textarea.remove();
           }
-
-          if (navigator.share) {
-            await navigator.share({ title: payload.title, text: payload.text });
-            showToast("تم فتح المشاركة");
-            return;
-          }
+          showToast("تم نسخ نص المادة");
         } catch (err) {
-          if (err && err.name === "AbortError") return;
-          console.error("Share failed:", err);
+          console.error("Copy failed:", err);
+          showToast("تعذر نسخ النص");
         }
-
-        if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(payload.text).catch(() => {});
-        }
-        window.open(`https://wa.me/?text=${encodeURIComponent(payload.text)}`, "_blank", "noopener,noreferrer");
-        showToast("تم تجهيز نص المشاركة");
       }
 
       function getCoursePinId(student, course) {
@@ -1125,7 +1026,7 @@ header("Expires: 0");
                 <div class="pinned-meta">${escapeHTML(student.name || "")}${student.number ? ` - الرقم: ${escapeHTML(student.number)}` : ""}</div>
               </div>
               <div class="pinned-actions">
-                <button type="button" class="course-action-btn pinned-share-btn">مشاركة</button>
+                <button type="button" class="course-action-btn pinned-share-btn">نسخ</button>
                 <button type="button" class="course-action-btn pinned-remove-btn">إلغاء التثبيت</button>
               </div>
             </div>
@@ -1435,9 +1336,9 @@ header("Expires: 0");
           return;
         }
         activeFetchCtrl = new AbortController();
-        fetch(`search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, { 
+        fetch(`search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, {
           signal: activeFetchCtrl.signal,
-          cache: "no-store" // ← أضيف
+          cache: "no-store"
         })
           .then((r) => r.json())
           .then((data) => {
@@ -1462,7 +1363,7 @@ header("Expires: 0");
         clearTimeout(debounceTimer);
         fetch(
           `search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`,
-          { cache: "no-store" } // ← أضيف
+          { cache: "no-store" }
         )
           .then((r) => r.json())
           .then((data) => {
@@ -1535,7 +1436,7 @@ header("Expires: 0");
                   <div class="course-topline">
                     <div class="course-name">${titleHtml}</div>
                     <div class="course-actions">
-                      <button type="button" class="course-action-btn share-course-btn" title="مشاركة المادة">مشاركة</button>
+                      <button type="button" class="course-action-btn share-course-btn" title="نسخ نص المادة">نسخ</button>
                       <button type="button" class="course-action-btn pin-course-btn${pinned ? " is-pinned" : ""}" title="${pinned ? "إلغاء تثبيت المادة" : "تثبيت المادة"}">${pinned ? "مثبت" : "تثبيت"}</button>
                     </div>
                   </div>
@@ -1622,6 +1523,8 @@ header("Expires: 0");
         const student = currentStudentData;
         let coursesExportHtml = "";
         student.courses.forEach((course) => {
+          const courseName = escapeHTML(formatCourseDisplayName(course.name));
+          const courseCode = escapeHTML(formatCourseCodeDisplay(course.code));
           let examHtml = "";
           if (course.exam) {
             examHtml = `
@@ -1636,7 +1539,10 @@ header("Expires: 0");
           }
           coursesExportHtml += `
             <div class="export-course">
-              <div class="export-course-name">${course.name} (${course.code})</div>
+              <div class="export-course-name">
+                <span class="export-course-title">${courseName}</span>
+                <span class="export-course-code">(${courseCode})</span>
+              </div>
               ${examHtml}
             </div>`;
         });
@@ -1669,6 +1575,6 @@ header("Expires: 0");
       renderHistory();
       renderPinnedCourse();
     </script>
-    <script src="tour-guide.js?v=1.0"></script>
+    <script src="tour-guide.js?v=<?php echo filemtime('tour-guide.js'); ?>"></script>
   </body>
 </html>
