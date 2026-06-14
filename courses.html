@@ -58,15 +58,98 @@
     .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 10px; transition: width 0.4s; }
     .progress-text { white-space: nowrap; color: #cbd5e1; font-size: 14px; }
 
-    .search-section { margin: 0 auto 20px auto; max-width: 500px; display: flex; gap: 8px; }
+    .search-section { margin: 0 auto 12px auto; max-width: 500px; display: flex; gap: 8px; }
     .search-input-wrapper { flex: 1; position: relative; }
     .search-input {
       width: 100%; height: 48px; background: #1e293b; border: 1px solid rgba(59,130,246,0.4);
-      border-radius: 14px; padding: 0 16px; font-family: "Cairo", sans-serif; font-size: 15px;
+      border-radius: 14px; padding: 0 16px 0 50px; font-family: "Cairo", sans-serif; font-size: 15px;
       color: #e2e8f0; outline: none; transition: border-color 0.3s, box-shadow 0.3s;
     }
     .search-input::placeholder { color: #64748b; }
     .search-input:focus { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+    .search-input-wrapper .clear-btn {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 50%;
+      line-height: 1;
+      display: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .search-input-wrapper .clear-btn:hover {
+      color: #f87171;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .autocomplete-list {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      left: 0;
+      background: #0f172a;
+      border: 1px solid rgba(59,130,246,0.38);
+      border-radius: 12px;
+      box-shadow: 0 18px 38px rgba(0,0,0,0.42);
+      overflow: hidden;
+      z-index: 1200;
+      max-height: 290px;
+      overflow-y: auto;
+      display: none;
+    }
+    .autocomplete-list.show { display: block; }
+    .autocomplete-item {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: #e2e8f0;
+      font-family: "Cairo", sans-serif;
+      text-align: right;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(148,163,184,0.1);
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover,
+    .autocomplete-item.active {
+      background: rgba(59,130,246,0.16);
+    }
+    .autocomplete-names {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .autocomplete-ar {
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .autocomplete-en {
+      color: #94a3b8;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .autocomplete-code {
+      color: #60a5fa;
+      background: rgba(59,130,246,0.14);
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
     .search-btn {
       height: 48px; padding: 0 20px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.5);
       color: #60a5fa; font-family: "Cairo", sans-serif; font-size: 15px; font-weight: 600;
@@ -75,6 +158,66 @@
     }
     .search-btn:hover { background: rgba(59,130,246,0.4); box-shadow: 0 0 12px rgba(59,130,246,0.3); }
     .search-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    .history {
+      max-width: 500px;
+      margin: 0 auto 20px;
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: 12px;
+      padding: 10px;
+      display: none;
+    }
+    .history-label {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      padding: 0 8px;
+    }
+    .history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .history-item {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .history-item:hover { background: #1e3a5f; }
+    .history-text {
+      color: #e2e8f0;
+      font-size: 14px;
+      white-space: normal;
+      word-break: break-word;
+    }
+    .history-delete {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    .history-delete:hover { color: #f87171; }
+    .history-clear {
+      display: inline-block;
+      width: auto;
+      color: #f59e0b;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 12px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .history-clear:hover { background: rgba(245, 158, 11, 0.1); }
 
     .filters {
       display: flex; flex-wrap: wrap; gap: 15px; background: rgba(30,41,59,0.6);
@@ -235,6 +378,21 @@
     }
     .search-result-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; font-size: 12px; color: #cbd5e1; }
     .search-result-meta span { background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 6px; }
+    .search-result-locations { margin: 8px 0; font-size: 12px; color: #cbd5e1; }
+    .search-result-locations-label { color: #94a3b8; margin-inline-end: 6px; font-weight: 600; }
+    .search-result-location-list { display: inline-flex; flex-wrap: wrap; gap: 6px; vertical-align: middle; }
+    .search-result-location {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(59,130,246,0.12); border: 1px solid rgba(96,165,250,0.25);
+      color: #dbeafe; padding: 2px 8px; border-radius: 999px;
+    }
+    .search-result-location-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .search-result-location-row {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 10px; padding: 8px 10px;
+    }
+    .location-prereq { color: #fcd34d; margin-top: 6px; line-height: 1.7; }
+    .location-prereq.empty { color: #94a3b8; }
     .search-result-prereq { font-size: 12px; color: #fcd34d; margin-top: 6px; }
     .search-result-prereq .prereq-label { background: rgba(245,158,11,0.2); padding: 1px 8px; border-radius: 8px; }
     .search-result-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
@@ -333,12 +491,19 @@
 
     <div class="search-section">
       <div class="search-input-wrapper">
-        <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن مادة (اسم عربي، إنجليزي، أو كود)..." autocomplete="off">
+        <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن مادة (اسم عربي، إنجليزي، أو كود)..." autocomplete="off" aria-autocomplete="list" aria-expanded="false">
+        <button class="clear-btn" id="clearSearchBtn" title="مسح البحث">&times;</button>
+        <div class="autocomplete-list" id="courseSearchSuggestions"></div>
       </div>
       <button class="search-btn" id="searchBtn">
         <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         بحث
       </button>
+    </div>
+    <div class="history" id="history">
+      <div class="history-label">سجل البحث:</div>
+      <div class="history-list" id="history-list"></div>
+      <div class="history-clear" id="clear-history">مسح السجل</div>
     </div>
 
     <div class="overall-progress">
@@ -380,6 +545,8 @@
   <script>
     const STORAGE_FILTER = 'courses_filter';
     const STORAGE_COMPLETED = 'completed_courses';
+    const STORAGE_SEARCH_HISTORY = 'courses_search_history';
+    const MAX_SEARCH_HISTORY = 10;
 
     const yearSelect = document.getElementById('yearSelect');
     const deptSelect = document.getElementById('deptSelect');
@@ -404,18 +571,28 @@
     const cancelClearBtn = document.getElementById('cancelClearBtn');
 
     const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const courseSearchSuggestions = document.getElementById('courseSearchSuggestions');
     const searchBtn = document.getElementById('searchBtn');
     const searchModal = document.getElementById('searchModal');
     const closeSearchModalBtn = document.getElementById('closeSearchModalBtn');
     const searchModalTitle = document.getElementById('searchModalTitle');
     const searchModalBody = document.getElementById('searchModalBody');
+    const historyDiv = document.getElementById('history');
+    const historyList = document.getElementById('history-list');
+    const clearHistoryBtn = document.getElementById('clear-history');
 
     let allData = [];
     let courseMap = {};
     let prereqToDependents = {};
     let courseDetailsMap = {};
+    let courseLocationsMap = {};
     let completedSet = new Set(JSON.parse(localStorage.getItem(STORAGE_COMPLETED) || '[]'));
     let realDept = '';
+    let courseSearchOptions = [];
+    let currentAutocompleteItems = [];
+    let activeAutocompleteIndex = -1;
+    let pendingSearchHistoryText = '';
 
     // ---------- دوال البحث المرن ----------
     function normalizeForSearch(str) {
@@ -423,10 +600,10 @@
       let s = str.toLowerCase();
       // إزالة التشكيل
       s = s.replace(/[\u064B-\u065F\u0670]/g, '');
-      // توحيد الألفات (أ إ آ -> ا)
-      s = s.replace(/[أإآ]/g, 'ا');
-      // توحيد الألف المقصورة (ى -> ا)
-      s = s.replace(/ى/g, 'ا');
+      // توحيد الألفات كما في search.php
+      s = s.replace(/[أإآٱ]/g, 'ا');
+      // توحيد الألف المقصورة كما في search.php
+      s = s.replace(/ى/g, 'ي');
       // توحيد التاء المربوطة (ة -> ه)
       s = s.replace(/ة/g, 'ه');
       // إزالة كل شيء غير الحروف العربية والإنجليزية والأرقام
@@ -450,6 +627,186 @@
         if (targetNorm.slice(0, -1).includes(queryNorm.slice(0, -1))) return true;
       }
       return false;
+    }
+
+    function escapeHTML(value) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return String(value ?? '').replace(/[&<>"']/g, char => map[char]);
+    }
+
+    function loadSearchHistory() {
+      try {
+        const raw = localStorage.getItem(STORAGE_SEARCH_HISTORY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveSearchHistory(history) {
+      localStorage.setItem(STORAGE_SEARCH_HISTORY, JSON.stringify(history));
+    }
+
+    function addToSearchHistory(query) {
+      if (!query) return;
+      let history = loadSearchHistory();
+      history = history.filter(item => !query.startsWith(item));
+      const isPrefixOfExisting = history.some(item => item.startsWith(query));
+      if (isPrefixOfExisting) {
+        saveSearchHistory(history);
+        renderSearchHistory();
+        return;
+      }
+      history = history.filter(item => item !== query);
+      history.unshift(query);
+      if (history.length > MAX_SEARCH_HISTORY) history.pop();
+      saveSearchHistory(history);
+      renderSearchHistory();
+    }
+
+    function deleteSearchHistoryItem(query) {
+      saveSearchHistory(loadSearchHistory().filter(item => item !== query));
+      renderSearchHistory();
+    }
+
+    function clearSearchHistory() {
+      localStorage.removeItem(STORAGE_SEARCH_HISTORY);
+      renderSearchHistory();
+    }
+
+    function toggleClearSearchButton() {
+      clearSearchBtn.style.display = searchInput.value.trim() ? 'block' : 'none';
+    }
+
+    function renderSearchHistory() {
+      const history = loadSearchHistory();
+      historyList.innerHTML = '';
+
+      if (!history.length) {
+        historyDiv.style.display = 'none';
+        return;
+      }
+
+      historyDiv.style.display = 'block';
+      history.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'history-item';
+
+        const text = document.createElement('span');
+        text.className = 'history-text';
+        text.textContent = item;
+        text.addEventListener('click', () => {
+          searchInput.value = item;
+          toggleClearSearchButton();
+          performSearch();
+        });
+
+        const del = document.createElement('button');
+        del.className = 'history-delete';
+        del.type = 'button';
+        del.innerHTML = '&times;';
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteSearchHistoryItem(item);
+        });
+
+        row.appendChild(text);
+        row.appendChild(del);
+        historyList.appendChild(row);
+      });
+    }
+
+    function populateCourseSearchSuggestions() {
+      const byCode = new Map();
+
+      allData.forEach(sem => {
+        (sem.courses || []).forEach(course => {
+          const code = String(course.code || '').trim();
+          if (!code) return;
+          const key = code.toLowerCase();
+          if (byCode.has(key)) return;
+
+          const arabic = course.arabic_name || course.name || '';
+          const english = course.name || '';
+          byCode.set(key, {
+            code,
+            arabic,
+            english,
+            codeNorm: code.toLowerCase().replace(/[^a-z0-9]/g, ''),
+            searchNorm: normalizeForSearch(`${code} ${arabic} ${english}`)
+          });
+        });
+      });
+
+      courseSearchOptions = [...byCode.values()].sort((a, b) => a.code.localeCompare(b.code));
+      renderAutocomplete();
+    }
+
+    function hideAutocomplete() {
+      currentAutocompleteItems = [];
+      activeAutocompleteIndex = -1;
+      courseSearchSuggestions.classList.remove('show');
+      courseSearchSuggestions.innerHTML = '';
+      searchInput.setAttribute('aria-expanded', 'false');
+    }
+
+    function setActiveAutocomplete(index) {
+      activeAutocompleteIndex = index;
+      courseSearchSuggestions.querySelectorAll('.autocomplete-item').forEach((item, i) => {
+        item.classList.toggle('active', i === activeAutocompleteIndex);
+      });
+    }
+
+    function chooseAutocompleteItem(item) {
+      if (!item) return;
+      searchInput.value = item.code;
+      pendingSearchHistoryText = item.arabic || item.english || item.code;
+      toggleClearSearchButton();
+      hideAutocomplete();
+      performSearch();
+    }
+
+    function renderAutocomplete() {
+      const query = searchInput.value.trim();
+      const queryNorm = normalizeForSearch(query);
+      courseSearchSuggestions.innerHTML = '';
+      currentAutocompleteItems = [];
+      activeAutocompleteIndex = -1;
+
+      if (!queryNorm) {
+        hideAutocomplete();
+        return;
+      }
+
+      currentAutocompleteItems = courseSearchOptions
+        .filter(item => item.codeNorm.includes(queryNorm) || isFlexibleMatch(queryNorm, item.searchNorm))
+        .slice(0, 8);
+
+      if (!currentAutocompleteItems.length) {
+        hideAutocomplete();
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+      currentAutocompleteItems.forEach((item, index) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'autocomplete-item';
+        btn.innerHTML = `
+          <span class="autocomplete-names">
+            <span class="autocomplete-ar">${escapeHTML(item.arabic)}</span>
+            <span class="autocomplete-en">${escapeHTML(item.english)}</span>
+          </span>
+          <span class="autocomplete-code">${escapeHTML(item.code)}</span>
+        `;
+        btn.addEventListener('mousedown', (e) => e.preventDefault());
+        btn.addEventListener('click', () => chooseAutocompleteItem(currentAutocompleteItems[index]));
+        fragment.appendChild(btn);
+      });
+
+      courseSearchSuggestions.appendChild(fragment);
+      courseSearchSuggestions.classList.add('show');
+      searchInput.setAttribute('aria-expanded', 'true');
     }
 
     // ---------- دوال التحكم بالمودالات ----------
@@ -540,39 +897,123 @@
       unlockScroll();
     }
 
+    function clearCourseSearchInput() {
+      searchInput.value = '';
+      pendingSearchHistoryText = '';
+      toggleClearSearchButton();
+      hideAutocomplete();
+    }
+
+    function getPrerequisiteSignature(codes) {
+      return [...(codes || [])].sort().join('|');
+    }
+
+    function collapseCommonDepartmentLocations(locations) {
+      const source = [...(locations || [])];
+      const used = new Set();
+      const collapsed = [];
+      const specializedDepts = ['CS', 'IT', 'IS'];
+      const groups = new Map();
+
+      source.forEach((loc, index) => {
+        if (!specializedDepts.includes(loc.dept)) return;
+        const key = `${loc.year}|${loc.term}|${getPrerequisiteSignature(loc.prerequisites)}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push({ loc, index });
+      });
+
+      groups.forEach(group => {
+        const depts = new Set(group.map(item => item.loc.dept));
+        if (!specializedDepts.every(dept => depts.has(dept))) return;
+
+        const first = group[0].loc;
+        collapsed.push({
+          ...first,
+          dept: 'عام',
+          semesterTitle: `مادة عامة - ${first.semesterTitle || ''}`,
+          key: `${first.year}|${first.term}|عام|${getPrerequisiteSignature(first.prerequisites)}`
+        });
+
+        group.forEach(item => used.add(item.index));
+      });
+
+      source.forEach((loc, index) => {
+        const alreadyCollapsedAsGeneral = loc.dept === 'عام' && collapsed.some(item =>
+          item.dept === 'عام' &&
+          item.year === loc.year &&
+          item.term === loc.term &&
+          getPrerequisiteSignature(item.prerequisites) === getPrerequisiteSignature(loc.prerequisites)
+        );
+        if (!used.has(index) && !alreadyCollapsedAsGeneral) collapsed.push(loc);
+      });
+
+      return collapsed.sort((a, b) =>
+        (a.year || 0) - (b.year || 0) ||
+        (a.term || 0) - (b.term || 0) ||
+        String(a.dept || '').localeCompare(String(b.dept || ''))
+      );
+    }
+
     function performSearch() {
       const query = searchInput.value.trim();
       if (!query) return;
+      hideAutocomplete();
       const normalizedQuery = normalizeForSearch(query);
+      const safeQuery = escapeHTML(query);
       const results = [];
+      const resultsByCode = new Map();
+      const historyText = pendingSearchHistoryText || query;
+      pendingSearchHistoryText = '';
+      addToSearchHistory(historyText);
 
       for (const sem of allData) {
         for (const course of (sem.courses || [])) {
           const normalizedArabic = normalizeForSearch(course.arabic_name || course.name);
           const normalizedEnglish = normalizeForSearch(course.name || '');
-          const normalizedCode = course.code.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const normalizedCode = (course.code || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
           if (isFlexibleMatch(normalizedQuery, normalizedArabic) ||
               isFlexibleMatch(normalizedQuery, normalizedEnglish) ||
               normalizedCode.includes(normalizedQuery)) {
+            const codeKey = (course.code || '').toLowerCase();
+            if (resultsByCode.has(codeKey)) continue;
             const details = courseDetailsMap[course.code] || {};
-            results.push({ ...course, details: details });
+            const locations = (courseLocationsMap[course.code] || [details]).filter(Boolean);
+            const sortedLocations = [...locations].sort((a, b) =>
+              (a.year || 0) - (b.year || 0) ||
+              (a.term || 0) - (b.term || 0) ||
+              String(a.dept || '').localeCompare(String(b.dept || ''))
+            );
+            const result = { ...course, details: details, locations: sortedLocations };
+            resultsByCode.set(codeKey, result);
+            results.push(result);
           }
         }
       }
 
       if (results.length === 0) {
-        searchModalTitle.innerHTML = `لا توجد نتائج لـ "${query}"`;
+        searchModalTitle.innerHTML = `لا توجد نتائج لـ "${safeQuery}"`;
         searchModalBody.innerHTML = '<div class="empty-msg">لم يتم العثور على مواد تطابق بحثك</div>';
       } else {
-        searchModalTitle.innerHTML = `نتائج البحث عن "${query}" (${results.length} مادة)`;
+        searchModalTitle.innerHTML = `نتائج البحث عن "${safeQuery}" (${results.length} مادة)`;
         let html = '<div class="search-results-list">';
         results.forEach(course => {
-          const dept = course.details.dept || 'عام';
-          const year = course.details.year || '?';
-          const term = course.details.termLabel || '?';
-          const prereqHTML = (course.prerequisites || []).length ? 
-            `<div class="search-result-prereq"><span class="prereq-label">متطلبات:</span> ${formatPrerequisites(course.prerequisites)}</div>` : '';
+          const rawLocations = course.locations && course.locations.length
+            ? course.locations
+            : [{ ...(course.details || {}), prerequisites: course.prerequisites || [] }];
+          const locations = collapseCommonDepartmentLocations(rawLocations);
+          const locationsHTML = locations.map(loc => {
+            const yearText = loc.year === 1 ? 'الأولى' : loc.year === 2 ? 'الثانية' : loc.year === 3 ? 'الثالثة' : loc.year === 4 ? 'الرابعة' : '?';
+            const prereqCodes = loc.prerequisites || [];
+            const prereqHTML = prereqCodes.length
+              ? `<div class="location-prereq"><span class="prereq-label">متطلبات:</span> ${formatPrerequisites(prereqCodes)}</div>` : ``;
+              // : `<div class="location-prereq empty"><span class="prereq-label">متطلبات:</span> لا توجد</div>`;
+            return `
+              <div class="search-result-location-row">
+                <span class="search-result-location">الفرقة ${yearText} - ${loc.termLabel || '?'} - ${loc.dept || 'عام'}</span>
+                ${prereqHTML}
+              </div>`;
+          }).join('');
 
           const hasVisibleDependents = getVisibleDependentsCount(course.code) > 0;
           const openBtnHTML = hasVisibleDependents ? 
@@ -587,12 +1028,10 @@
                 </div>
                 <div class="search-result-code">${course.code}</div>
               </div>
-              <div class="search-result-meta">
-                <span>الفرقة ${year === 1 ? 'الأولى' : year === 2 ? 'الثانية' : year === 3 ? 'الثالثة' : 'الرابعة'}</span>
-                <span>${term}</span>
-                <span>${dept}</span>
+              <div class="search-result-locations">
+                <span class="search-result-locations-label">موجودة في:</span>
+                <div class="search-result-location-rows">${locationsHTML}</div>
               </div>
-              ${prereqHTML}
               ${openBtnHTML ? `<div class="search-result-footer">${openBtnHTML}</div>` : ''}
             </div>`;
         });
@@ -612,6 +1051,7 @@
 
     function closeSearchModal() {
       searchModal.style.display = 'none';
+      clearCourseSearchInput();
       unlockScroll();
     }
 
@@ -649,8 +1089,53 @@
       }
     });
 
-    searchBtn.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
+    clearSearchBtn.addEventListener('mousedown', (e) => e.preventDefault());
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      toggleClearSearchButton();
+      hideAutocomplete();
+      searchInput.focus();
+    });
+    searchInput.addEventListener('input', () => {
+      toggleClearSearchButton();
+      renderAutocomplete();
+    });
+    searchInput.addEventListener('focus', renderAutocomplete);
+    searchInput.addEventListener('keydown', (e) => {
+      if (!currentAutocompleteItems.length) {
+        if (e.key === 'Escape') hideAutocomplete();
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveAutocomplete((activeAutocompleteIndex + 1) % currentAutocompleteItems.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveAutocomplete((activeAutocompleteIndex - 1 + currentAutocompleteItems.length) % currentAutocompleteItems.length);
+      } else if (e.key === 'Enter' && activeAutocompleteIndex >= 0) {
+        e.preventDefault();
+        chooseAutocompleteItem(currentAutocompleteItems[activeAutocompleteIndex]);
+      } else if (e.key === 'Escape') {
+        hideAutocomplete();
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-input-wrapper')) hideAutocomplete();
+    });
+    clearHistoryBtn.addEventListener('click', clearSearchHistory);
+    searchBtn.addEventListener('click', () => {
+      hideAutocomplete();
+      performSearch();
+    });
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        hideAutocomplete();
+        performSearch();
+      }
+    });
+    renderSearchHistory();
+    toggleClearSearchButton();
 
     // ---------- باقي التطبيق (دون تغيير) ----------
     function loadCoursesCounter() {
@@ -682,13 +1167,24 @@
 
           (sem.courses || []).forEach(c => {
             courseMap[c.code] = c;
-            courseDetailsMap[c.code] = { year, term, termLabel: term===1?'ترم أول':(term===2?'ترم ثاني':''), dept: dept||'عام', semesterTitle: title };
+            const details = { year, term, termLabel: term===1?'ترم أول':(term===2?'ترم ثاني':''), dept: dept||'عام', semesterTitle: title };
+            courseDetailsMap[c.code] = details;
+            if (!courseLocationsMap[c.code]) courseLocationsMap[c.code] = [];
+            const locationKey = `${details.year}|${details.term}|${details.dept}|${details.semesterTitle}`;
+            if (!courseLocationsMap[c.code].some(loc => loc.key === locationKey)) {
+              courseLocationsMap[c.code].push({
+                ...details,
+                key: locationKey,
+                prerequisites: [...(c.prerequisites || [])]
+              });
+            }
             (c.prerequisites || []).forEach(pre => {
               if (!prereqToDependents[pre]) prereqToDependents[pre] = [];
               prereqToDependents[pre].push(c.code);
             });
           });
         });
+        populateCourseSearchSuggestions();
         loadFilterState();
         updateDepartmentOptions();
         render();
@@ -947,6 +1443,6 @@
     }
     updateDepartmentOptions();
   </script>
-  <script src="tour-guide.js"></script>
+  <script src="tour-guide.js?v=1.0"></script>
 </body>
 </html>

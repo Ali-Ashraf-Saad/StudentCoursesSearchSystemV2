@@ -299,6 +299,56 @@ header("Expires: 0");
         font-weight: 600;
         margin-bottom: 6px;
       }
+      .course-topline {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 6px;
+      }
+      .course-topline .course-name {
+        flex: 1;
+        min-width: 0;
+        margin-bottom: 0;
+      }
+      .course-actions,
+      .pinned-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+      .course-action-btn {
+        background: rgba(59, 130, 246, 0.18);
+        border: 1px solid rgba(96, 165, 250, 0.45);
+        color: #93c5fd;
+        font-family: "Cairo", sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+        white-space: nowrap;
+      }
+      .course-action-btn:hover {
+        background: rgba(59, 130, 246, 0.35);
+        color: #dbeafe;
+        transform: translateY(-1px);
+      }
+      .course-action-btn.pin-course-btn {
+        background: rgba(245, 158, 11, 0.16);
+        border-color: rgba(251, 191, 36, 0.45);
+        color: #fcd34d;
+      }
+      .course-action-btn.pin-course-btn.is-pinned,
+      .course-action-btn.pinned-remove-btn {
+        background: rgba(16, 185, 129, 0.18);
+        border-color: rgba(52, 211, 153, 0.5);
+        color: #86efac;
+      }
       .exam-details {
         font-size: 13px;
         color: #cbd5e1;
@@ -322,6 +372,64 @@ header("Expires: 0");
         font-weight: 600;
         margin-top: 4px;
         display: block;
+      }
+      .pinned-course {
+        margin-top: 16px;
+        display: none;
+      }
+      .pinned-course-label {
+        color: #fcd34d;
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        padding: 0 8px;
+      }
+      .pinned-course-card {
+        background: rgba(30, 41, 59, 0.85);
+        border-radius: 16px;
+        padding: 16px;
+        border: 1px solid rgba(251, 191, 36, 0.28);
+        border-right: 5px solid #f59e0b;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+      }
+      .pinned-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .pinned-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #f8fafc;
+      }
+      .pinned-meta {
+        color: #94a3b8;
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .toast {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(15, 23, 42, 0.96);
+        color: #e2e8f0;
+        border: 1px solid rgba(96, 165, 250, 0.45);
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 12000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s, transform 0.25s;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
       }
 
       /* أنماط حالة الامتحان */
@@ -453,6 +561,85 @@ header("Expires: 0");
         font-size: 12px;
         color: #475569;
       }
+      #course-share-card {
+        position: absolute;
+        left: -9999px;
+        top: -9999px;
+        width: 560px;
+        padding: 28px;
+        background: linear-gradient(145deg, #0b1120 0%, #182033 100%);
+        border-radius: 22px;
+        color: #e2e8f0;
+        font-family: "Cairo", sans-serif;
+        direction: rtl;
+        border: 2px solid rgba(96, 165, 250, 0.42);
+        box-shadow: 0 22px 45px rgba(0, 0, 0, 0.55);
+      }
+      #course-share-card .share-header {
+        border-bottom: 2px solid rgba(96, 165, 250, 0.22);
+        padding-bottom: 16px;
+        margin-bottom: 18px;
+      }
+      #course-share-card .share-course-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 6px;
+      }
+      #course-share-card .share-code {
+        display: inline-block;
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.15);
+        border-radius: 999px;
+        padding: 3px 12px;
+        font-weight: 700;
+      }
+      #course-share-card .share-student {
+        color: #cbd5e1;
+        font-size: 15px;
+        margin-top: 12px;
+      }
+      #course-share-card .share-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      #course-share-card .share-row span {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 999px;
+        padding: 6px 12px;
+        color: #dbeafe;
+        font-size: 14px;
+      }
+      #course-share-card .share-note {
+        color: #fcd34d;
+        font-size: 14px;
+        margin-top: 14px;
+      }
+      #course-share-card .watermark {
+        text-align: center;
+        margin-top: 20px;
+        color: #64748b;
+        font-size: 12px;
+      }
+
+      @media (max-width: 600px) {
+        .course-topline,
+        .pinned-header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .course-actions,
+        .pinned-actions {
+          width: 100%;
+        }
+        .course-action-btn {
+          flex: 1;
+          text-align: center;
+        }
+      }
 
       footer {
         text-align: center;
@@ -532,6 +719,8 @@ header("Expires: 0");
         <div class="history-clear" id="clear-history">مسح السجل</div>
       </div>
 
+      <div class="pinned-course" id="pinned-course"></div>
+
       <div class="export-btn-container" id="export-container">
         <button class="export-btn" onclick="exportAsImage()">تحميل صورة المواد</button>
       </div>
@@ -540,6 +729,8 @@ header("Expires: 0");
     </div>
 
     <div id="export-card"></div>
+    <div id="course-share-card"></div>
+    <div class="toast" id="toast"></div>
 
     <footer>
       StudentsCourses 2026 &middot; Developed by Ali Ashraf &middot;
@@ -576,6 +767,7 @@ header("Expires: 0");
 
       const HISTORY_KEY = "search_history";
       const MAX_HISTORY = 10;
+      const PINNED_COURSE_KEY = "pinned_course_card_v1";
 
       function goCourses() {
         fetch("/counterFiles/course_counter.php?action=increment", { 
@@ -673,6 +865,8 @@ header("Expires: 0");
       const clearBtn = document.getElementById("clearSearchBtn");
       const resultsDiv = document.getElementById("results");
       const exportContainer = document.getElementById("export-container");
+      const pinnedCourseDiv = document.getElementById("pinned-course");
+      const toast = document.getElementById("toast");
 
       let debounceTimer = null;
       let autoCommitTimer = null;
@@ -702,6 +896,277 @@ header("Expires: 0");
         clearBtn.style.display = searchInput.value.trim() ? "block" : "none";
       }
 
+      function escapeHTML(value) {
+        const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
+        return String(value ?? "").replace(/[&<>"']/g, (char) => map[char]);
+      }
+
+      function showToast(message) {
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove("show"), 2600);
+      }
+
+      function buildCourseExamHtml(course) {
+        if (!course.exam) return `<div class="no-exam">لم تحدد اللجنة بعد</div>`;
+
+        const range = parseExamTimeRange(course.exam.date, course.exam.time, course.exam.period);
+        let statusText = "وقت الامتحان غير معروف";
+        let startISO = "";
+        let endISO = "";
+
+        if (range) {
+          statusText = getExamStatusText(range.start, range.end);
+          startISO = range.start.toISOString();
+          endISO = range.end.toISOString();
+        }
+
+        return `
+          <div class="exam-details">
+            <span>اللجنة: ${escapeHTML(course.exam.committee)}</span>
+            <span>المكان: ${escapeHTML(course.exam.room)}</span>
+            <span>التاريخ: ${escapeHTML(course.exam.day)} ${escapeHTML(course.exam.date)}</span>
+            <span>الوقت: ${escapeHTML(course.exam.period)} (${escapeHTML(course.exam.time)})</span>
+          </div>
+          <div class="remaining-time" data-exam-start="${startISO}" data-exam-end="${endISO}">
+            ${statusText}
+          </div>`;
+      }
+
+      function getExamPlainStatus(course) {
+        if (!course.exam) return "لم تحدد اللجنة بعد";
+        const range = parseExamTimeRange(course.exam.date, course.exam.time, course.exam.period);
+        if (!range) return "وقت الامتحان غير معروف";
+        const now = getSimulatedNow();
+        if (now >= range.end) return "منتهي";
+        if (now >= range.start && now < range.end) {
+          return `الامتحان الآن - ${formatTimeRemaining(range.end - now).text}`;
+        }
+        return formatTimeRemaining(range.start - now).text;
+      }
+
+      function buildCourseSharePayload(student, course) {
+        const title = `${course.name || "مادة"}`;
+        const lines = [
+          student?.name ? `الطالب: ${student.name}` : "",
+          `المادة: ${title}`,
+        ];
+
+        if (course.exam) {
+          lines.push(
+            `التاريخ: ${course.exam.day || ""} ${course.exam.date || ""}`.trim(),
+            `الوقت: ${course.exam.period || ""} (${course.exam.time || ""})`.trim(),
+            `المكان: لجنة ${course.exam.committee || "-"} ${course.exam.room || "-"}`,
+          );
+        } else {
+          lines.push("لم تحدد اللجنة بعد");
+        }
+
+        const safeFileName = `course_${student?.number || "student"}_${course.code || "course"}.png`.replace(/[^\w.-]+/g, "_");
+        return { title, text: lines.filter(Boolean).join("\n"), fileName: safeFileName };
+      }
+
+      function renderCourseShareCard(student, course) {
+        const shareCard = document.getElementById("course-share-card");
+        if (!shareCard) return null;
+        const examRows = course.exam
+          ? `
+            <div class="share-row">
+              <span>اللجنة: ${escapeHTML(course.exam.committee || "-")}</span>
+              <span>المكان: ${escapeHTML(course.exam.room || "-")}</span>
+              <span>${escapeHTML(course.exam.day || "")} ${escapeHTML(course.exam.date || "")}</span>
+              <span>${escapeHTML(course.exam.period || "")} (${escapeHTML(course.exam.time || "")})</span>
+              <span>${escapeHTML(getExamPlainStatus(course))}</span>
+            </div>`
+          : `<div class="share-note">لم تحدد اللجنة بعد</div>`;
+
+        shareCard.innerHTML = `
+          <div class="share-header">
+            <div class="share-course-title">${escapeHTML(course.name || "مادة")}</div>
+            <span class="share-code">${escapeHTML(course.code || "")}</span>
+            <div class="share-student">
+              ${escapeHTML(student?.name || "")}
+              ${student?.number ? ` - ${escapeHTML(student.number)}` : ""}
+            </div>
+          </div>
+          ${examRows}
+          ${course.driveLink ? `<div class="share-note">رابط المادة: ${escapeHTML(course.driveLink)}</div>` : ""}
+          <div class="watermark">StudentsCourses V2 &middot; Developed by Ali Ashraf</div>`;
+        return shareCard;
+      }
+
+      function canShareImageFiles() {
+        try {
+          return !!(
+            window.html2canvas &&
+            navigator.share &&
+            navigator.canShare &&
+            typeof File !== "undefined" &&
+            navigator.canShare({ files: [new File([""], "course.png", { type: "image/png" })] })
+          );
+        } catch (_) {
+          return false;
+        }
+      }
+
+      async function shareCourse(student, course) {
+        if (!course) return;
+        const payload = buildCourseSharePayload(student, course);
+        const canTryImageShare = canShareImageFiles();
+
+        try {
+          if (canTryImageShare) {
+            const shareCard = renderCourseShareCard(student, course);
+            const canvas = shareCard
+              ? await html2canvas(shareCard, { backgroundColor: null, scale: 2, useCORS: true, allowTaint: true })
+              : null;
+            const blob = canvas
+              ? await new Promise((resolve) => canvas.toBlob(resolve, "image/png"))
+              : null;
+
+            if (blob) {
+              const file = new File([blob], payload.fileName, { type: "image/png" });
+              await navigator.share({ title: payload.title, text: payload.text, files: [file] });
+              showToast("تم فتح المشاركة كصورة");
+              return;
+            }
+          }
+
+          if (navigator.share) {
+            await navigator.share({ title: payload.title, text: payload.text });
+            showToast("تم فتح المشاركة");
+            return;
+          }
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+          console.error("Share failed:", err);
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(payload.text).catch(() => {});
+        }
+        window.open(`https://wa.me/?text=${encodeURIComponent(payload.text)}`, "_blank", "noopener,noreferrer");
+        showToast("تم تجهيز نص المشاركة");
+      }
+
+      function getCoursePinId(student, course) {
+        return `${student?.number || "student"}__${course?.code || "course"}`;
+      }
+
+      function normalizePinnedCourse(course) {
+        return {
+          name: course.name || "",
+          code: course.code || "",
+          driveLink: course.driveLink || "",
+          exam: course.exam ? {
+            committee: course.exam.committee || "",
+            room: course.exam.room || "",
+            day: course.exam.day || "",
+            date: course.exam.date || "",
+            period: course.exam.period || "",
+            time: course.exam.time || "",
+          } : null,
+        };
+      }
+
+      function loadPinnedCourse() {
+        try {
+          const raw = localStorage.getItem(PINNED_COURSE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function isPinnedCourse(student, course) {
+        const pinned = loadPinnedCourse();
+        return !!pinned && pinned.id === getCoursePinId(student, course);
+      }
+
+      function updatePinButtons() {
+        document.querySelectorAll(".pin-course-btn").forEach((btn) => {
+          const card = btn.closest(".card");
+          const courseItem = btn.closest(".course-item");
+          const courseIndex = Number(courseItem?.dataset.courseIndex);
+          const student = card?.__studentData;
+          const course = student?.courses?.[courseIndex];
+          const pinned = student && course && isPinnedCourse(student, course);
+          btn.classList.toggle("is-pinned", !!pinned);
+          btn.textContent = pinned ? "مثبت" : "تثبيت";
+          btn.title = pinned ? "إلغاء تثبيت المادة" : "تثبيت المادة";
+        });
+      }
+
+      function renderPinnedCourse() {
+        const pinned = loadPinnedCourse();
+        if (!pinned || !pinnedCourseDiv) {
+          if (pinnedCourseDiv) {
+            pinnedCourseDiv.style.display = "none";
+            pinnedCourseDiv.innerHTML = "";
+          }
+          return;
+        }
+
+        const student = pinned.student || {};
+        const course = pinned.course || {};
+        const courseTitle = course.driveLink
+          ? `<a href="${escapeHTML(course.driveLink)}" target="_blank" style="color:#60a5fa;text-decoration:none;">${escapeHTML(course.name)} (${escapeHTML(course.code)})</a>`
+          : `${escapeHTML(course.name)} (${escapeHTML(course.code)})`;
+
+        pinnedCourseDiv.style.display = "block";
+        pinnedCourseDiv.innerHTML = `
+          <div class="pinned-course-label">المادة المثبتة</div>
+          <div class="pinned-course-card">
+            <div class="pinned-header">
+              <div>
+                <div class="pinned-title">${courseTitle}</div>
+                <div class="pinned-meta">${escapeHTML(student.name || "")}${student.number ? ` - الرقم: ${escapeHTML(student.number)}` : ""}</div>
+              </div>
+              <div class="pinned-actions">
+                <button type="button" class="course-action-btn pinned-share-btn">مشاركة</button>
+                <button type="button" class="course-action-btn pinned-remove-btn">إلغاء التثبيت</button>
+              </div>
+            </div>
+            ${buildCourseExamHtml(course)}
+          </div>`;
+
+        pinnedCourseDiv.querySelector(".pinned-share-btn")?.addEventListener("click", () => shareCourse(student, course));
+        pinnedCourseDiv.querySelector(".pinned-remove-btn")?.addEventListener("click", () => {
+          localStorage.removeItem(PINNED_COURSE_KEY);
+          renderPinnedCourse();
+          updatePinButtons();
+          showToast("تم إلغاء تثبيت المادة");
+        });
+        startRemainingUpdates();
+      }
+
+      function toggleCoursePin(student, course) {
+        if (isPinnedCourse(student, course)) {
+          localStorage.removeItem(PINNED_COURSE_KEY);
+          renderPinnedCourse();
+          updatePinButtons();
+          showToast("تم إلغاء تثبيت المادة");
+          return;
+        }
+
+        const payload = {
+          id: getCoursePinId(student, course),
+          savedAt: Date.now(),
+          student: { name: student?.name || "", number: student?.number || "" },
+          course: normalizePinnedCourse(course),
+        };
+        localStorage.setItem(PINNED_COURSE_KEY, JSON.stringify(payload));
+        renderPinnedCourse();
+        updatePinButtons();
+        showToast("تم تثبيت المادة");
+      }
+
+      function restartPinnedTimerIfNeeded() {
+        if (loadPinnedCourse()) startRemainingUpdates();
+      }
+
       clearBtn.addEventListener("mousedown", () => {
         suppressBlurCommit = true;
       });
@@ -720,6 +1185,7 @@ header("Expires: 0");
           activeFetchCtrl.abort();
           activeFetchCtrl = null;
         }
+        restartPinnedTimerIfNeeded();
         searchInput.focus();
         setTimeout(() => {
           suppressBlurCommit = false;
@@ -964,6 +1430,7 @@ header("Expires: 0");
             exportContainer.style.display = "none";
             currentStudentData = null;
             clearTimeout(remainingTimer);
+            restartPinnedTimerIfNeeded();
           }
           return;
         }
@@ -1053,42 +1520,27 @@ header("Expires: 0");
           card.__examEntries = studentExamEntries;
 
           const coursesHtml = item.courses
-            .map((course) => {
+            .map((course, courseIndex) => {
               const isUpcoming = upcomingExam && course === upcomingExam.course;
               const courseClass = "course-item" + (isUpcoming ? " upcoming" : "");
-
-              let examHtml = "";
-              if (course.exam) {
-                const range = parseExamTimeRange(course.exam.date, course.exam.time, course.exam.period);
-                let statusText = "وقت الامتحان غير معروف";
-                let startISO = "";
-                let endISO = "";
-
-                if (range) {
-                  statusText = getExamStatusText(range.start, range.end);
-                  startISO = range.start.toISOString();
-                  endISO = range.end.toISOString();
-                }
-
-                examHtml = `
-                  <div class="exam-details">
-                    <span>اللجنة: ${course.exam.committee}</span>
-                    <span>المكان: ${course.exam.room}</span>
-                    <span>التاريخ: ${course.exam.day} ${course.exam.date}</span>
-                    <span>الوقت: ${course.exam.period} (${course.exam.time})</span>
-                  </div>
-                  <div class="remaining-time" data-exam-start="${startISO}" data-exam-end="${endISO}">
-                    ${statusText}
-                  </div>`;
-              } else {
-                examHtml = `<div class="no-exam">لم تحدد اللجنة بعد</div>`;
-              }
+              const examHtml = buildCourseExamHtml(course);
 
               const titleHtml = course.driveLink
                 ? `<a href="${course.driveLink}" target="_blank" style="color:#60a5fa;text-decoration:none;">${course.name} (${course.code})</a>`
                 : `${course.name} (${course.code})`;
+              const pinned = isPinnedCourse(item, course);
 
-              return `<div class="${courseClass}"><div class="course-name">${titleHtml}</div>${examHtml}</div>`;
+              return `
+                <div class="${courseClass}" data-course-index="${courseIndex}">
+                  <div class="course-topline">
+                    <div class="course-name">${titleHtml}</div>
+                    <div class="course-actions">
+                      <button type="button" class="course-action-btn share-course-btn" title="مشاركة المادة">مشاركة</button>
+                      <button type="button" class="course-action-btn pin-course-btn${pinned ? " is-pinned" : ""}" title="${pinned ? "إلغاء تثبيت المادة" : "تثبيت المادة"}">${pinned ? "مثبت" : "تثبيت"}</button>
+                    </div>
+                  </div>
+                  ${examHtml}
+                </div>`;
             })
             .join("") || `<div>لا توجد مواد مسجلة</div>`;
 
@@ -1097,10 +1549,24 @@ header("Expires: 0");
             <div class="number">الرقم: ${item.number}</div>
             <div>عدد المواد: ${item.courses.length}</div>
             ${coursesHtml}`;
+          card.addEventListener("click", (e) => {
+            const shareBtn = e.target.closest(".share-course-btn");
+            const pinBtn = e.target.closest(".pin-course-btn");
+            if (!shareBtn && !pinBtn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const courseItem = e.target.closest(".course-item");
+            const courseIndex = Number(courseItem?.dataset.courseIndex);
+            const course = item.courses?.[courseIndex];
+            if (!course) return;
+            if (shareBtn) shareCourse(item, course);
+            if (pinBtn) toggleCoursePin(item, course);
+          });
           fragment.appendChild(card);
         });
 
         resultsDiv.appendChild(fragment);
+        updatePinButtons();
         exportContainer.style.display = "block";
         startRemainingUpdates();
       }
@@ -1121,6 +1587,7 @@ header("Expires: 0");
             activeFetchCtrl.abort();
             activeFetchCtrl = null;
           }
+          restartPinnedTimerIfNeeded();
           return;
         }
         debounceTimer = setTimeout(() => doLiveSearch(val), LIVE_DEBOUNCE_MS);
@@ -1200,7 +1667,8 @@ header("Expires: 0");
       }
 
       renderHistory();
+      renderPinnedCourse();
     </script>
-    <script src="tour-guide.js"></script>
+    <script src="tour-guide.js?v=1.0"></script>
   </body>
 </html>

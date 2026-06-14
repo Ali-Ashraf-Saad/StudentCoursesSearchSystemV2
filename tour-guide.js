@@ -57,6 +57,22 @@
     }
     .tour-btn.skip:hover { background: rgba(239,68,68,0.25); }
 
+    @media (max-width: 640px) {
+      .tour-tooltip {
+        width: calc(100vw - 32px);
+        max-width: calc(100vw - 32px);
+        padding: 18px 16px;
+        border-radius: 16px;
+      }
+      .tour-tooltip h4 { font-size: 17px; }
+      .tour-tooltip p { font-size: 13px; margin-bottom: 18px; }
+      .tour-buttons { gap: 10px; }
+      .tour-btn {
+        padding: 9px 14px;
+        margin-left: 6px;
+      }
+    }
+
     /* زر الرجوع إلى الأعلى */
     .back-to-top {
       position: fixed;
@@ -135,8 +151,8 @@
       { selector: '.filters', title: 'اختر الفرقة والقسم', desc: 'حدد الفرقة والقسم والترم لتصفية المواد التي تهمك.', position: 'bottom' },
       { selector: '#fillPreviousBtn', title: 'المواد السابقة تلقائياً', desc: 'بنقرة واحدة تُكمل كل مواد السنوات الماضية لتوفير الوقت.', position: 'bottom' },
       { selector: '.course-card:first-child', title: 'أكمل المواد', desc: 'بعد اختيار الفلتر، ستظهر المواد هنا. <b>اضغط على أي مادة</b> لتحديدها كمكتملة (ستتحول للخضراء).', position: 'top', fallbackSelector: '#coursesContainer' },
-      { selector: '.select-all-btn:first-child', title: 'تحديد الكل', desc: 'اضغط هذا الزر لتحديد جميع مواد هذا الترم كمكتملة دفعة واحدة (أو مسحها إن كانت مكتملة).', position: 'top', fallbackSelector: '.semester-block:first-child .select-all-btn' },
-      { selector: '.open-courses-btn:first-child', title: 'زر "يفتح"', desc: 'اضغط هذا الزر لترى جميع المواد التي تعتمد على هذه المادة كمتطلب سابق.', position: 'left', fallbackSelector: '.open-courses-btn' },
+      { selector: '.select-all-btn:first-child', title: 'تحديد الكل', desc: 'اضغط هذا الزر لتحديد جميع مواد هذا الترم كمكتملة دفعة واحدة (أو مسحها إن كانت مكتملة).', position: 'top', mobilePosition: 'bottom', fallbackSelector: '.semester-block:first-child .select-all-btn' },
+      { selector: '.open-courses-btn:first-child', title: 'زر "يفتح"', desc: 'اضغط هذا الزر لترى جميع المواد التي تعتمد على هذه المادة كمتطلب سابق.', position: 'left', mobilePosition: 'bottom', fallbackSelector: '.open-courses-btn' },
       { selector: '#reminderSection', title: 'تذكير المواد المتبقية', desc: 'ملخص سريع للمواد غير المكتملة في كل فرقة، يساعدك على التخطيط.', position: 'top' },
       { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
     ];
@@ -194,7 +210,13 @@
     };
 
     // ترتيب المحاولات
-    const order = [preferred, ...Object.keys(placements).filter(p => p !== preferred)];
+    const isMobile = innerWidth <= 640;
+    const mobilePreferred = rect.top > (innerHeight - rect.bottom) ? 'top' : 'bottom';
+    const preferredPlacement = isMobile
+      ? (['top', 'bottom'].includes(preferred) ? preferred : mobilePreferred)
+      : preferred;
+    const availablePlacements = isMobile ? ['top', 'bottom'] : Object.keys(placements);
+    const order = [preferredPlacement, ...availablePlacements.filter(p => p !== preferredPlacement)];
     let best = null, bestScore = -Infinity;
 
     for (const pos of order) {
@@ -203,8 +225,11 @@
       const constrainedLeft = Math.max(margin, Math.min(p.left, innerWidth - tipWidth - margin));
       const topDiff = Math.abs(constrainedTop - p.top);
       const leftDiff = Math.abs(constrainedLeft - p.left);
+      const overlapY = Math.max(0, Math.min(constrainedTop + tipHeight, rect.bottom) - Math.max(constrainedTop, rect.top));
+      const overlapX = Math.max(0, Math.min(constrainedLeft + tipWidth, rect.right) - Math.max(constrainedLeft, rect.left));
+      const overlapPenalty = overlapX > 0 && overlapY > 0 ? (overlapX * overlapY) / 100 : 0;
       // نفضل الموضع الذي لم يُضطر للتعديل
-      const score = 2000 - (topDiff + leftDiff) * 2;
+      const score = 2000 - (topDiff + leftDiff) * 2 - overlapPenalty;
       if (constrainedTop === p.top && constrainedLeft === p.left) {
         best = { top: p.top, left: p.left, pos };
         break; // وجدنا موضعاً مثالياً
@@ -274,7 +299,7 @@
     }
 
     currentTarget = target;
-    currentPosition = step.position || 'bottom';
+    currentPosition = (innerWidth <= 640 && step.mobilePosition) ? step.mobilePosition : (step.position || 'bottom');
     const style = getComputedStyle(target);
     cachedBorderRadius = style.borderRadius || '12px';
 
