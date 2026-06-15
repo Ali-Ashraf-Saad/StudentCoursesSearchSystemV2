@@ -1664,6 +1664,6 @@ header("Expires: 0");
       renderHistory();
       renderPinnedCourse();
     </script>
-    <script src="tour-guide.js?v=<?php echo filemtime('tour-guide.js'); ?>"></script>
+    <script src="tour-guide.js?v=10"></script>
   </body>
 </html>

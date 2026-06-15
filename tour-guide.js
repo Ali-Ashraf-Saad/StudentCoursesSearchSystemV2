@@ -132,17 +132,29 @@
   }
 
   // ========== 3. منطق الجولة ==========
-  const pageKey = location.pathname.includes('/courses') ? 'tour_courses_final6' : 'tour_index_final6';
-  if (localStorage.getItem(pageKey)) return;
-
-  const isIndex = !location.pathname.includes('/courses');
   const isCourses = location.pathname.includes('/courses');
+  const isQA = location.pathname.includes('qa');
+  const isIndex = !isCourses && !isQA;
+
+  const pageKey = isCourses
+    ? 'tour_courses'
+    : isQA
+      ? 'tour_qa'
+      : 'tour_index';
+
+  if (localStorage.getItem(pageKey)) return;
 
   let steps = [];
   if (isIndex) {
     steps = [
       { selector: '#search', title: 'ابحث باسمك', desc: 'اكتب <b>الاسم</b> (أو جزء منه). يدعم أيضاً الرقم الأكاديمي.', position: 'bottom' },
+      { selector: '.nav-btn[onclick*="goQA"], .nav-btn[onclick*="goQa"], a[href*="qa.html"], a[href*="qa"]', title: 'سؤال وجواب', desc: 'هنا ستجد أشهر الأسئلة التي يسأل عنها الطالب، مع إجابات مختصرة وواضحة تساعدك بسرعة.', position: 'bottom' },
       { selector: '.nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'اضغط هنا للانتقال إلى متابعة مواد الفرق وتحديد ما أنجزته.', position: 'bottom' },
+      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
+    ];
+  } else if (isQA) {
+    steps = [
+      { selector: 'main h1, h1', title: 'سؤال وجواب', desc: 'هذه أشهر الأسئلة التي يسأل عنها الطالب.', position: 'bottom' },
       { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
     ];
   } else if (isCourses) {
@@ -157,6 +169,7 @@
       { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
     ];
   }
+
 
   if (!steps.length) return;
 
@@ -335,10 +348,16 @@
 
   let attempts = 0;
   function tryStartTour() {
-    if (location.pathname.includes('/courses')) {
+    if (isCourses) {
       // انتظار ظهور العناصر المهمة في صفحة المقررات
       const firstCard = document.querySelector('.course-card:first-child');
       if (!firstCard) {
+        if (attempts < 20) { attempts++; setTimeout(tryStartTour, 200); return; }
+      }
+    }
+    if (isQA) {
+      const heading = document.querySelector('main h1, h1');
+      if (!heading) {
         if (attempts < 20) { attempts++; setTimeout(tryStartTour, 200); return; }
       }
     }
