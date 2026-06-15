@@ -392,6 +392,17 @@ header("Expires: 0");
         border-right: 5px solid #f59e0b;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
       }
+      .pinned-course-card.pinned-upcoming {
+        border-color: rgba(251, 191, 36, 0.7);
+        border-right-color: #fbbf24;
+        box-shadow: 0 0 14px rgba(251, 191, 36, 0.45), 0 14px 34px rgba(0, 0, 0, 0.28);
+        animation: pulse-yellow 2s infinite;
+      }
+      @keyframes pulse-yellow {
+        0% { box-shadow: 0 0 14px rgba(251, 191, 36, 0.4), 0 14px 34px rgba(0, 0, 0, 0.28); }
+        50% { box-shadow: 0 0 26px rgba(251, 191, 36, 0.75), 0 14px 34px rgba(0, 0, 0, 0.28); }
+        100% { box-shadow: 0 0 14px rgba(251, 191, 36, 0.4), 0 14px 34px rgba(0, 0, 0, 0.28); }
+      }
       .pinned-header {
         display: flex;
         align-items: flex-start;
@@ -577,6 +588,23 @@ header("Expires: 0");
         color: #475569;
       }
       @media (max-width: 600px) {
+        body {
+          padding-top: 66px;
+        }
+        .top-nav {
+          gap: 6px;
+          padding: 8px 6px;
+        }
+        .nav-btn {
+          gap: 5px;
+          padding: 7px 6px;
+          font-size: 13px;
+          white-space: nowrap;
+        }
+        .nav-btn svg {
+          width: 20px;
+          height: 20px;
+        }
         .course-topline,
         .pinned-header {
           flex-direction: column;
@@ -640,6 +668,13 @@ header("Expires: 0");
         <span>المقررات</span>
       </button>
 
+      <button class="nav-btn" onclick="goQA()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
+        </svg>
+        <span>سؤال وجواب</span>
+      </button>
+
       <button class="nav-btn" onclick="refreshPage()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.45.83.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
@@ -696,7 +731,7 @@ header("Expires: 0");
       // ════════ محاكاة الوقت للتجارب (احذف هذا القسم بالكامل بعد الاختبار) ════════
       const SIMULATION_ENABLED = false; // ⚠️ سطر محاكاة - احذف بعد الاختبار
       // const SIMULATION_START = new Date("2026-06-29T9:29:00"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
-      const SIMULATION_START = new Date("2026-06-29T09:29:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
+      const SIMULATION_START = new Date("2026-06-01T13:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
       const SIMULATION_PAGE_LOAD_REAL_TIME = Date.now(); // ⚠️ سطر محاكاة - احذف بعد الاختبار
       function getSimulatedNow() { // ⚠️ دالة محاكاة - احذف بعد الاختبار
           if (!SIMULATION_ENABLED) return new Date();
@@ -720,7 +755,7 @@ header("Expires: 0");
       const PINNED_COURSE_KEY = "pinned_course_card_v1";
 
       function goCourses() {
-        fetch("/counterFiles/course_counter.php?action=increment", {
+        fetch("/counterFiles/course_counter?action=increment", {
           method: "GET",
           keepalive: true,
           cache: "no-store"
@@ -728,6 +763,18 @@ header("Expires: 0");
           .catch(() => {})
           .finally(() => {
             window.location.href = "/courses";
+          });
+      }
+
+      function goQA() {
+        fetch("/counterFiles/qa_counter?action=increment", {
+          method: "GET",
+          keepalive: true,
+          cache: "no-store"
+        })
+          .catch(() => {})
+          .finally(() => {
+            window.location.href = "/qa";
           });
       }
 
@@ -828,7 +875,7 @@ header("Expires: 0");
       let remainingTimer = null;
 
       function loadCounter() {
-        fetch("/counterFiles/counter.php?action=get", { cache: "no-store" })
+        fetch("/counterFiles/counter?action=get", { cache: "no-store" })
           .then((r) => r.json())
           .then((d) => {
             const el = document.getElementById("visitCount");
@@ -972,6 +1019,44 @@ header("Expires: 0");
         };
       }
 
+      function normalizePinnedCourses(courses) {
+        return (courses || []).map((course) => normalizePinnedCourse(course));
+      }
+
+      function getUpcomingCourseFromCourses(courses) {
+        const now = getSimulatedNow();
+        const entries = (courses || [])
+          .filter((course) => course.exam)
+          .map((course) => {
+            const range = parseExamTimeRange(course.exam.date, course.exam.time, course.exam.period);
+            if (!range) return null;
+            return { course, start: range.start, end: range.end };
+          })
+          .filter(Boolean);
+
+        const activeExam = entries.find((entry) => now >= entry.start && now < entry.end);
+        const futureExam = entries.filter((entry) => entry.start > now).sort((a, b) => a.start - b.start)[0];
+        return (activeExam || futureExam || null)?.course || null;
+      }
+
+      function isPinnedCourseUpcoming(pinned) {
+        const course = pinned?.course;
+        const courses = pinned?.courses || [];
+        if (!course || !courses.length) return false;
+        const upcomingCourse = getUpcomingCourseFromCourses(courses);
+        return !!upcomingCourse && upcomingCourse.code === course.code;
+      }
+
+      function updatePinnedUpcomingVisual() {
+        if (!pinnedCourseDiv) return;
+        const card = pinnedCourseDiv.querySelector(".pinned-course-card");
+        if (!card) return;
+
+        const isUpcomingPinned = isPinnedCourseUpcoming(loadPinnedCourse());
+        card.classList.toggle("pinned-upcoming", isUpcomingPinned);
+
+      }
+
       function loadPinnedCourse() {
         try {
           const raw = localStorage.getItem(PINNED_COURSE_KEY);
@@ -1012,6 +1097,7 @@ header("Expires: 0");
 
         const student = pinned.student || {};
         const course = pinned.course || {};
+        const isUpcomingPinned = isPinnedCourseUpcoming(pinned);
         const courseTitle = course.driveLink
           ? `<a href="${escapeHTML(course.driveLink)}" target="_blank" style="color:#60a5fa;text-decoration:none;">${escapeHTML(course.name)} (${escapeHTML(course.code)})</a>`
           : `${escapeHTML(course.name)} (${escapeHTML(course.code)})`;
@@ -1019,7 +1105,7 @@ header("Expires: 0");
         pinnedCourseDiv.style.display = "block";
         pinnedCourseDiv.innerHTML = `
           <div class="pinned-course-label">المادة المثبتة</div>
-          <div class="pinned-course-card">
+          <div class="pinned-course-card${isUpcomingPinned ? " pinned-upcoming" : ""}">
             <div class="pinned-header">
               <div>
                 <div class="pinned-title">${courseTitle}</div>
@@ -1057,6 +1143,7 @@ header("Expires: 0");
           savedAt: Date.now(),
           student: { name: student?.name || "", number: student?.number || "" },
           course: normalizePinnedCourse(course),
+          courses: normalizePinnedCourses(student?.courses || []),
         };
         localStorage.setItem(PINNED_COURSE_KEY, JSON.stringify(payload));
         renderPinnedCourse();
@@ -1300,6 +1387,8 @@ header("Expires: 0");
           return;
         }
 
+        updatePinnedUpcomingVisual();
+
         if (nextUpdateInterval !== Infinity && nextUpdateInterval > 0) {
           remainingTimer = setTimeout(updateAllRemainingTimes, nextUpdateInterval);
         }
@@ -1336,7 +1425,7 @@ header("Expires: 0");
           return;
         }
         activeFetchCtrl = new AbortController();
-        fetch(`search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, {
+        fetch(`search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, {
           signal: activeFetchCtrl.signal,
           cache: "no-store"
         })
@@ -1362,7 +1451,7 @@ header("Expires: 0");
         }
         clearTimeout(debounceTimer);
         fetch(
-          `search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`,
+          `search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`,
           { cache: "no-store" }
         )
           .then((r) => r.json())
