@@ -253,7 +253,7 @@
 
   <script>
     function loadQACounter() {
-      fetch("counterFiles/qa_counter?action=get", { cache: "no-store" })
+      fetch("/counterFiles/counter?counter=qa", { cache: "no-store" })
         .then(response => response.json())
         .then(data => {
           document.getElementById("visitCount").innerText = data.count ?? 0;
@@ -264,7 +264,7 @@
     }
 
     loadQACounter();
-    setInterval(loadQACounter, 5000);
+    setInterval(loadQACounter, 4000);
   </script>
   <script src="tour-guide.js?v=10"></script>
 </body>

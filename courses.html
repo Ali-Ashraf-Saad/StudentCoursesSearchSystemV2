@@ -1137,15 +1137,14 @@
     renderSearchHistory();
     toggleClearSearchButton();
 
-    // ---------- باقي التطبيق (دون تغيير) ----------
     function loadCoursesCounter() {
-      fetch("counterFiles/course_counter?action=get", { cache: "no-store" })
+      fetch("/counterFiles/counter?counter=course", { cache: "no-store" })
         .then(r => r.json())
         .then(d => { document.getElementById("visitCount").innerText = d.count ?? 0; })
         .catch(() => { document.getElementById("visitCount").innerText = "--"; });
     }
     loadCoursesCounter();
-    setInterval(loadCoursesCounter, 5000);
+    setInterval(loadCoursesCounter, 4000);
 
     fetch('data/subjects.json')
       .then(res => res.json())

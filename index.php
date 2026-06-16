@@ -755,8 +755,8 @@ header("Expires: 0");
       const PINNED_COURSE_KEY = "pinned_course_card_v1";
 
       function goCourses() {
-        fetch("/counterFiles/course_counter?action=increment", {
-          method: "GET",
+        fetch("/counterFiles/counter?action=increment&counter=course", {
+          method: "POST",
           keepalive: true,
           cache: "no-store"
         })
@@ -767,8 +767,8 @@ header("Expires: 0");
       }
 
       function goQA() {
-        fetch("/counterFiles/qa_counter?action=increment", {
-          method: "GET",
+        fetch("/counterFiles/counter?action=increment&counter=qa", {
+          method: "POST",
           keepalive: true,
           cache: "no-store"
         })
@@ -875,7 +875,7 @@ header("Expires: 0");
       let remainingTimer = null;
 
       function loadCounter() {
-        fetch("/counterFiles/counter?action=get", { cache: "no-store" })
+        fetch("/counterFiles/counter?counter=users", { cache: "no-store" })
           .then((r) => r.json())
           .then((d) => {
             const el = document.getElementById("visitCount");
@@ -887,7 +887,7 @@ header("Expires: 0");
           });
       }
       loadCounter();
-      setInterval(loadCounter, 5000);
+      setInterval(loadCounter, 4000);
 
       function toggleClearButton() {
         clearBtn.style.display = searchInput.value.trim() ? "block" : "none";

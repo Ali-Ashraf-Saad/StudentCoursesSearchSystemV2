@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/counterFiles/counter-lib.php';
+
+
 date_default_timezone_set('Africa/Cairo');
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -120,10 +123,7 @@ foreach ($students as $student) {
 if ($commit && count($results) > 0 && count($results) < 5) {
     if (!file_exists('data')) mkdir('data', 0755, true);
 
-    $counterFile = 'counterFiles/counter.txt';
-    if (!file_exists($counterFile)) file_put_contents($counterFile, '0');
-    $c = (int)file_get_contents($counterFile) + 1;
-    file_put_contents($counterFile, $c);
+    incrementCounter(__DIR__ . '/counterFiles/logs/users.jsonl');
 }
 
 echo json_encode(["results" => $results], JSON_UNESCAPED_UNICODE);
