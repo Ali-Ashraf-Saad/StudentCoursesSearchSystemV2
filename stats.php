@@ -122,33 +122,70 @@ function processJsonlFile($filePath, $id) {
         $monthlyKeys[] = $t->format('Y-m');
     }
     
-    // ============================================
-    // حساب الإجمالي التراكمي لكل فترة (Cumulative)
-    // ============================================
-    // 1. نجد العدد التراكمي قبل بداية النافذة الزمنية (Baseline)
-    $baselineCount = 0;
+// ============================================
+// حساب الإجمالي التراكمي لكل فترة (Cumulative)
+// ============================================
+
+// ترتيب الأحداث زمنيًا
+usort($events, function($a, $b) {
+    return strtotime($a['time']) - strtotime($b['time']);
+});
+
+// دالة تجيب آخر إجمالي قبل بداية النافذة
+$findBaseline = function(array $events, DateTime $windowStart): int {
+    $baseline = 0;
     foreach ($events as $event) {
         $time = DateTime::createFromFormat('Y-m-d H:i:s', $event['time']);
         if (!$time) continue;
-        $time->setTimezone($now->getTimezone());
-        
-        $eHour = $time->format('Y-m-d H');
-        $eDate = $time->format('Y-m-d');
-        $eMonth = $time->format('Y-m');
-        
-        // إذا كان الحدث قبل بداية جميع النوافذ، فهو يمثل الأساس
-        if (array_search($eHour, $hourlyKeys) === false && 
-            array_search($eDate, $dailyKeys) === false && 
-            array_search($eMonth, $monthlyKeys) === false) {
-            $baselineCount = (int)$event['count'];
+        $time->setTimezone($windowStart->getTimezone());
+
+        if ($time < $windowStart) {
+            $baseline = (int)$event['count'];
+        } else {
+            break;
         }
     }
-    
-    // تهيئة مصفوفات الإجمالي بالقيمة الأساسية
-    $hourlyCumulative = array_fill(0, 24, $baselineCount);
-    $dailyCumulative = array_fill(0, 7, $baselineCount);
-    $monthlyCumulative = array_fill(0, 12, $baselineCount);
-    
+    return $baseline;
+};
+
+// بداية كل نافذة
+$hourlyWindowStart = (clone $now)->modify('-23 hours');
+$hourlyWindowStart->setTime((int)$hourlyWindowStart->format('H'), 0, 0);
+
+$dailyWindowStart = (clone $now)->modify('-6 days');
+$dailyWindowStart->setTime(0, 0, 0);
+
+$monthlyWindowStart = (clone $now)->modify('-11 months');
+$monthlyWindowStart->modify('first day of this month');
+$monthlyWindowStart->setTime(0, 0, 0);
+
+// baseline لكل نافذة
+$hourlyBaseline = $findBaseline($events, $hourlyWindowStart);
+$dailyBaseline = $findBaseline($events, $dailyWindowStart);
+$monthlyBaseline = $findBaseline($events, $monthlyWindowStart);
+
+// بناء cumulative بشكل صحيح من الزيادات
+$hourlyCumulative = [];
+$dailyCumulative = [];
+$monthlyCumulative = [];
+
+$running = $hourlyBaseline;
+for ($i = 0; $i < 24; $i++) {
+    $running += $hourlyData[$i];
+    $hourlyCumulative[$i] = $running;
+}
+
+$running = $dailyBaseline;
+for ($i = 0; $i < 7; $i++) {
+    $running += $dailyData[$i];
+    $dailyCumulative[$i] = $running;
+}
+
+$running = $monthlyBaseline;
+for ($i = 0; $i < 12; $i++) {
+    $running += $monthlyData[$i];
+    $monthlyCumulative[$i] = $running;
+}    
     // ============================================
     // معالجة الأحداث وحساب الفروق والإجماليات
     // ============================================
@@ -254,6 +291,51 @@ function processJsonlFile($filePath, $id) {
 // ============================================
 // نقاط API
 // ============================================
+
+function getAllLogFiles(): array {
+    $files = glob(LOGS_DIR . '/*.jsonl') ?: [];
+    sort($files, SORT_NATURAL | SORT_FLAG_CASE);
+    return array_map('basename', $files);
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'list_logs') {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-cache, no-store, must-revalidate');
+
+    echo json_encode([
+        'files' => getAllLogFiles()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'download_log') {
+    $file = basename($_GET['file'] ?? '');
+
+    if ($file === '' || !preg_match('/^[a-zA-Z0-9._-]+\.jsonl$/', $file)) {
+        http_response_code(400);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'اسم ملف غير صالح';
+        exit;
+    }
+
+    $filePath = LOGS_DIR . '/' . $file;
+
+    if (!file_exists($filePath) || !is_file($filePath)) {
+        http_response_code(404);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo 'الملف غير موجود';
+        exit;
+    }
+
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="' . $file . '"');
+    header('Content-Length: ' . filesize($filePath));
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+
+    readfile($filePath);
+    exit;
+}
+
 if (isset($_GET['action']) && $_GET['action'] === 'get_stats') {
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache, no-store, must-revalidate');
@@ -295,6 +377,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الإحصائيات الذكية المتقدمة</title>
+    <link rel="icon" type="image/x-icon" href="images/stats-favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -461,16 +544,42 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             animation: rotation 1s linear infinite;
         }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .reset-btn {
-            margin-top: 3rem; text-align: center;
-        }
-        .reset-btn button {
-            background: rgba(239, 68, 68, 0.1); color: var(--danger); 
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 0.75rem 2rem; border-radius: 12px; cursor: pointer; 
-            font-family: 'Cairo'; font-weight: 600; font-size: 0.95rem;
-            transition: all 0.3s; display: inline-flex; align-items: center; gap: 0.5rem;
-        }
+.reset-btn {
+    margin-top: 3rem;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.reset-btn button {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 0.75rem 2rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Cairo';
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reset-btn button:first-child {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-blue);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.reset-btn button:first-child:hover {
+    background: var(--primary-blue);
+    color: white;
+            box-shadow: 0 4px 15px rgba(68, 73, 239, 0.3);
+}
         .reset-btn button:hover { 
             background: var(--danger); color: white; 
             box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
@@ -506,11 +615,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
 
     <div class="last-update-info" id="lastUpdateInfo"></div>
 
-    <div class="reset-btn">
-        <button onclick="resetServerCache()">
-            <i class="fas fa-rotate-right"></i> إعادة ضبط كاش الخادم
-        </button>
-    </div>
+<div class="reset-btn">
+    <button onclick="downloadAllLogs()">
+        <i class="fas fa-download"></i> تحميل كل ملفات JSONL
+    </button>
+
+    <button onclick="resetServerCache()">
+        <i class="fas fa-rotate-right"></i> إعادة ضبط كاش الخادم
+    </button>
+</div>
 </div>
 
 <script>
@@ -767,6 +880,37 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         chartInstances[canvasId].currentView = defaultView;
         updateCurrentHighlight(chart, initialIsCurrent, color);
     }
+
+async function downloadAllLogs() {
+    try {
+        const response = await fetch('stats?action=list_logs&t=' + Date.now());
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const data = await response.json();
+        const files = data.files || [];
+
+        if (files.length === 0) {
+            alert('لا توجد ملفات JSONL داخل مجلد السجلات');
+            return;
+        }
+
+        // تحميل كل ملف منفصل
+        for (const file of files) {
+            const a = document.createElement('a');
+            a.href = 'stats?action=download_log&file=' + encodeURIComponent(file) + '&t=' + Date.now();
+            a.download = file;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            // تأخير بسيط حتى لا يمنع المتصفح التحميلات المتعددة
+            await new Promise(resolve => setTimeout(resolve, 250));
+        }
+    } catch (error) {
+        console.error(error);
+        alert('حدث خطأ أثناء تحميل الملفات');
+    }
+}
 
     async function resetServerCache() {
         try {
