@@ -854,6 +854,40 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
     const chartDataStore = {};
     const chartInstances = {};
 
+    // كل فترة زمنية مخزّنة في chartDataStore تحت بادئة موحّدة:
+    // <prefix>Data, <prefix>Labels, <prefix>IsCurrent, <prefix>Cumulative
+    const VIEW_PREFIXES = {
+        last1hour: 'minutely',
+        last6hours: 'hourly6',
+        last24hours: 'hourly',
+        last7days: 'daily',
+        last30days: 'daily30',
+        last12months: 'monthly'
+    };
+
+    // يبني كائن chartDataStore الموحّد من استجابة الإحصائيات القادمة من الخادم
+    function buildChartDataStoreEntry(stats) {
+        const entry = {};
+        Object.values(VIEW_PREFIXES).forEach(function(prefix) {
+            entry[prefix + 'Data'] = stats[prefix + 'Data'];
+            entry[prefix + 'Labels'] = stats[prefix + 'Labels'];
+            entry[prefix + 'IsCurrent'] = stats[prefix + 'IsCurrent'];
+            entry[prefix + 'Cumulative'] = stats[prefix + 'Cumulative'];
+        });
+        return entry;
+    }
+
+    // يستخرج بيانات/تسميات/علامة "الفترة الحالية" لعرض معيّن (last24hours, last7days...) من أي مصدر بيانات بنفس الشكل
+    function getViewSeries(dataStore, view) {
+        const prefix = VIEW_PREFIXES[view] || VIEW_PREFIXES.last24hours;
+        return {
+            data: dataStore[prefix + 'Data'],
+            labels: dataStore[prefix + 'Labels'],
+            isCurrent: dataStore[prefix + 'IsCurrent'],
+            cumulative: dataStore[prefix + 'Cumulative']
+        };
+    }
+
     // ============================================
     // إدارة زر التلميحات
     // ============================================
@@ -922,371 +956,33 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         }
     }
 
-    function createOrUpdateCard(config, stats) {
-        const existingCard = document.getElementById('card-wrapper-' + config.id);
-        if (existingCard) {
-            updateCard(config, stats);
-        } else {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.id = 'card-wrapper-' + config.id;
-            card.innerHTML = getCardHTML(config, stats);
-            document.getElementById('dashboard').appendChild(card);
-            
-            chartDataStore[config.id] = {
-                minutelyData: stats.minutelyData,
-                minutelyLabels: stats.minutelyLabels,
-                minutelyIsCurrent: stats.minutelyIsCurrent,
-                minutelyCumulative: stats.minutelyCumulative,
-                hourly6Data: stats.hourly6Data,
-                hourly6Labels: stats.hourly6Labels,
-                hourly6IsCurrent: stats.hourly6IsCurrent,
-                hourly6Cumulative: stats.hourly6Cumulative,
-                hourlyData: stats.hourlyData,
-                hourlyLabels: stats.hourlyLabels,
-                hourlyIsCurrent: stats.hourlyIsCurrent,
-                hourlyCumulative: stats.hourlyCumulative,
-                dailyData: stats.dailyData,
-                dailyLabels: stats.dailyLabels,
-                dailyIsCurrent: stats.dailyIsCurrent,
-                dailyCumulative: stats.dailyCumulative,
-                daily30Data: stats.daily30Data,
-                daily30Labels: stats.daily30Labels,
-                daily30IsCurrent: stats.daily30IsCurrent,
-                daily30Cumulative: stats.daily30Cumulative,
-                monthlyData: stats.monthlyData,
-                monthlyLabels: stats.monthlyLabels,
-                monthlyIsCurrent: stats.monthlyIsCurrent,
-                monthlyCumulative: stats.monthlyCumulative
-            };
-            
-            setTimeout(function() { 
-                renderChart(config.id, config.color, stats.hourlyData, stats.hourlyLabels, stats.hourlyIsCurrent, 'last24hours'); 
-            }, 100);
-        }
-    }
-
-    function updateCard(config, stats) {
-        const card = document.getElementById('card-wrapper-' + config.id);
-        if (!card) return;
-        
-        card.querySelector('.main-counter').innerText = stats.total.toLocaleString('en-US');
-        
-        const statValues = card.querySelectorAll('.stat-value');
-        statValues[0].innerText = stats.today.toLocaleString('en-US');
-        statValues[1].innerText = stats.thisHour.toLocaleString('en-US');
-        statValues[2].innerText = stats.thisWeek.toLocaleString('en-US');
-        statValues[3].innerText = stats.avgPerDay;
-        statValues[4].innerText = stats.peakHour;
-        statValues[5].innerText = stats.lastVisitFormatted;
-        
-        chartDataStore[config.id] = {
-            minutelyData: stats.minutelyData,
-            minutelyLabels: stats.minutelyLabels,
-            minutelyIsCurrent: stats.minutelyIsCurrent,
-            minutelyCumulative: stats.minutelyCumulative,
-            hourly6Data: stats.hourly6Data,
-            hourly6Labels: stats.hourly6Labels,
-            hourly6IsCurrent: stats.hourly6IsCurrent,
-            hourly6Cumulative: stats.hourly6Cumulative,
-            hourlyData: stats.hourlyData,
-            hourlyLabels: stats.hourlyLabels,
-            hourlyIsCurrent: stats.hourlyIsCurrent,
-            hourlyCumulative: stats.hourlyCumulative,
-            dailyData: stats.dailyData,
-            dailyLabels: stats.dailyLabels,
-            dailyIsCurrent: stats.dailyIsCurrent,
-            dailyCumulative: stats.dailyCumulative,
-            daily30Data: stats.daily30Data,
-            daily30Labels: stats.daily30Labels,
-            daily30IsCurrent: stats.daily30IsCurrent,
-            daily30Cumulative: stats.daily30Cumulative,
-            monthlyData: stats.monthlyData,
-            monthlyLabels: stats.monthlyLabels,
-            monthlyIsCurrent: stats.monthlyIsCurrent,
-            monthlyCumulative: stats.monthlyCumulative
-        };
-        
-        const chart = chartInstances[config.id];
-        if (chart) {
-            // حفظ حالة التلميح الحالي قبل التحديث
-            const activeElements = chart.getActiveElements();
-            const hasActiveTooltip = activeElements.length > 0;
-            const activeIndex = hasActiveTooltip ? activeElements[0].index : -1;
-            
-            const currentView = chart.currentView || 'last24hours';
-            let newData, newLabels, newIsCurrent;
-            
-            if (currentView === 'last1hour') {
-                newData = stats.minutelyData; newLabels = stats.minutelyLabels; newIsCurrent = stats.minutelyIsCurrent;
-            } else if (currentView === 'last6hours') {
-                newData = stats.hourly6Data; newLabels = stats.hourly6Labels; newIsCurrent = stats.hourly6IsCurrent;
-            } else if (currentView === 'last24hours') {
-                newData = stats.hourlyData; newLabels = stats.hourlyLabels; newIsCurrent = stats.hourlyIsCurrent;
-            } else if (currentView === 'last7days') {
-                newData = stats.dailyData; newLabels = stats.dailyLabels; newIsCurrent = stats.dailyIsCurrent;
-            } else if (currentView === 'last30days') {
-                newData = stats.daily30Data; newLabels = stats.daily30Labels; newIsCurrent = stats.daily30IsCurrent;
-            } else {
-                newData = stats.monthlyData; newLabels = stats.monthlyLabels; newIsCurrent = stats.monthlyIsCurrent;
-            }
-            
-            chart.data.labels = newLabels;
-            chart.data.datasets[0].data = newData;
-            updateCurrentHighlight(chart, newIsCurrent, config.color);
-            
-            // تحديث الرسم مع إعادة تفعيل التلميح إذا كان ظاهرًا
-            chart.update();
-            
-            // إعادة تفعيل التلميح على نفس النقطة إذا كان ظاهرًا قبل التحديث
-            if (hasActiveTooltip && activeIndex >= 0 && activeIndex < newData.length) {
-                chart.setActiveElements([{datasetIndex: 0, index: activeIndex}]);
-                chart.tooltip.setActiveElements([{datasetIndex: 0, index: activeIndex}], {x: 0, y: 0});
-                chart.update('none');
-            }
-        }
-    }
-
-// تعديل updateCurrentHighlight لتعطيل الأنيميشن
-function updateCurrentHighlight(chart, isCurrentArray, color) {
-    const pointColors = [], pointRadii = [], pointBorderWidths = [], pointHoverRadii = [];
+// يحسب أنماط النقاط (اللون/الحجم) بناءً على أيّها تمثّل "الفترة الحالية"
+function computePointStyles(isCurrentArray) {
+    const pointBackgroundColor = [], pointRadius = [], pointBorderWidth = [], pointHoverRadius = [];
     isCurrentArray.forEach(function(isCurrent) {
         if (isCurrent) {
-            pointColors.push('#fff');
-            pointRadii.push(8);
-            pointHoverRadii.push(10);
-            pointBorderWidths.push(3);
+            pointBackgroundColor.push('#fff');
+            pointRadius.push(8);
+            pointHoverRadius.push(10);
+            pointBorderWidth.push(3);
         } else {
-            pointColors.push('#0f172a');
-            pointRadii.push(4);
-            pointHoverRadii.push(7);
-            pointBorderWidths.push(2);
+            pointBackgroundColor.push('#0f172a');
+            pointRadius.push(4);
+            pointHoverRadius.push(7);
+            pointBorderWidth.push(2);
         }
     });
-    chart.data.datasets[0].pointBackgroundColor = pointColors;
-    chart.data.datasets[0].pointRadius = pointRadii;
-    chart.data.datasets[0].pointHoverRadius = pointHoverRadii;
-    chart.data.datasets[0].pointBorderWidth = pointBorderWidths;
+    return { pointBackgroundColor, pointRadius, pointHoverRadius, pointBorderWidth };
+}
+
+// يبرز نقطة "الفترة الحالية" على رسم بياني موجود بالفعل (تحديثات لاحقة بدون أنيميشن)
+function updateCurrentHighlight(chart, isCurrentArray, color) {
+    const style = computePointStyles(isCurrentArray);
+    chart.data.datasets[0].pointBackgroundColor = style.pointBackgroundColor;
+    chart.data.datasets[0].pointRadius = style.pointRadius;
+    chart.data.datasets[0].pointHoverRadius = style.pointHoverRadius;
+    chart.data.datasets[0].pointBorderWidth = style.pointBorderWidth;
     chart.data.datasets[0].pointBorderColor = color;
-}
-
-// تعديل renderChart لتعطيل الأنيميشن تمامًا
-function renderChart(canvasId, color, initialData, initialLabels, initialIsCurrent, defaultView, disableAnimation = false) {
-    const ctx = document.getElementById('chart-' + canvasId).getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-    gradient.addColorStop(0, color + '50'); 
-    gradient.addColorStop(1, color + '00'); 
-
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: initialLabels,
-            datasets: [{
-                label: 'النشاط',
-                data: initialData,
-                borderColor: color,
-                backgroundColor: gradient,
-                borderWidth: 3,
-                pointBackgroundColor: '#0f172a',
-                pointBorderColor: color,
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 7,
-                pointHoverBackgroundColor: color,
-                pointHoverBorderColor: '#fff',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'nearest', axis: 'x', intersect: false },
-            layout: {
-                padding: { top: 80 }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    position: 'topFixed',
-                    caretSize: 7,
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    titleFont: { family: 'Cairo', size: 14, weight: 'bold' },
-                    bodyFont: { family: 'Cairo', size: 13, weight: '600' },
-                    padding: 10, cornerRadius: 10, displayColors: false,
-                    borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            const view = context.chart.currentView || 'last24hours';
-                            const store = chartDataStore[context.chart.canvas.id.replace('chart-', '')];
-                            if (!store) return '';
-                            
-                            let increment = context.parsed.y;
-                            let cumulative = 0;
-                            
-                            if (view === 'last1hour') {
-                                cumulative = store.minutelyCumulative[context.dataIndex];
-                            } else if (view === 'last6hours') {
-                                cumulative = store.hourly6Cumulative[context.dataIndex];
-                            } else if (view === 'last24hours') {
-                                cumulative = store.hourlyCumulative[context.dataIndex];
-                            } else if (view === 'last7days') {
-                                cumulative = store.dailyCumulative[context.dataIndex];
-                            } else if (view === 'last30days') {
-                                cumulative = store.daily30Cumulative[context.dataIndex];
-                            } else {
-                                cumulative = store.monthlyCumulative[context.dataIndex];
-                            }
-                            
-                            return [
-                                'الزيادة في هذا الوقت: ' + increment.toLocaleString('en-US'),
-                                'الإجمالي حتى هذا الوقت: ' + cumulative.toLocaleString('en-US')
-                            ];
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    border: { display: false },
-                    ticks: { color: '#64748b', font: { family: 'Cairo', size: 11 }, maxTicksLimit: 8 }
-                },
-                y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    border: { display: false },
-                    ticks: { display: false }, beginAtZero: true
-                }
-            },
-            // تعطيل الأنيميشن تمامًا
-            animation: disableAnimation ? false : { duration: 800, easing: 'easeOutQuart' }
-        }
-    });
-
-    chartInstances[canvasId] = chart;
-    chartInstances[canvasId].currentView = defaultView;
-    updateCurrentHighlight(chart, initialIsCurrent, color);
-}
-
-// تعديل updateCard لتعطيل الأنيميشن عند التحديث
-function updateCard(config, stats) {
-    const card = document.getElementById('card-wrapper-' + config.id);
-    if (!card) return;
-    
-    card.querySelector('.main-counter').innerText = stats.total.toLocaleString('en-US');
-    
-    const statValues = card.querySelectorAll('.stat-value');
-    statValues[0].innerText = stats.today.toLocaleString('en-US');
-    statValues[1].innerText = stats.thisHour.toLocaleString('en-US');
-    statValues[2].innerText = stats.thisWeek.toLocaleString('en-US');
-    statValues[3].innerText = stats.avgPerDay;
-    statValues[4].innerText = stats.peakHour;
-    statValues[5].innerText = stats.lastVisitFormatted;
-    
-    chartDataStore[config.id] = {
-        minutelyData: stats.minutelyData,
-        minutelyLabels: stats.minutelyLabels,
-        minutelyIsCurrent: stats.minutelyIsCurrent,
-        minutelyCumulative: stats.minutelyCumulative,
-        hourly6Data: stats.hourly6Data,
-        hourly6Labels: stats.hourly6Labels,
-        hourly6IsCurrent: stats.hourly6IsCurrent,
-        hourly6Cumulative: stats.hourly6Cumulative,
-        hourlyData: stats.hourlyData,
-        hourlyLabels: stats.hourlyLabels,
-        hourlyIsCurrent: stats.hourlyIsCurrent,
-        hourlyCumulative: stats.hourlyCumulative,
-        dailyData: stats.dailyData,
-        dailyLabels: stats.dailyLabels,
-        dailyIsCurrent: stats.dailyIsCurrent,
-        dailyCumulative: stats.dailyCumulative,
-        daily30Data: stats.daily30Data,
-        daily30Labels: stats.daily30Labels,
-        daily30IsCurrent: stats.daily30IsCurrent,
-        daily30Cumulative: stats.daily30Cumulative,
-        monthlyData: stats.monthlyData,
-        monthlyLabels: stats.monthlyLabels,
-        monthlyIsCurrent: stats.monthlyIsCurrent,
-        monthlyCumulative: stats.monthlyCumulative
-    };
-    
-    const chart = chartInstances[config.id];
-    if (chart) {
-        const activeElements = chart.getActiveElements();
-        const hasActiveTooltip = activeElements.length > 0;
-        const activeIndex = hasActiveTooltip ? activeElements[0].index : -1;
-        
-        const currentView = chart.currentView || 'last24hours';
-        let newData, newLabels, newIsCurrent;
-        
-        if (currentView === 'last1hour') {
-            newData = stats.minutelyData; newLabels = stats.minutelyLabels; newIsCurrent = stats.minutelyIsCurrent;
-        } else if (currentView === 'last6hours') {
-            newData = stats.hourly6Data; newLabels = stats.hourly6Labels; newIsCurrent = stats.hourly6IsCurrent;
-        } else if (currentView === 'last24hours') {
-            newData = stats.hourlyData; newLabels = stats.hourlyLabels; newIsCurrent = stats.hourlyIsCurrent;
-        } else if (currentView === 'last7days') {
-            newData = stats.dailyData; newLabels = stats.dailyLabels; newIsCurrent = stats.dailyIsCurrent;
-        } else if (currentView === 'last30days') {
-            newData = stats.daily30Data; newLabels = stats.daily30Labels; newIsCurrent = stats.daily30IsCurrent;
-        } else {
-            newData = stats.monthlyData; newLabels = stats.monthlyLabels; newIsCurrent = stats.monthlyIsCurrent;
-        }
-        
-        // تعطيل الأنيميشن مؤقتًا
-        chart.options.animation = false;
-        
-        chart.data.labels = newLabels;
-        chart.data.datasets[0].data = newData;
-        updateCurrentHighlight(chart, newIsCurrent, config.color);
-        
-        chart.update('none');
-        
-        if (hasActiveTooltip && activeIndex >= 0 && activeIndex < newData.length) {
-            chart.setActiveElements([{datasetIndex: 0, index: activeIndex}]);
-            chart.tooltip.setActiveElements([{datasetIndex: 0, index: activeIndex}], {x: 0, y: 0});
-            chart.update('none');
-        }
-        
-        // إعادة تفعيل الأنيميشن للتحديثات المستقبلية إذا لزم الأمر
-        // chart.options.animation = { duration: 800, easing: 'easeOutQuart' };
-    }
-}
-
-// تعديل switchChartView لتعطيل الأنيميشن عند تغيير العرض
-function switchChartView(id, view, btnElement) {
-    const buttons = btnElement.parentElement.querySelectorAll('.toggle-btn');
-    buttons.forEach(function(btn) { btn.classList.remove('active'); });
-    btnElement.classList.add('active');
-
-    const chart = chartInstances[id];
-    const data = chartDataStore[id];
-    if (!chart || !data) return;
-    
-    chart.currentView = view;
-    let newData, newLabels, newIsCurrent;
-    
-    if (view === 'last1hour') {
-        newData = data.minutelyData; newLabels = data.minutelyLabels; newIsCurrent = data.minutelyIsCurrent;
-    } else if (view === 'last6hours') {
-        newData = data.hourly6Data; newLabels = data.hourly6Labels; newIsCurrent = data.hourly6IsCurrent;
-    } else if (view === 'last24hours') {
-        newData = data.hourlyData; newLabels = data.hourlyLabels; newIsCurrent = data.hourlyIsCurrent;
-    } else if (view === 'last7days') {
-        newData = data.dailyData; newLabels = data.dailyLabels; newIsCurrent = data.dailyIsCurrent;
-    } else if (view === 'last30days') {
-        newData = data.daily30Data; newLabels = data.daily30Labels; newIsCurrent = data.daily30IsCurrent;
-    } else {
-        newData = data.monthlyData; newLabels = data.monthlyLabels; newIsCurrent = data.monthlyIsCurrent;
-    }
-    
-    // تعطيل الأنيميشن عند تغيير العرض
-    chart.options.animation = false;
-    
-    chart.data.labels = newLabels;
-    chart.data.datasets[0].data = newData;
-    updateCurrentHighlight(chart, newIsCurrent, chart.data.datasets[0].borderColor);
-    chart.update('none');
 }
 
     function getCardHTML(config, stats) {
@@ -1334,138 +1030,8 @@ function switchChartView(id, view, btnElement) {
             '<div class="chart-container"><canvas id="chart-' + config.id + '"></canvas></div>';
     }
 
-    function switchChartView(id, view, btnElement) {
-        const buttons = btnElement.parentElement.querySelectorAll('.toggle-btn');
-        buttons.forEach(function(btn) { btn.classList.remove('active'); });
-        btnElement.classList.add('active');
-
-        const chart = chartInstances[id];
-        const data = chartDataStore[id];
-        if (!chart || !data) return;
-        
-        chart.currentView = view;
-        let newData, newLabels, newIsCurrent;
-        
-        if (view === 'last1hour') {
-            newData = data.minutelyData; newLabels = data.minutelyLabels; newIsCurrent = data.minutelyIsCurrent;
-        } else if (view === 'last6hours') {
-            newData = data.hourly6Data; newLabels = data.hourly6Labels; newIsCurrent = data.hourly6IsCurrent;
-        } else if (view === 'last24hours') {
-            newData = data.hourlyData; newLabels = data.hourlyLabels; newIsCurrent = data.hourlyIsCurrent;
-        } else if (view === 'last7days') {
-            newData = data.dailyData; newLabels = data.dailyLabels; newIsCurrent = data.dailyIsCurrent;
-        } else if (view === 'last30days') {
-            newData = data.daily30Data; newLabels = data.daily30Labels; newIsCurrent = data.daily30IsCurrent;
-        } else {
-            newData = data.monthlyData; newLabels = data.monthlyLabels; newIsCurrent = data.monthlyIsCurrent;
-        }
-        
-        chart.data.labels = newLabels;
-        chart.data.datasets[0].data = newData;
-        updateCurrentHighlight(chart, newIsCurrent, chart.data.datasets[0].borderColor);
-        chart.update();
-    }
-
-// تعديل دالة renderChart لإضافة معامل disableAnimation
-function renderChart(canvasId, color, initialData, initialLabels, initialIsCurrent, defaultView, disableAnimation = false) {
-    const ctx = document.getElementById('chart-' + canvasId).getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-    gradient.addColorStop(0, color + '50'); 
-    gradient.addColorStop(1, color + '00'); 
-
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: initialLabels,
-            datasets: [{
-                label: 'النشاط',
-                data: initialData,
-                borderColor: color,
-                backgroundColor: gradient,
-                borderWidth: 3,
-                pointBackgroundColor: '#0f172a',
-                pointBorderColor: color,
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 7,
-                pointHoverBackgroundColor: color,
-                pointHoverBorderColor: '#fff',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'nearest', axis: 'x', intersect: false },
-            layout: {
-                padding: { top: 80 }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    position: 'topFixed',
-                    caretSize: 7,
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    titleFont: { family: 'Cairo', size: 14, weight: 'bold' },
-                    bodyFont: { family: 'Cairo', size: 13, weight: '600' },
-                    padding: 10, cornerRadius: 10, displayColors: false,
-                    borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            const view = context.chart.currentView || 'last24hours';
-                            const store = chartDataStore[context.chart.canvas.id.replace('chart-', '')];
-                            if (!store) return '';
-                            
-                            let increment = context.parsed.y;
-                            let cumulative = 0;
-                            
-                            if (view === 'last1hour') {
-                                cumulative = store.minutelyCumulative[context.dataIndex];
-                            } else if (view === 'last6hours') {
-                                cumulative = store.hourly6Cumulative[context.dataIndex];
-                            } else if (view === 'last24hours') {
-                                cumulative = store.hourlyCumulative[context.dataIndex];
-                            } else if (view === 'last7days') {
-                                cumulative = store.dailyCumulative[context.dataIndex];
-                            } else if (view === 'last30days') {
-                                cumulative = store.daily30Cumulative[context.dataIndex];
-                            } else {
-                                cumulative = store.monthlyCumulative[context.dataIndex];
-                            }
-                            
-                            return [
-                                'الزيادة في هذا الوقت: ' + increment.toLocaleString('en-US'),
-                                'الإجمالي حتى هذا الوقت: ' + cumulative.toLocaleString('en-US')
-                            ];
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    border: { display: false },
-                    ticks: { color: '#64748b', font: { family: 'Cairo', size: 11 }, maxTicksLimit: 8 }
-                },
-                y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                    border: { display: false },
-                    ticks: { display: false }, beginAtZero: true
-                }
-            },
-            // تعطيل الأنيميشن عند الإنشاء بعد مسح الكاش
-            animation: { duration: disableAnimation ? 0 : 800, easing: 'easeOutQuart' }
-        }
-    });
-
-    chartInstances[canvasId] = chart;
-    chartInstances[canvasId].currentView = defaultView;
-    updateCurrentHighlight(chart, initialIsCurrent, color);
-}
-
-// تعديل createOrUpdateCard لتمرير disableAnimation
-function createOrUpdateCard(config, stats, disableAnimation = false) {
+// ينشئ كرت إحصائية جديد في أول تحميل، أو يحدّث كرتًا موجودًا في التحديثات اللاحقة
+function createOrUpdateCard(config, stats) {
     const existingCard = document.getElementById('card-wrapper-' + config.id);
     if (existingCard) {
         updateCard(config, stats);
@@ -1475,196 +1041,26 @@ function createOrUpdateCard(config, stats, disableAnimation = false) {
         card.id = 'card-wrapper-' + config.id;
         card.innerHTML = getCardHTML(config, stats);
         document.getElementById('dashboard').appendChild(card);
-        
-        chartDataStore[config.id] = {
-            minutelyData: stats.minutelyData,
-            minutelyLabels: stats.minutelyLabels,
-            minutelyIsCurrent: stats.minutelyIsCurrent,
-            minutelyCumulative: stats.minutelyCumulative,
-            hourly6Data: stats.hourly6Data,
-            hourly6Labels: stats.hourly6Labels,
-            hourly6IsCurrent: stats.hourly6IsCurrent,
-            hourly6Cumulative: stats.hourly6Cumulative,
-            hourlyData: stats.hourlyData,
-            hourlyLabels: stats.hourlyLabels,
-            hourlyIsCurrent: stats.hourlyIsCurrent,
-            hourlyCumulative: stats.hourlyCumulative,
-            dailyData: stats.dailyData,
-            dailyLabels: stats.dailyLabels,
-            dailyIsCurrent: stats.dailyIsCurrent,
-            dailyCumulative: stats.dailyCumulative,
-            daily30Data: stats.daily30Data,
-            daily30Labels: stats.daily30Labels,
-            daily30IsCurrent: stats.daily30IsCurrent,
-            daily30Cumulative: stats.daily30Cumulative,
-            monthlyData: stats.monthlyData,
-            monthlyLabels: stats.monthlyLabels,
-            monthlyIsCurrent: stats.monthlyIsCurrent,
-            monthlyCumulative: stats.monthlyCumulative
-        };
-        
-        setTimeout(function() { 
-            renderChart(config.id, config.color, stats.hourlyData, stats.hourlyLabels, stats.hourlyIsCurrent, 'last24hours', disableAnimation); 
+
+        chartDataStore[config.id] = buildChartDataStoreEntry(stats);
+
+        setTimeout(function() {
+            renderChart(config.id, config.color, stats.hourlyData, stats.hourlyLabels, stats.hourlyIsCurrent, 'last24hours');
         }, 100);
     }
 }
 
-// تعديل updateCard لتعطيل الأنيميشن عند التحديث
-function updateCard(config, stats) {
-    const card = document.getElementById('card-wrapper-' + config.id);
-    if (!card) return;
-    
-    card.querySelector('.main-counter').innerText = stats.total.toLocaleString('en-US');
-    
-    const statValues = card.querySelectorAll('.stat-value');
-    statValues[0].innerText = stats.today.toLocaleString('en-US');
-    statValues[1].innerText = stats.thisHour.toLocaleString('en-US');
-    statValues[2].innerText = stats.thisWeek.toLocaleString('en-US');
-    statValues[3].innerText = stats.avgPerDay;
-    statValues[4].innerText = stats.peakHour;
-    statValues[5].innerText = stats.lastVisitFormatted;
-    
-    chartDataStore[config.id] = {
-        minutelyData: stats.minutelyData,
-        minutelyLabels: stats.minutelyLabels,
-        minutelyIsCurrent: stats.minutelyIsCurrent,
-        minutelyCumulative: stats.minutelyCumulative,
-        hourly6Data: stats.hourly6Data,
-        hourly6Labels: stats.hourly6Labels,
-        hourly6IsCurrent: stats.hourly6IsCurrent,
-        hourly6Cumulative: stats.hourly6Cumulative,
-        hourlyData: stats.hourlyData,
-        hourlyLabels: stats.hourlyLabels,
-        hourlyIsCurrent: stats.hourlyIsCurrent,
-        hourlyCumulative: stats.hourlyCumulative,
-        dailyData: stats.dailyData,
-        dailyLabels: stats.dailyLabels,
-        dailyIsCurrent: stats.dailyIsCurrent,
-        dailyCumulative: stats.dailyCumulative,
-        daily30Data: stats.daily30Data,
-        daily30Labels: stats.daily30Labels,
-        daily30IsCurrent: stats.daily30IsCurrent,
-        daily30Cumulative: stats.daily30Cumulative,
-        monthlyData: stats.monthlyData,
-        monthlyLabels: stats.monthlyLabels,
-        monthlyIsCurrent: stats.monthlyIsCurrent,
-        monthlyCumulative: stats.monthlyCumulative
-    };
-    
-    const chart = chartInstances[config.id];
-    if (chart) {
-        const activeElements = chart.getActiveElements();
-        const hasActiveTooltip = activeElements.length > 0;
-        const activeIndex = hasActiveTooltip ? activeElements[0].index : -1;
-        
-        const currentView = chart.currentView || 'last24hours';
-        let newData, newLabels, newIsCurrent;
-        
-        if (currentView === 'last1hour') {
-            newData = stats.minutelyData; newLabels = stats.minutelyLabels; newIsCurrent = stats.minutelyIsCurrent;
-        } else if (currentView === 'last6hours') {
-            newData = stats.hourly6Data; newLabels = stats.hourly6Labels; newIsCurrent = stats.hourly6IsCurrent;
-        } else if (currentView === 'last24hours') {
-            newData = stats.hourlyData; newLabels = stats.hourlyLabels; newIsCurrent = stats.hourlyIsCurrent;
-        } else if (currentView === 'last7days') {
-            newData = stats.dailyData; newLabels = stats.dailyLabels; newIsCurrent = stats.dailyIsCurrent;
-        } else if (currentView === 'last30days') {
-            newData = stats.daily30Data; newLabels = stats.daily30Labels; newIsCurrent = stats.daily30IsCurrent;
-        } else {
-            newData = stats.monthlyData; newLabels = stats.monthlyLabels; newIsCurrent = stats.monthlyIsCurrent;
-        }
-        
-        chart.data.labels = newLabels;
-        chart.data.datasets[0].data = newData;
-        updateCurrentHighlight(chart, newIsCurrent, config.color);
-        
-        // تعطيل الأنيميشن عند التحديث
-        chart.update('none');
-        
-        if (hasActiveTooltip && activeIndex >= 0 && activeIndex < newData.length) {
-            chart.setActiveElements([{datasetIndex: 0, index: activeIndex}]);
-            chart.tooltip.setActiveElements([{datasetIndex: 0, index: activeIndex}], {x: 0, y: 0});
-            chart.update('none');
-        }
-    }
-}
 
-// تعديل initDashboard لتمرير disableAnimation
-async function initDashboard(disableAnimation = false) {
-    const dashboard = document.getElementById('dashboard');
-    const allStats = await fetchAllStats();
-    
-    if (!allStats) {
-        dashboard.innerHTML = '<div class="card" style="grid-column: 1/-1; border-color: var(--danger); animation: fadeInUp 0.6s ease-out forwards;"><div class="card-header"><div class="card-title" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> فشل الاتصال بالخادم</div></div><div style="text-align: center; padding: 2rem; color: var(--text-secondary);"><i class="fas fa-server" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; color: var(--danger);"></i><p style="font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">تعذر جلب البيانات من الخادم</p></div></div>';
-        return;
-    }
-    
-    const loader = dashboard.querySelector('.loader-container');
-    if (loader) loader.remove();
-    
-    countersConfig.forEach(function(config) {
-        const stats = allStats[config.id];
-        if (stats) createOrUpdateCard(config, stats, disableAnimation);
-    });
-    
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    document.getElementById('lastUpdateInfo').innerHTML = '<i class="fas fa-clock"></i> آخر تحديث: ' + timeStr;
-}
-
-async function resetServerCache() {
-    try {
-        const response = await fetch('stats?action=reset_cache');
-        const result = await response.json();
-        if (result.success) {
-            // لا ندمر الرسوم البيانية، فقط نحدث البيانات مباشرة
-            document.getElementById('dashboard').innerHTML = '<div class="loader-container"><span class="loader"></span><p style="margin-top: 1.5rem; color: var(--text-secondary); font-weight: 600;">جاري إعادة حساب الإحصائيات...</p></div>';
-            
-            // مسح المصفوفات لإعادة الإنشاء النظيف
-            for (let key in chartInstances) {
-                if (chartInstances[key]) {
-                    chartInstances[key].destroy();
-                }
-                delete chartInstances[key];
-            }
-            for (let key in chartDataStore) delete chartDataStore[key];
-            
-            setTimeout(function() { initDashboard(true); }, 1000);
-        }
-    } catch (error) {
-        alert('حدث خطأ أثناء إعادة الضبط');
-    }
-}
-
-// تعديل initDashboard لضمان عدم وجود أنيميشن عند الإنشاء بعد مسح الكاش
-async function initDashboard(disableAnimation = false) {
-    const dashboard = document.getElementById('dashboard');
-    const allStats = await fetchAllStats();
-    
-    if (!allStats) {
-        dashboard.innerHTML = '<div class="card" style="grid-column: 1/-1; border-color: var(--danger); animation: fadeInUp 0.6s ease-out forwards;"><div class="card-header"><div class="card-title" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> فشل الاتصال بالخادم</div></div><div style="text-align: center; padding: 2rem; color: var(--text-secondary);"><i class="fas fa-server" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; color: var(--danger);"></i><p style="font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">تعذر جلب البيانات من الخادم</p></div></div>';
-        return;
-    }
-    
-    const loader = dashboard.querySelector('.loader-container');
-    if (loader) loader.remove();
-    
-    countersConfig.forEach(function(config) {
-        const stats = allStats[config.id];
-        if (stats) createOrUpdateCard(config, stats, disableAnimation);
-    });
-    
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    document.getElementById('lastUpdateInfo').innerHTML = '<i class="fas fa-clock"></i> آخر تحديث: ' + timeStr;
-}
-
-// تعديل renderChart لتعطيل جميع أنواع الأنيميشن
-function renderChart(canvasId, color, initialData, initialLabels, initialIsCurrent, defaultView, disableAnimation = false) {
+// ينشئ رسمًا بيانيًا جديدًا (Chart.js) لكرت إحصائية، مع أنيميشن "رسم الخط" عند الإنشاء فقط
+function renderChart(canvasId, color, initialData, initialLabels, initialIsCurrent, defaultView) {
     const ctx = document.getElementById('chart-' + canvasId).getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 250);
     gradient.addColorStop(0, color + '50'); 
     gradient.addColorStop(1, color + '00'); 
+
+    // نحسب أنماط النقاط مسبقًا ونضعها ضمن إعداد الرسم الابتدائي بدل استدعاء update() بعد
+    // الإنشاء مباشرة - فاستدعاء update('none') فور الإنشاء كان يُلغي أنيميشن الرسم قبل تشغيله
+    const pointStyle = computePointStyles(initialIsCurrent);
 
     const chart = new Chart(ctx, {
         type: 'line',
@@ -1676,11 +1072,11 @@ function renderChart(canvasId, color, initialData, initialLabels, initialIsCurre
                 borderColor: color,
                 backgroundColor: gradient,
                 borderWidth: 3,
-                pointBackgroundColor: '#0f172a',
+                pointBackgroundColor: pointStyle.pointBackgroundColor,
                 pointBorderColor: color,
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 7,
+                pointBorderWidth: pointStyle.pointBorderWidth,
+                pointRadius: pointStyle.pointRadius,
+                pointHoverRadius: pointStyle.pointHoverRadius,
                 pointHoverBackgroundColor: color,
                 pointHoverBorderColor: '#fff',
                 fill: true,
@@ -1709,24 +1105,10 @@ function renderChart(canvasId, color, initialData, initialLabels, initialIsCurre
                             const view = context.chart.currentView || 'last24hours';
                             const store = chartDataStore[context.chart.canvas.id.replace('chart-', '')];
                             if (!store) return '';
-                            
-                            let increment = context.parsed.y;
-                            let cumulative = 0;
-                            
-                            if (view === 'last1hour') {
-                                cumulative = store.minutelyCumulative[context.dataIndex];
-                            } else if (view === 'last6hours') {
-                                cumulative = store.hourly6Cumulative[context.dataIndex];
-                            } else if (view === 'last24hours') {
-                                cumulative = store.hourlyCumulative[context.dataIndex];
-                            } else if (view === 'last7days') {
-                                cumulative = store.dailyCumulative[context.dataIndex];
-                            } else if (view === 'last30days') {
-                                cumulative = store.daily30Cumulative[context.dataIndex];
-                            } else {
-                                cumulative = store.monthlyCumulative[context.dataIndex];
-                            }
-                            
+
+                            const increment = context.parsed.y;
+                            const cumulative = getViewSeries(store, view).cumulative[context.dataIndex];
+
                             return [
                                 'الزيادة في هذا الوقت: ' + increment.toLocaleString('en-US'),
                                 'الإجمالي حتى هذا الوقت: ' + cumulative.toLocaleString('en-US')
@@ -1747,22 +1129,28 @@ function renderChart(canvasId, color, initialData, initialLabels, initialIsCurre
                     ticks: { display: false }, beginAtZero: true
                 }
             },
-            // تعطيل جميع أنواع الأنيميشن
-            animation: false,
-            animations: {},
-            transitions: {}
+            // أنيميشن "رسم الخط" عند الإنشاء لأول مرة
+            animation: { duration: 800, easing: 'easeOutQuart' },
+            // تعطيل أنيميشن "resize" تحديدًا (وليس كل الأنيميشن): هذا هو السبب الحقيقي للخط
+            // العمودي الذي كان يظهر يمين الرسم ويزيحه لليسار عند إعادة بناء الكروت بعد مسح
+            // الكاش - حجم الكرت يتغيّر بفارق بسيط (تحميل خط Cairo / استقرار التخطيط) أثناء
+            // تشغيل أنيميشن الإنشاء، فيقوم Chart.js تلقائيًا بعمل resize متحرك في منتصف
+            // الحركة وهو ما يُنتج الخط/الإزاحة. تعطيل أنيميشن resize فقط يمنع هذا تحديدًا.
+            transitions: {
+                resize: {
+                    animation: { duration: 0 }
+                }
+            },
+            resizeDelay: 100
         }
     });
 
     chartInstances[canvasId] = chart;
     chartInstances[canvasId].currentView = defaultView;
-    updateCurrentHighlight(chart, initialIsCurrent, color);
-    
-    // إعادة الرسم بدون أنيميشن
-    chart.update('none');
 }
 
-// تعديل updateCard لتعطيل الأنيميشن تمامًا
+
+// يحدّث الأرقام والرسم البياني لكرت موجود دون إعادة إنشائه (يحافظ على حالة التلميح الظاهر إن وجد)
 function updateCard(config, stats) {
     const card = document.getElementById('card-wrapper-' + config.id);
     if (!card) return;
@@ -1776,64 +1164,25 @@ function updateCard(config, stats) {
     statValues[3].innerText = stats.avgPerDay;
     statValues[4].innerText = stats.peakHour;
     statValues[5].innerText = stats.lastVisitFormatted;
-    
-    chartDataStore[config.id] = {
-        minutelyData: stats.minutelyData,
-        minutelyLabels: stats.minutelyLabels,
-        minutelyIsCurrent: stats.minutelyIsCurrent,
-        minutelyCumulative: stats.minutelyCumulative,
-        hourly6Data: stats.hourly6Data,
-        hourly6Labels: stats.hourly6Labels,
-        hourly6IsCurrent: stats.hourly6IsCurrent,
-        hourly6Cumulative: stats.hourly6Cumulative,
-        hourlyData: stats.hourlyData,
-        hourlyLabels: stats.hourlyLabels,
-        hourlyIsCurrent: stats.hourlyIsCurrent,
-        hourlyCumulative: stats.hourlyCumulative,
-        dailyData: stats.dailyData,
-        dailyLabels: stats.dailyLabels,
-        dailyIsCurrent: stats.dailyIsCurrent,
-        dailyCumulative: stats.dailyCumulative,
-        daily30Data: stats.daily30Data,
-        daily30Labels: stats.daily30Labels,
-        daily30IsCurrent: stats.daily30IsCurrent,
-        daily30Cumulative: stats.daily30Cumulative,
-        monthlyData: stats.monthlyData,
-        monthlyLabels: stats.monthlyLabels,
-        monthlyIsCurrent: stats.monthlyIsCurrent,
-        monthlyCumulative: stats.monthlyCumulative
-    };
+
+    chartDataStore[config.id] = buildChartDataStoreEntry(stats);
     
     const chart = chartInstances[config.id];
     if (chart) {
         const activeElements = chart.getActiveElements();
         const hasActiveTooltip = activeElements.length > 0;
         const activeIndex = hasActiveTooltip ? activeElements[0].index : -1;
-        
+
         const currentView = chart.currentView || 'last24hours';
-        let newData, newLabels, newIsCurrent;
-        
-        if (currentView === 'last1hour') {
-            newData = stats.minutelyData; newLabels = stats.minutelyLabels; newIsCurrent = stats.minutelyIsCurrent;
-        } else if (currentView === 'last6hours') {
-            newData = stats.hourly6Data; newLabels = stats.hourly6Labels; newIsCurrent = stats.hourly6IsCurrent;
-        } else if (currentView === 'last24hours') {
-            newData = stats.hourlyData; newLabels = stats.hourlyLabels; newIsCurrent = stats.hourlyIsCurrent;
-        } else if (currentView === 'last7days') {
-            newData = stats.dailyData; newLabels = stats.dailyLabels; newIsCurrent = stats.dailyIsCurrent;
-        } else if (currentView === 'last30days') {
-            newData = stats.daily30Data; newLabels = stats.daily30Labels; newIsCurrent = stats.daily30IsCurrent;
-        } else {
-            newData = stats.monthlyData; newLabels = stats.monthlyLabels; newIsCurrent = stats.monthlyIsCurrent;
-        }
-        
-        chart.data.labels = newLabels;
-        chart.data.datasets[0].data = newData;
-        updateCurrentHighlight(chart, newIsCurrent, config.color);
+        const series = getViewSeries(chartDataStore[config.id], currentView);
+
+        chart.data.labels = series.labels;
+        chart.data.datasets[0].data = series.data;
+        updateCurrentHighlight(chart, series.isCurrent, config.color);
         
         chart.update('none');
         
-        if (hasActiveTooltip && activeIndex >= 0 && activeIndex < newData.length) {
+        if (hasActiveTooltip && activeIndex >= 0 && activeIndex < series.data.length) {
             chart.setActiveElements([{datasetIndex: 0, index: activeIndex}]);
             chart.tooltip.setActiveElements([{datasetIndex: 0, index: activeIndex}], {x: 0, y: 0});
             chart.update('none');
@@ -1841,7 +1190,7 @@ function updateCard(config, stats) {
     }
 }
 
-// تعديل switchChartView لتعطيل الأنيميشن
+// يبدّل الفترة الزمنية المعروضة على رسم بياني معيّن عند الضغط على أحد أزرار التبويب
 function switchChartView(id, view, btnElement) {
     const buttons = btnElement.parentElement.querySelectorAll('.toggle-btn');
     buttons.forEach(function(btn) { btn.classList.remove('active'); });
@@ -1852,25 +1201,11 @@ function switchChartView(id, view, btnElement) {
     if (!chart || !data) return;
     
     chart.currentView = view;
-    let newData, newLabels, newIsCurrent;
-    
-    if (view === 'last1hour') {
-        newData = data.minutelyData; newLabels = data.minutelyLabels; newIsCurrent = data.minutelyIsCurrent;
-    } else if (view === 'last6hours') {
-        newData = data.hourly6Data; newLabels = data.hourly6Labels; newIsCurrent = data.hourly6IsCurrent;
-    } else if (view === 'last24hours') {
-        newData = data.hourlyData; newLabels = data.hourlyLabels; newIsCurrent = data.hourlyIsCurrent;
-    } else if (view === 'last7days') {
-        newData = data.dailyData; newLabels = data.dailyLabels; newIsCurrent = data.dailyIsCurrent;
-    } else if (view === 'last30days') {
-        newData = data.daily30Data; newLabels = data.daily30Labels; newIsCurrent = data.daily30IsCurrent;
-    } else {
-        newData = data.monthlyData; newLabels = data.monthlyLabels; newIsCurrent = data.monthlyIsCurrent;
-    }
-    
-    chart.data.labels = newLabels;
-    chart.data.datasets[0].data = newData;
-    updateCurrentHighlight(chart, newIsCurrent, chart.data.datasets[0].borderColor);
+    const series = getViewSeries(data, view);
+
+    chart.data.labels = series.labels;
+    chart.data.datasets[0].data = series.data;
+    updateCurrentHighlight(chart, series.isCurrent, chart.data.datasets[0].borderColor);
     chart.update('none');
 }
 

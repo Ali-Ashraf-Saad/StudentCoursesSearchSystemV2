@@ -4,8 +4,6 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-{"count":81,"time":"2026-06-22 01:10:36"}
-
 # =========================
 # الإعدادات
 # =========================
