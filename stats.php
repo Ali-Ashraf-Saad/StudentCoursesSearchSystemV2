@@ -1,7 +1,6 @@
 <?php
 // stats.php - لوحة الإحصائيات الذكية المتقدمة
 
-
 date_default_timezone_set('Africa/Cairo'); 
 
 // ============================================
@@ -9,7 +8,7 @@ date_default_timezone_set('Africa/Cairo');
 // ============================================
 define('LOGS_DIR', __DIR__ . '/counterFiles/logs');
 define('CACHE_DIR', __DIR__ . '/counterFiles/stats_cache');
-define('CACHE_TTL', 30); // مدة صلاحية الكاش بالثواني
+define('CACHE_TTL', 30);
 
 if (!is_dir(CACHE_DIR)) {
     @mkdir(CACHE_DIR, 0755, true);
@@ -35,6 +34,47 @@ $logFiles = [
         'color' => '#f59e0b'
     ]
 ];
+
+// ============================================
+// دالة تنسيق المدة الزمنية بالعربية
+// ============================================
+function formatDuration($minutes) {
+    $minutes = (int)$minutes;
+    if ($minutes < 1) return 'الآن';
+    
+    $days = floor($minutes / 1440);
+    $hours = floor(($minutes % 1440) / 60);
+    $mins = $minutes % 60;
+    
+    $parts = [];
+    
+    if ($days > 0) {
+        if ($days == 1) $parts[] = 'يوم';
+        elseif ($days == 2) $parts[] = 'يومين';
+        elseif ($days >= 3 && $days <= 10) $parts[] = $days . ' أيام';
+        else $parts[] = $days . ' يوم';
+    }
+    
+    if ($hours > 0) {
+        if ($hours == 1) $parts[] = 'ساعة';
+        elseif ($hours == 2) $parts[] = 'ساعتين';
+        elseif ($hours >= 3 && $hours <= 10) $parts[] = $hours . ' ساعات';
+        else $parts[] = $hours . ' ساعة';
+    }
+    
+    if ($mins > 0) {
+        if ($mins == 1) $parts[] = 'دقيقة';
+        elseif ($mins == 2) $parts[] = 'دقيقتين';
+        elseif ($mins >= 3 && $mins <= 10) $parts[] = $mins . ' دقائق';
+        else $parts[] = $mins . ' دقيقة';
+    }
+    
+    if (empty($parts)) return 'الآن';
+    
+    $parts = array_slice($parts, 0, 2);
+    
+    return implode(' و', $parts);
+}
 
 // ============================================
 // دالة معالجة ملف JSONL واستخراج الإحصائيات
@@ -80,19 +120,59 @@ function processJsonlFile($filePath, $id) {
     
     $now = new DateTime('now');
     $today = $now->format('Y-m-d');
+    $yesterday = (clone $now)->modify('-1 day')->format('Y-m-d');
     $currentHour = (int)$now->format('H');
     $currentMonth = $now->format('Y-m');
     
     $lastEvent = end($events);
     $total = (int)$lastEvent['count'];
     
-    // أسماء الأيام والأشهر بالعربي
+    // حساب آخر زيارة
+    $lastEventDateTime = DateTime::createFromFormat('Y-m-d H:i:s', $lastEvent['time']);
+    $lastVisitMinutes = 0;
+    if ($lastEventDateTime) {
+        $diff = $now->getTimestamp() - $lastEventDateTime->getTimestamp();
+        $lastVisitMinutes = max(0, floor($diff / 60));
+    }
+    $lastVisitFormatted = formatDuration($lastVisitMinutes);
+    
     $arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
     $arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
     
+    usort($events, function($a, $b) {
+        return strtotime($a['time']) - strtotime($b['time']);
+    });
+    
     // ============================================
-    // إعداد الفترات الزمنية الديناميكية
+    // إعداد الفترات الزمنية
     // ============================================
+    
+    // 1. آخر ساعة - تجميع كل 5 دقائق (12 فترة)
+    $minutelyData = []; $minutelyLabels = []; $minutelyIsCurrent = []; $minutelyKeys = [];
+    for ($i = 11; $i >= 0; $i--) {
+        $t = clone $now;
+        $minutesBack = $i * 5;
+        $t->modify("-{$minutesBack} minutes");
+        $minute = (int)$t->format('i');
+        $groupedMinute = floor($minute / 5) * 5;
+        $t->setTime((int)$t->format('H'), $groupedMinute, 0);
+        $minutelyData[] = 0;
+        $minutelyLabels[] = $t->format('H:i');
+        $minutelyIsCurrent[] = ($i === 0);
+        $minutelyKeys[] = $t->format('Y-m-d H:i');
+    }
+    
+    // 2. آخر 6 ساعات
+    $hourly6Data = []; $hourly6Labels = []; $hourly6IsCurrent = []; $hourly6Keys = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $t = clone $now; $t->modify("-{$i} hours");
+        $hourly6Data[] = 0;
+        $hourly6Labels[] = $t->format('H:00');
+        $hourly6IsCurrent[] = ($i === 0);
+        $hourly6Keys[] = $t->format('Y-m-d H');
+    }
+    
+    // 3. آخر 24 ساعة
     $hourlyData = []; $hourlyLabels = []; $hourlyIsCurrent = []; $hourlyKeys = [];
     for ($i = 23; $i >= 0; $i--) {
         $t = clone $now; $t->modify("-{$i} hours");
@@ -102,99 +182,108 @@ function processJsonlFile($filePath, $id) {
         $hourlyKeys[] = $t->format('Y-m-d H');
     }
     
+    // 4. آخر 7 أيام
     $dailyData = []; $dailyLabels = []; $dailyIsCurrent = []; $dailyKeys = [];
     for ($i = 6; $i >= 0; $i--) {
         $t = clone $now; $t->modify("-{$i} days");
         $dailyData[] = 0;
-        // إضافة اسم اليوم بالعربي مع التاريخ
         $dailyLabels[] = $arabicDays[(int)$t->format('w')] . ' ' . $t->format('d/m');
         $dailyIsCurrent[] = ($i === 0);
         $dailyKeys[] = $t->format('Y-m-d');
     }
     
+    // 5. آخر 30 يوم
+    $daily30Data = []; $daily30Labels = []; $daily30IsCurrent = []; $daily30Keys = [];
+    for ($i = 29; $i >= 0; $i--) {
+        $t = clone $now; $t->modify("-{$i} days");
+        $daily30Data[] = 0;
+        $daily30Labels[] = $t->format('d/m');
+        $daily30IsCurrent[] = ($i === 0);
+        $daily30Keys[] = $t->format('Y-m-d');
+    }
+    
+    // 6. آخر 12 شهر
     $monthlyData = []; $monthlyLabels = []; $monthlyIsCurrent = []; $monthlyKeys = [];
     for ($i = 11; $i >= 0; $i--) {
         $t = clone $now; $t->modify("-{$i} months");
         $monthlyData[] = 0;
-        // إضافة اسم الشهر بالعربي بجانب الاخت الإنجليزي والسنة
         $monthlyLabels[] = $arabicMonths[(int)$t->format('n') - 1] . ' ' . $t->format('M Y');
         $monthlyIsCurrent[] = ($i === 0);
         $monthlyKeys[] = $t->format('Y-m');
     }
     
-// ============================================
-// حساب الإجمالي التراكمي لكل فترة (Cumulative)
-// ============================================
-
-// ترتيب الأحداث زمنيًا
-usort($events, function($a, $b) {
-    return strtotime($a['time']) - strtotime($b['time']);
-});
-
-// دالة تجيب آخر إجمالي قبل بداية النافذة
-$findBaseline = function(array $events, DateTime $windowStart): int {
-    $baseline = 0;
-    foreach ($events as $event) {
-        $time = DateTime::createFromFormat('Y-m-d H:i:s', $event['time']);
-        if (!$time) continue;
-        $time->setTimezone($windowStart->getTimezone());
-
-        if ($time < $windowStart) {
-            $baseline = (int)$event['count'];
-        } else {
-            break;
+    // دالة لحساب baseline
+    $findBaseline = function(array $events, DateTime $windowStart): int {
+        $baseline = 0;
+        foreach ($events as $event) {
+            $time = DateTime::createFromFormat('Y-m-d H:i:s', $event['time']);
+            if (!$time) continue;
+            $time->setTimezone($windowStart->getTimezone());
+            if ($time < $windowStart) {
+                $baseline = (int)$event['count'];
+            } else {
+                break;
+            }
         }
-    }
-    return $baseline;
-};
-
-// بداية كل نافذة
-$hourlyWindowStart = (clone $now)->modify('-23 hours');
-$hourlyWindowStart->setTime((int)$hourlyWindowStart->format('H'), 0, 0);
-
-$dailyWindowStart = (clone $now)->modify('-6 days');
-$dailyWindowStart->setTime(0, 0, 0);
-
-$monthlyWindowStart = (clone $now)->modify('-11 months');
-$monthlyWindowStart->modify('first day of this month');
-$monthlyWindowStart->setTime(0, 0, 0);
-
-// baseline لكل نافذة
-$hourlyBaseline = $findBaseline($events, $hourlyWindowStart);
-$dailyBaseline = $findBaseline($events, $dailyWindowStart);
-$monthlyBaseline = $findBaseline($events, $monthlyWindowStart);
-
-// بناء cumulative بشكل صحيح من الزيادات
-$hourlyCumulative = [];
-$dailyCumulative = [];
-$monthlyCumulative = [];
-
-$running = $hourlyBaseline;
-for ($i = 0; $i < 24; $i++) {
-    $running += $hourlyData[$i];
-    $hourlyCumulative[$i] = $running;
-}
-
-$running = $dailyBaseline;
-for ($i = 0; $i < 7; $i++) {
-    $running += $dailyData[$i];
-    $dailyCumulative[$i] = $running;
-}
-
-$running = $monthlyBaseline;
-for ($i = 0; $i < 12; $i++) {
-    $running += $monthlyData[$i];
-    $monthlyCumulative[$i] = $running;
-}    
-    // ============================================
-    // معالجة الأحداث وحساب الفروق والإجماليات
-    // ============================================
-    usort($events, function($a, $b) {
-        return strtotime($a['time']) - strtotime($b['time']);
-    });
+        return $baseline;
+    };
     
-    $todayCount = 0; $thisHourCount = 0; $thisMonthCount = 0;
+    // بداية كل نافذة
+    $minutelyWindowStart = (clone $now)->modify('-59 minutes');
+    $hourly6WindowStart = (clone $now)->modify('-5 hours');
+    $hourly6WindowStart->setTime((int)$hourly6WindowStart->format('H'), 0, 0);
+    $hourlyWindowStart = (clone $now)->modify('-23 hours');
+    $hourlyWindowStart->setTime((int)$hourlyWindowStart->format('H'), 0, 0);
+    $dailyWindowStart = (clone $now)->modify('-6 days');
+    $dailyWindowStart->setTime(0, 0, 0);
+    $daily30WindowStart = (clone $now)->modify('-29 days');
+    $daily30WindowStart->setTime(0, 0, 0);
+    $monthlyWindowStart = (clone $now)->modify('-11 months');
+    $monthlyWindowStart->modify('first day of this month');
+    $monthlyWindowStart->setTime(0, 0, 0);
+    
+    $minutelyBaseline = $findBaseline($events, $minutelyWindowStart);
+    $hourly6Baseline = $findBaseline($events, $hourly6WindowStart);
+    $hourlyBaseline = $findBaseline($events, $hourlyWindowStart);
+    $dailyBaseline = $findBaseline($events, $dailyWindowStart);
+    $daily30Baseline = $findBaseline($events, $daily30WindowStart);
+    $monthlyBaseline = $findBaseline($events, $monthlyWindowStart);
+    
+    // بناء cumulative
+    $minutelyCumulative = []; $hourly6Cumulative = []; $hourlyCumulative = [];
+    $dailyCumulative = []; $daily30Cumulative = []; $monthlyCumulative = [];
+    
+    $running = $minutelyBaseline;
+    for ($i = 0; $i < 12; $i++) { $running += $minutelyData[$i]; $minutelyCumulative[$i] = $running; }
+    
+    $running = $hourly6Baseline;
+    for ($i = 0; $i < 6; $i++) { $running += $hourly6Data[$i]; $hourly6Cumulative[$i] = $running; }
+    
+    $running = $hourlyBaseline;
+    for ($i = 0; $i < 24; $i++) { $running += $hourlyData[$i]; $hourlyCumulative[$i] = $running; }
+    
+    $running = $dailyBaseline;
+    for ($i = 0; $i < 7; $i++) { $running += $dailyData[$i]; $dailyCumulative[$i] = $running; }
+    
+    $running = $daily30Baseline;
+    for ($i = 0; $i < 30; $i++) { $running += $daily30Data[$i]; $daily30Cumulative[$i] = $running; }
+    
+    $running = $monthlyBaseline;
+    for ($i = 0; $i < 12; $i++) { $running += $monthlyData[$i]; $monthlyCumulative[$i] = $running; }
+    
+    // ============================================
+    // معالجة الأحداث
+    // ============================================
+    $todayCount = 0; $yesterdayCount = 0; $thisHourCount = 0; $thisMonthCount = 0;
+    $thisWeekCount = 0; $lastWeekCount = 0;
     $prevCount = 0;
+    
+    // حساب بداية الأسبوع (السبت في مصر)
+    $dayOfWeek = (int)$now->format('w');
+    $daysSinceSaturday = ($dayOfWeek + 1) % 7;
+    $weekStart = (clone $now)->modify("-{$daysSinceSaturday} days");
+    $weekStart->setTime(0, 0, 0);
+    $lastWeekStart = (clone $weekStart)->modify('-7 days');
     
     foreach ($events as $event) {
         $time = DateTime::createFromFormat('Y-m-d H:i:s', $event['time']);
@@ -212,45 +301,59 @@ for ($i = 0; $i < 12; $i++) {
         $eventMonth = $time->format('Y-m');
         $eventHourOnly = (int)$time->format('H');
         
+        $minute = (int)$time->format('i');
+        $groupedMinute = floor($minute / 5) * 5;
+        $eventMinuteGrouped = $time->format('Y-m-d H') . ':' . str_pad($groupedMinute, 2, '0', STR_PAD_LEFT);
+        
         if ($eventDate === $today) {
             $todayCount += $increment;
             if ($eventHourOnly === $currentHour) $thisHourCount += $increment;
         }
+        if ($eventDate === $yesterday) {
+            $yesterdayCount += $increment;
+        }
         if ($eventMonth === $currentMonth) {
             $thisMonthCount += $increment;
         }
+        if ($time >= $weekStart) {
+            $thisWeekCount += $increment;
+        } elseif ($time >= $lastWeekStart && $time < $weekStart) {
+            $lastWeekCount += $increment;
+        }
+        
+        // ملء الفترات
+        $mIdx = array_search($eventMinuteGrouped, $minutelyKeys);
+        if ($mIdx !== false) { $minutelyData[$mIdx] += $increment; $minutelyCumulative[$mIdx] = $eventCount; }
+        
+        $h6Idx = array_search($eventHour, $hourly6Keys);
+        if ($h6Idx !== false) { $hourly6Data[$h6Idx] += $increment; $hourly6Cumulative[$h6Idx] = $eventCount; }
         
         $hIdx = array_search($eventHour, $hourlyKeys);
-        if ($hIdx !== false) {
-            $hourlyData[$hIdx] += $increment;
-            $hourlyCumulative[$hIdx] = $eventCount; // حفظ الإجمالي في هذه الساعة
-        }
+        if ($hIdx !== false) { $hourlyData[$hIdx] += $increment; $hourlyCumulative[$hIdx] = $eventCount; }
         
         $dIdx = array_search($eventDate, $dailyKeys);
-        if ($dIdx !== false) {
-            $dailyData[$dIdx] += $increment;
-            $dailyCumulative[$dIdx] = $eventCount; // حفظ الإجمالي في هذا اليوم
-        }
+        if ($dIdx !== false) { $dailyData[$dIdx] += $increment; $dailyCumulative[$dIdx] = $eventCount; }
         
-        $mIdx = array_search($eventMonth, $monthlyKeys);
-        if ($mIdx !== false) {
-            $monthlyData[$mIdx] += $increment;
-            $monthlyCumulative[$mIdx] = $eventCount; // حفظ الإجمالي في هذا الشهر
-        }
+        $d30Idx = array_search($eventDate, $daily30Keys);
+        if ($d30Idx !== false) { $daily30Data[$d30Idx] += $increment; $daily30Cumulative[$d30Idx] = $eventCount; }
+        
+        $mthIdx = array_search($eventMonth, $monthlyKeys);
+        if ($mthIdx !== false) { $monthlyData[$mthIdx] += $increment; $monthlyCumulative[$mthIdx] = $eventCount; }
     }
     
-    // ملء الفجوات في الإجمالي (إذا لم تكن هناك زيارات في فترة معينة، يبقى الإجمالي كما كان)
-    for ($i = 1; $i < 24; $i++) {
-        if ($hourlyData[$i] == 0) $hourlyCumulative[$i] = $hourlyCumulative[$i-1];
-    }
-    for ($i = 1; $i < 7; $i++) {
-        if ($dailyData[$i] == 0) $dailyCumulative[$i] = $dailyCumulative[$i-1];
-    }
-    for ($i = 1; $i < 12; $i++) {
-        if ($monthlyData[$i] == 0) $monthlyCumulative[$i] = $monthlyCumulative[$i-1];
-    }
+    // ملء الفجوات
+    for ($i = 1; $i < 12; $i++) { if ($minutelyData[$i] == 0) $minutelyCumulative[$i] = $minutelyCumulative[$i-1]; }
+    for ($i = 1; $i < 6; $i++) { if ($hourly6Data[$i] == 0) $hourly6Cumulative[$i] = $hourly6Cumulative[$i-1]; }
+    for ($i = 1; $i < 24; $i++) { if ($hourlyData[$i] == 0) $hourlyCumulative[$i] = $hourlyCumulative[$i-1]; }
+    for ($i = 1; $i < 7; $i++) { if ($dailyData[$i] == 0) $dailyCumulative[$i] = $dailyCumulative[$i-1]; }
+    for ($i = 1; $i < 30; $i++) { if ($daily30Data[$i] == 0) $daily30Cumulative[$i] = $daily30Cumulative[$i-1]; }
+    for ($i = 1; $i < 12; $i++) { if ($monthlyData[$i] == 0) $monthlyCumulative[$i] = $monthlyCumulative[$i-1]; }
     
-    // حساب ساعة الذروة والمتوسط
+    // متوسط الزيارات اليومي (آخر 30 يوم)
+    $totalLast30 = array_sum($daily30Data);
+    $avgPerDay = round($totalLast30 / 30, 1);
+    
+    // ساعة الذروة
     $peakHour = ''; $maxHourVal = 0;
     for ($i = 0; $i < 24; $i++) {
         if ($hourlyData[$i] > $maxHourVal) {
@@ -258,17 +361,28 @@ for ($i = 0; $i < 12; $i++) {
             $peakHour = $hourlyLabels[$i];
         }
     }
-    $totalLast24 = array_sum($hourlyData);
-    $avgPerHour = $totalLast24 > 0 ? round($totalLast24 / 24, 1) : 0;
     
     $stats = [
         'id' => $id,
         'total' => $total,
         'today' => $todayCount,
+        'yesterday' => $yesterdayCount,
         'thisHour' => $thisHourCount,
         'thisMonth' => $thisMonthCount,
+        'thisWeek' => $thisWeekCount,
+        'lastWeek' => $lastWeekCount,
+        'avgPerDay' => $avgPerDay,
         'peakHour' => $peakHour ?: '00:00',
-        'avgPerHour' => $avgPerHour,
+        'lastVisitMinutes' => $lastVisitMinutes,
+        'lastVisitFormatted' => $lastVisitFormatted,
+        'minutelyData' => $minutelyData,
+        'minutelyLabels' => $minutelyLabels,
+        'minutelyIsCurrent' => $minutelyIsCurrent,
+        'minutelyCumulative' => $minutelyCumulative,
+        'hourly6Data' => $hourly6Data,
+        'hourly6Labels' => $hourly6Labels,
+        'hourly6IsCurrent' => $hourly6IsCurrent,
+        'hourly6Cumulative' => $hourly6Cumulative,
         'hourlyData' => $hourlyData,
         'hourlyLabels' => $hourlyLabels,
         'hourlyIsCurrent' => $hourlyIsCurrent,
@@ -277,6 +391,10 @@ for ($i = 0; $i < 12; $i++) {
         'dailyLabels' => $dailyLabels,
         'dailyIsCurrent' => $dailyIsCurrent,
         'dailyCumulative' => $dailyCumulative,
+        'daily30Data' => $daily30Data,
+        'daily30Labels' => $daily30Labels,
+        'daily30IsCurrent' => $daily30IsCurrent,
+        'daily30Cumulative' => $daily30Cumulative,
         'monthlyData' => $monthlyData,
         'monthlyLabels' => $monthlyLabels,
         'monthlyIsCurrent' => $monthlyIsCurrent,
@@ -301,37 +419,29 @@ function getAllLogFiles(): array {
 if (isset($_GET['action']) && $_GET['action'] === 'list_logs') {
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache, no-store, must-revalidate');
-
-    echo json_encode([
-        'files' => getAllLogFiles()
-    ], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['files' => getAllLogFiles()], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 if (isset($_GET['action']) && $_GET['action'] === 'download_log') {
     $file = basename($_GET['file'] ?? '');
-
     if ($file === '' || !preg_match('/^[a-zA-Z0-9._-]+\.jsonl$/', $file)) {
         http_response_code(400);
         header('Content-Type: text/plain; charset=utf-8');
         echo 'اسم ملف غير صالح';
         exit;
     }
-
     $filePath = LOGS_DIR . '/' . $file;
-
     if (!file_exists($filePath) || !is_file($filePath)) {
         http_response_code(404);
         header('Content-Type: text/plain; charset=utf-8');
         echo 'الملف غير موجود';
         exit;
     }
-
     header('Content-Type: application/octet-stream');
     header('Content-Disposition: attachment; filename="' . $file . '"');
     header('Content-Length: ' . filesize($filePath));
     header('Cache-Control: no-store, no-cache, must-revalidate');
-
     readfile($filePath);
     exit;
 }
@@ -347,10 +457,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_stats') {
             $results[$id] = $stats;
         } else {
             $results[$id] = [
-                'id' => $id, 'total' => 0, 'today' => 0, 'thisHour' => 0, 'thisMonth' => 0,
-                'peakHour' => '00:00', 'avgPerHour' => 0,
+                'id' => $id, 'total' => 0, 'today' => 0, 'yesterday' => 0,
+                'thisHour' => 0, 'thisMonth' => 0, 'thisWeek' => 0, 'lastWeek' => 0,
+                'avgPerDay' => 0,
+                'peakHour' => '00:00', 
+                'lastVisitMinutes' => 0, 'lastVisitFormatted' => 'غير متوفر',
+                'minutelyData' => array_fill(0, 12, 0), 'minutelyLabels' => [], 'minutelyIsCurrent' => array_fill(0, 12, false), 'minutelyCumulative' => array_fill(0, 12, 0),
+                'hourly6Data' => array_fill(0, 6, 0), 'hourly6Labels' => [], 'hourly6IsCurrent' => array_fill(0, 6, false), 'hourly6Cumulative' => array_fill(0, 6, 0),
                 'hourlyData' => array_fill(0, 24, 0), 'hourlyLabels' => [], 'hourlyIsCurrent' => array_fill(0, 24, false), 'hourlyCumulative' => array_fill(0, 24, 0),
                 'dailyData' => array_fill(0, 7, 0), 'dailyLabels' => [], 'dailyIsCurrent' => array_fill(0, 7, false), 'dailyCumulative' => array_fill(0, 7, 0),
+                'daily30Data' => array_fill(0, 30, 0), 'daily30Labels' => [], 'daily30IsCurrent' => array_fill(0, 30, false), 'daily30Cumulative' => array_fill(0, 30, 0),
                 'monthlyData' => array_fill(0, 12, 0), 'monthlyLabels' => [], 'monthlyIsCurrent' => array_fill(0, 12, false), 'monthlyCumulative' => array_fill(0, 12, 0),
                 'lastUpdate' => date('Y-m-d H:i:s')
             ];
@@ -409,7 +525,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary-blue); }
         .container { max-width: 1400px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 3.5rem; position: relative; }
+        header { 
+            text-align: center; 
+            margin-bottom: 3.5rem; 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
         header h1 {
             font-size: 2.8rem; font-weight: 800;
             background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
@@ -417,14 +541,60 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             margin-bottom: 0.75rem; letter-spacing: -0.5px;
         }
         header p { color: var(--text-secondary); font-size: 1.15rem; font-weight: 400; }
-        .server-badge {
-            display: inline-flex; align-items: center; gap: 8px;
+        
+        /* زر التلميحات */
+        .hints-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            padding: 6px 16px; border-radius: 20px;
-            font-size: 0.85rem; color: var(--primary-blue);
-            margin-top: 1rem; font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--primary-blue);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-family: 'Cairo';
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
         }
+        .hints-toggle-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            transform: translateY(-2px);
+        }
+        .hints-toggle-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        .hints-toggle-btn .toggle-icon {
+            width: 36px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .hints-toggle-btn.active .toggle-icon {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .hints-toggle-btn .toggle-icon::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            right: 18px;
+            transition: all 0.3s ease;
+        }
+        .hints-toggle-btn.active .toggle-icon::after {
+            right: 2px;
+        }
+        
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -468,27 +638,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             color: var(--primary-blue); font-size: 1.5rem; 
             filter: drop-shadow(0 0 8px var(--primary-glow));
         }
-        .live-badge {
-            font-size: 0.75rem; color: var(--success); 
-            background: rgba(16, 185, 129, 0.1); 
-            padding: 6px 12px; border-radius: 20px;
-            display: flex; align-items: center; gap: 6px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-        .pulse-dot {
-            width: 8px; height: 8px; background: var(--success);
-            border-radius: 50%; position: relative;
-        }
-        .pulse-dot::after {
-            content: ''; position: absolute; top: -4px; left: -4px;
-            width: 16px; height: 16px; background: var(--success);
-            border-radius: 50%; opacity: 0.6;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.6; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
         .main-counter {
             font-size: 3.8rem; font-weight: 800; text-align: center;
             margin: 0.5rem 0 1.5rem 0; letter-spacing: -1.5px;
@@ -500,6 +649,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         .stat-item {
             background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.03); transition: all 0.3s ease;
+            position: relative;
         }
         .stat-item:hover { 
             background: rgba(15, 23, 42, 0.8); 
@@ -510,18 +660,82 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.5rem;
             display: flex; align-items: center; gap: 0.5rem; font-weight: 600;
         }
-        .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--text-main); }
+        .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
         .stat-value.highlight { color: var(--warning); }
         .stat-value.success { color: var(--success); }
+        
+        /* Tooltip مخصص - يظهر فقط عند تفعيل الزر */
+        .stat-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.98);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            pointer-events: none;
+            max-width: 250px;
+            white-space: normal;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            bottom: calc(100% + 2px);
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(15, 23, 42, 0.98);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        /* التلميحات تظهر فقط عند تفعيل الزر */
+        body.show-hints .stat-item {
+            cursor: help;
+        }
+        
+        body.show-hints .stat-item:hover::after,
+        body.show-hints .stat-item:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* مؤشر بصري للكروت عند تفعيل التلميحات */
+        body.show-hints .stat-item::after {
+            content: attr(data-tooltip);
+        }
+        
+        body:not(.show-hints) .stat-item::after {
+            content: '';
+        }
+        
         .chart-controls {
             display: flex; justify-content: center; margin-bottom: 1rem;
             background: rgba(15, 23, 42, 0.8); padding: 4px; border-radius: 14px;
             width: 100%; border: 1px solid var(--card-border);
+            flex-wrap: wrap;
         }
         .toggle-btn {
-            flex: 1; padding: 8px 12px; border-radius: 10px; border: none; background: transparent;
-            color: var(--text-secondary); font-family: 'Cairo'; font-weight: 600; font-size: 0.85rem;
+            flex: 1; padding: 8px 8px; border-radius: 10px; border: none; background: transparent;
+            color: var(--text-secondary); font-family: 'Cairo'; font-weight: 600; font-size: 0.75rem;
             cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 60px;
         }
         .toggle-btn:hover:not(.active) {
             color: var(--text-main);
@@ -544,42 +758,39 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             animation: rotation 1s linear infinite;
         }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.reset-btn {
-    margin-top: 3rem;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.reset-btn button {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    padding: 0.75rem 2rem;
-    border-radius: 12px;
-    cursor: pointer;
-    font-family: 'Cairo';
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: all 0.3s;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.reset-btn button:first-child {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--primary-blue);
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-.reset-btn button:first-child:hover {
-    background: var(--primary-blue);
-    color: white;
-            box-shadow: 0 4px 15px rgba(68, 73, 239, 0.3);
-}
+        .reset-btn {
+            margin-top: 3rem;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .reset-btn button {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Cairo';
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .reset-btn button:first-child {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-blue);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .reset-btn button:first-child:hover {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
         .reset-btn button:hover { 
             background: var(--danger); color: white; 
             box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
@@ -593,8 +804,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             header h1 { font-size: 2rem; }
             .main-counter { font-size: 3rem; }
             body { padding: 1rem; }
-            .chart-controls { flex-direction: row; }
-            .toggle-btn { font-size: 0.8rem; padding: 8px 4px; }
+            .toggle-btn { font-size: 0.7rem; padding: 6px 4px; min-width: 50px; }
+            body.show-hints .stat-item::after {
+                max-width: 200px;
+                font-size: 0.7rem;
+            }
         }
     </style>
 </head>
@@ -603,7 +817,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
 <div class="container">
     <header>
         <h1>لوحة التحكم والإحصائيات</h1>
-
+        <button class="hints-toggle-btn" id="hintsToggleBtn" onclick="toggleHints()">
+            <i class="fas fa-circle-info"></i>
+            <span id="hintsToggleText">تفعيل التلميحات</span>
+            <span class="toggle-icon"></span>
+        </button>
     </header>
 
     <div class="dashboard-grid" id="dashboard">
@@ -615,15 +833,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
 
     <div class="last-update-info" id="lastUpdateInfo"></div>
 
-<div class="reset-btn">
-    <button onclick="downloadAllLogs()">
-        <i class="fas fa-download"></i> تحميل كل ملفات JSONL
-    </button>
-
-    <button onclick="resetServerCache()">
-        <i class="fas fa-rotate-right"></i> إعادة ضبط كاش الخادم
-    </button>
-</div>
+    <div class="reset-btn">
+        <button onclick="downloadAllLogs()">
+            <i class="fas fa-download"></i> تحميل كل ملفات JSONL
+        </button>
+        <button onclick="resetServerCache()">
+            <i class="fas fa-rotate-right"></i> إعادة ضبط كاش الخادم
+        </button>
+    </div>
 </div>
 
 <script>
@@ -635,6 +852,63 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
 
     const chartDataStore = {};
     const chartInstances = {};
+
+    // ============================================
+    // إدارة زر التلميحات
+    // ============================================
+    function toggleHints() {
+        const body = document.body;
+        const btn = document.getElementById('hintsToggleBtn');
+        const text = document.getElementById('hintsToggleText');
+        
+        body.classList.toggle('show-hints');
+        const isActive = body.classList.contains('show-hints');
+        
+        if (isActive) {
+            btn.classList.add('active');
+            text.innerText = 'إيقاف التلميحات';
+            localStorage.setItem('statsHintsEnabled', 'true');
+        } else {
+            btn.classList.remove('active');
+            text.innerText = 'تفعيل التلميحات';
+            localStorage.setItem('statsHintsEnabled', 'false');
+        }
+    }
+    
+    // استرجاع حالة الزر عند تحميل الصفحة
+    function initHintsToggle() {
+        const saved = localStorage.getItem('statsHintsEnabled');
+        if (saved === 'true') {
+            document.body.classList.add('show-hints');
+            const btn = document.getElementById('hintsToggleBtn');
+            const text = document.getElementById('hintsToggleText');
+            btn.classList.add('active');
+            text.innerText = 'إيقاف التلميحات';
+        }
+    }
+
+    const tooltipPlugin = Chart.registry.getPlugin('tooltip');
+    if (tooltipPlugin && tooltipPlugin.positioners) {
+        tooltipPlugin.positioners.topFixed = function(elements) {
+            if (!elements.length) return false;
+            const activeElement = elements[0];
+            const chart = this.chart;
+            const x = activeElement.element.x;
+            const left = chart.chartArea.left;
+            const right = chart.chartArea.right;
+            let offset = 0;
+            if (right > left) {
+                const ratio = (x - left) / (right - left);
+                offset = ratio * 4;
+            }
+            return {
+                x: x - offset,
+                y: chart.chartArea.top,
+                xAlign: 'center',
+                yAlign: 'bottom'
+            };
+        };
+    }
 
     async function fetchAllStats() {
         try {
@@ -659,6 +933,14 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             document.getElementById('dashboard').appendChild(card);
             
             chartDataStore[config.id] = {
+                minutelyData: stats.minutelyData,
+                minutelyLabels: stats.minutelyLabels,
+                minutelyIsCurrent: stats.minutelyIsCurrent,
+                minutelyCumulative: stats.minutelyCumulative,
+                hourly6Data: stats.hourly6Data,
+                hourly6Labels: stats.hourly6Labels,
+                hourly6IsCurrent: stats.hourly6IsCurrent,
+                hourly6Cumulative: stats.hourly6Cumulative,
                 hourlyData: stats.hourlyData,
                 hourlyLabels: stats.hourlyLabels,
                 hourlyIsCurrent: stats.hourlyIsCurrent,
@@ -667,6 +949,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
                 dailyLabels: stats.dailyLabels,
                 dailyIsCurrent: stats.dailyIsCurrent,
                 dailyCumulative: stats.dailyCumulative,
+                daily30Data: stats.daily30Data,
+                daily30Labels: stats.daily30Labels,
+                daily30IsCurrent: stats.daily30IsCurrent,
+                daily30Cumulative: stats.daily30Cumulative,
                 monthlyData: stats.monthlyData,
                 monthlyLabels: stats.monthlyLabels,
                 monthlyIsCurrent: stats.monthlyIsCurrent,
@@ -674,7 +960,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             };
             
             setTimeout(function() { 
-                renderChart(config.id, config.color, stats.hourlyData, stats.hourlyLabels, stats.hourlyIsCurrent, 'day'); 
+                renderChart(config.id, config.color, stats.hourlyData, stats.hourlyLabels, stats.hourlyIsCurrent, 'last24hours'); 
             }, 100);
         }
     }
@@ -684,12 +970,24 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         if (!card) return;
         
         card.querySelector('.main-counter').innerText = stats.total.toLocaleString('en-US');
-        card.querySelector('.stat-value.success').innerText = stats.today.toLocaleString('en-US');
-        card.querySelectorAll('.stat-value')[1].innerText = stats.thisHour.toLocaleString('en-US');
-        card.querySelector('.stat-value.highlight').innerText = stats.peakHour;
-        card.querySelectorAll('.stat-value')[3].innerText = stats.avgPerHour;
+        
+        const statValues = card.querySelectorAll('.stat-value');
+        statValues[0].innerText = stats.today.toLocaleString('en-US');
+        statValues[1].innerText = stats.thisHour.toLocaleString('en-US');
+        statValues[2].innerText = stats.thisWeek.toLocaleString('en-US');
+        statValues[3].innerText = stats.avgPerDay;
+        statValues[4].innerText = stats.peakHour;
+        statValues[5].innerText = stats.lastVisitFormatted;
         
         chartDataStore[config.id] = {
+            minutelyData: stats.minutelyData,
+            minutelyLabels: stats.minutelyLabels,
+            minutelyIsCurrent: stats.minutelyIsCurrent,
+            minutelyCumulative: stats.minutelyCumulative,
+            hourly6Data: stats.hourly6Data,
+            hourly6Labels: stats.hourly6Labels,
+            hourly6IsCurrent: stats.hourly6IsCurrent,
+            hourly6Cumulative: stats.hourly6Cumulative,
             hourlyData: stats.hourlyData,
             hourlyLabels: stats.hourlyLabels,
             hourlyIsCurrent: stats.hourlyIsCurrent,
@@ -698,6 +996,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             dailyLabels: stats.dailyLabels,
             dailyIsCurrent: stats.dailyIsCurrent,
             dailyCumulative: stats.dailyCumulative,
+            daily30Data: stats.daily30Data,
+            daily30Labels: stats.daily30Labels,
+            daily30IsCurrent: stats.daily30IsCurrent,
+            daily30Cumulative: stats.daily30Cumulative,
             monthlyData: stats.monthlyData,
             monthlyLabels: stats.monthlyLabels,
             monthlyIsCurrent: stats.monthlyIsCurrent,
@@ -706,21 +1008,22 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         
         const chart = chartInstances[config.id];
         if (chart) {
-            const currentView = chart.currentView || 'day';
+            if (chart.getActiveElements().length > 0) return;
+            const currentView = chart.currentView || 'last24hours';
             let newData, newLabels, newIsCurrent;
             
-            if (currentView === 'day') {
-                newData = stats.hourlyData;
-                newLabels = stats.hourlyLabels;
-                newIsCurrent = stats.hourlyIsCurrent;
-            } else if (currentView === 'week') {
-                newData = stats.dailyData;
-                newLabels = stats.dailyLabels;
-                newIsCurrent = stats.dailyIsCurrent;
+            if (currentView === 'last1hour') {
+                newData = stats.minutelyData; newLabels = stats.minutelyLabels; newIsCurrent = stats.minutelyIsCurrent;
+            } else if (currentView === 'last6hours') {
+                newData = stats.hourly6Data; newLabels = stats.hourly6Labels; newIsCurrent = stats.hourly6IsCurrent;
+            } else if (currentView === 'last24hours') {
+                newData = stats.hourlyData; newLabels = stats.hourlyLabels; newIsCurrent = stats.hourlyIsCurrent;
+            } else if (currentView === 'last7days') {
+                newData = stats.dailyData; newLabels = stats.dailyLabels; newIsCurrent = stats.dailyIsCurrent;
+            } else if (currentView === 'last30days') {
+                newData = stats.daily30Data; newLabels = stats.daily30Labels; newIsCurrent = stats.daily30IsCurrent;
             } else {
-                newData = stats.monthlyData;
-                newLabels = stats.monthlyLabels;
-                newIsCurrent = stats.monthlyIsCurrent;
+                newData = stats.monthlyData; newLabels = stats.monthlyLabels; newIsCurrent = stats.monthlyIsCurrent;
             }
             
             chart.data.labels = newLabels;
@@ -731,20 +1034,23 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
     }
 
     function updateCurrentHighlight(chart, isCurrentArray, color) {
-        const pointColors = [], pointRadii = [], pointBorderWidths = [];
+        const pointColors = [], pointRadii = [], pointBorderWidths = [], pointHoverRadii = [];
         isCurrentArray.forEach(function(isCurrent) {
             if (isCurrent) {
                 pointColors.push('#fff');
                 pointRadii.push(8);
+                pointHoverRadii.push(10);
                 pointBorderWidths.push(3);
             } else {
                 pointColors.push('#0f172a');
                 pointRadii.push(4);
+                pointHoverRadii.push(7);
                 pointBorderWidths.push(2);
             }
         });
         chart.data.datasets[0].pointBackgroundColor = pointColors;
         chart.data.datasets[0].pointRadius = pointRadii;
+        chart.data.datasets[0].pointHoverRadius = pointHoverRadii;
         chart.data.datasets[0].pointBorderWidth = pointBorderWidths;
         chart.data.datasets[0].pointBorderColor = color;
     }
@@ -758,15 +1064,38 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
                 '<div class="main-counter" style="color: ' + config.color + '">' + stats.total.toLocaleString('en-US') + '</div>' +
             '</div>' +
             '<div class="stats-grid">' +
-                '<div class="stat-item"><div class="stat-label"><i class="fas fa-calendar-day" style="color: var(--success)"></i> زيارات اليوم</div><div class="stat-value success">' + stats.today.toLocaleString('en-US') + '</div></div>' +
-                '<div class="stat-item"><div class="stat-label"><i class="fas fa-clock" style="color: var(--primary-blue)"></i> هذه الساعة</div><div class="stat-value">' + stats.thisHour.toLocaleString('en-US') + '</div></div>' +
-                '<div class="stat-item"><div class="stat-label"><i class="fas fa-crown" style="color: var(--warning)"></i> ساعة الذروة</div><div class="stat-value highlight">' + stats.peakHour + '</div></div>' +
-                '<div class="stat-item"><div class="stat-label"><i class="fas fa-chart-line" style="color: #a855f7"></i> المتوسط/ساعة</div><div class="stat-value">' + stats.avgPerHour + '</div></div>' +
+                '<div class="stat-item" data-tooltip="إجمالي عدد الزيارات المسجلة منذ بداية اليوم (12:00 صباحاً) حتى الآن">' +
+                    '<div class="stat-label"><i class="fas fa-calendar-day" style="color: var(--success)"></i> زيارات اليوم</div>' +
+                    '<div class="stat-value success">' + stats.today.toLocaleString('en-US') + '</div>' +
+                '</div>' +
+                '<div class="stat-item" data-tooltip="عدد الزيارات المسجلة في الساعة الحالية فقط">' +
+                    '<div class="stat-label"><i class="fas fa-clock" style="color: var(--primary-blue)"></i> هذه الساعة</div>' +
+                    '<div class="stat-value">' + stats.thisHour.toLocaleString('en-US') + '</div>' +
+                '</div>' +
+                '<div class="stat-item" data-tooltip="إجمالي عدد الزيارات منذ بداية الأسبوع الحالي (يبدأ من السبت)">' +
+                    '<div class="stat-label"><i class="fas fa-calendar-week" style="color: #8b5cf6"></i> هذا الأسبوع</div>' +
+                    '<div class="stat-value">' + stats.thisWeek.toLocaleString('en-US') + '</div>' +
+                '</div>' +
+                '<div class="stat-item" data-tooltip="متوسط عدد الزيارات اليومية خلال آخر 30 يوماً">' +
+                    '<div class="stat-label"><i class="fas fa-chart-line" style="color: #a855f7"></i> متوسط يومي</div>' +
+                    '<div class="stat-value">' + stats.avgPerDay + '</div>' +
+                '</div>' +
+                '<div class="stat-item" data-tooltip="الساعة التي سجلت أعلى عدد من الزيارات خلال آخر 24 ساعة">' +
+                    '<div class="stat-label"><i class="fas fa-crown" style="color: var(--warning)"></i> ساعة الذروة</div>' +
+                    '<div class="stat-value highlight">' + stats.peakHour + '</div>' +
+                '</div>' +
+                '<div class="stat-item" data-tooltip="الوقت المنقضي منذ آخر زيارة مسجلة في النظام">' +
+                    '<div class="stat-label"><i class="fas fa-clock-rotate-left" style="color: #06b6d4"></i> آخر زيارة</div>' +
+                    '<div class="stat-value">' + stats.lastVisitFormatted + '</div>' +
+                '</div>' +
             '</div>' +
             '<div class="chart-controls">' +
-                '<button class="toggle-btn active" onclick="switchChartView(\'' + config.id + '\', \'day\', this)">آخر 24 ساعة</button>' +
-                '<button class="toggle-btn" onclick="switchChartView(\'' + config.id + '\', \'week\', this)">آخر 7 أيام</button>' +
-                '<button class="toggle-btn" onclick="switchChartView(\'' + config.id + '\', \'month\', this)">آخر 12 شهر</button>' +
+                '<button class="toggle-btn" onclick="switchChartView(\'' + config.id + '\', \'last1hour\', this)">ساعة</button>' +
+                '<button class="toggle-btn" onclick="switchChartView(\'' + config.id + '\', \'last6hours\', this)">6 ساعات</button>' +
+                '<button class="toggle-btn active" onclick="switchChartView(\'' + config.id + '\', \'last24hours\', this)">24 ساعة</button>' +
+                '<button class="toggle-btn" onclick="switchChartView(\'' + config.id + '\', \'last7days\', this)">7 أيام</button>' +
+                '<button class="toggle-btn" onclick="switchChartView(\'' + config.id + '\', \'last30days\', this)">30 يوم</button>' +
+                '<button class="toggle-btn" onclick="switchChartView(\'' + config.id + '\', \'last12months\', this)">12 شهر</button>' +
             '</div>' +
             '<div class="chart-container"><canvas id="chart-' + config.id + '"></canvas></div>';
     }
@@ -783,10 +1112,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         chart.currentView = view;
         let newData, newLabels, newIsCurrent;
         
-        if (view === 'day') {
+        if (view === 'last1hour') {
+            newData = data.minutelyData; newLabels = data.minutelyLabels; newIsCurrent = data.minutelyIsCurrent;
+        } else if (view === 'last6hours') {
+            newData = data.hourly6Data; newLabels = data.hourly6Labels; newIsCurrent = data.hourly6IsCurrent;
+        } else if (view === 'last24hours') {
             newData = data.hourlyData; newLabels = data.hourlyLabels; newIsCurrent = data.hourlyIsCurrent;
-        } else if (view === 'week') {
+        } else if (view === 'last7days') {
             newData = data.dailyData; newLabels = data.dailyLabels; newIsCurrent = data.dailyIsCurrent;
+        } else if (view === 'last30days') {
+            newData = data.daily30Data; newLabels = data.daily30Labels; newIsCurrent = data.daily30IsCurrent;
         } else {
             newData = data.monthlyData; newLabels = data.monthlyLabels; newIsCurrent = data.monthlyIsCurrent;
         }
@@ -827,33 +1162,43 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
+                interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                layout: {
+                    padding: { top: 80 }
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        position: 'topFixed',
+                        caretSize: 7,
                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
                         titleFont: { family: 'Cairo', size: 14, weight: 'bold' },
                         bodyFont: { family: 'Cairo', size: 13, weight: '600' },
-                        padding: 14, cornerRadius: 10, displayColors: false,
+                        padding: 10, cornerRadius: 10, displayColors: false,
                         borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
                         callbacks: {
                             label: function(context) {
-                                const view = context.chart.currentView || 'day';
+                                const view = context.chart.currentView || 'last24hours';
                                 const store = chartDataStore[context.chart.canvas.id.replace('chart-', '')];
                                 if (!store) return '';
                                 
                                 let increment = context.parsed.y;
                                 let cumulative = 0;
                                 
-                                if (view === 'day') {
+                                if (view === 'last1hour') {
+                                    cumulative = store.minutelyCumulative[context.dataIndex];
+                                } else if (view === 'last6hours') {
+                                    cumulative = store.hourly6Cumulative[context.dataIndex];
+                                } else if (view === 'last24hours') {
                                     cumulative = store.hourlyCumulative[context.dataIndex];
-                                } else if (view === 'week') {
+                                } else if (view === 'last7days') {
                                     cumulative = store.dailyCumulative[context.dataIndex];
+                                } else if (view === 'last30days') {
+                                    cumulative = store.daily30Cumulative[context.dataIndex];
                                 } else {
                                     cumulative = store.monthlyCumulative[context.dataIndex];
                                 }
                                 
-                                // إرجاع مصفوفة لعرض سطرين في التلميح
                                 return [
                                     'الزيادة في هذا الوقت: ' + increment.toLocaleString('en-US'),
                                     'الإجمالي حتى هذا الوقت: ' + cumulative.toLocaleString('en-US')
@@ -864,11 +1209,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
                 },
                 scales: {
                     x: {
-                        grid: { display: false, drawBorder: false },
+                        grid: { display: false },
+                        border: { display: false },
                         ticks: { color: '#64748b', font: { family: 'Cairo', size: 11 }, maxTicksLimit: 8 }
                     },
                     y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.04)', drawBorder: false },
+                        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+                        border: { display: false },
                         ticks: { display: false }, beginAtZero: true
                     }
                 },
@@ -881,36 +1228,30 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         updateCurrentHighlight(chart, initialIsCurrent, color);
     }
 
-async function downloadAllLogs() {
-    try {
-        const response = await fetch('stats?action=list_logs&t=' + Date.now());
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-
-        const data = await response.json();
-        const files = data.files || [];
-
-        if (files.length === 0) {
-            alert('لا توجد ملفات JSONL داخل مجلد السجلات');
-            return;
+    async function downloadAllLogs() {
+        try {
+            const response = await fetch('stats?action=list_logs&t=' + Date.now());
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            const files = data.files || [];
+            if (files.length === 0) {
+                alert('لا توجد ملفات JSONL داخل مجلد السجلات');
+                return;
+            }
+            for (const file of files) {
+                const a = document.createElement('a');
+                a.href = 'stats?action=download_log&file=' + encodeURIComponent(file) + '&t=' + Date.now();
+                a.download = file;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                await new Promise(resolve => setTimeout(resolve, 250));
+            }
+        } catch (error) {
+            console.error(error);
+            alert('حدث خطأ أثناء تحميل الملفات');
         }
-
-        // تحميل كل ملف منفصل
-        for (const file of files) {
-            const a = document.createElement('a');
-            a.href = 'stats?action=download_log&file=' + encodeURIComponent(file) + '&t=' + Date.now();
-            a.download = file;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-
-            // تأخير بسيط حتى لا يمنع المتصفح التحميلات المتعددة
-            await new Promise(resolve => setTimeout(resolve, 250));
-        }
-    } catch (error) {
-        console.error(error);
-        alert('حدث خطأ أثناء تحميل الملفات');
     }
-}
 
     async function resetServerCache() {
         try {
@@ -948,6 +1289,7 @@ async function downloadAllLogs() {
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        initHintsToggle();
         initDashboard();
         setInterval(initDashboard, 5000);
     });
