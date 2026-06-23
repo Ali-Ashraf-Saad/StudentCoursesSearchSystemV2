@@ -392,6 +392,17 @@ header("Expires: 0");
         border-right: 5px solid #f59e0b;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
       }
+      .pinned-course-card.pinned-upcoming {
+        border-color: rgba(251, 191, 36, 0.7);
+        border-right-color: #fbbf24;
+        box-shadow: 0 0 14px rgba(251, 191, 36, 0.45), 0 14px 34px rgba(0, 0, 0, 0.28);
+        animation: pulse-yellow 2s infinite;
+      }
+      @keyframes pulse-yellow {
+        0% { box-shadow: 0 0 14px rgba(251, 191, 36, 0.4), 0 14px 34px rgba(0, 0, 0, 0.28); }
+        50% { box-shadow: 0 0 26px rgba(251, 191, 36, 0.75), 0 14px 34px rgba(0, 0, 0, 0.28); }
+        100% { box-shadow: 0 0 14px rgba(251, 191, 36, 0.4), 0 14px 34px rgba(0, 0, 0, 0.28); }
+      }
       .pinned-header {
         display: flex;
         align-items: flex-start;
@@ -535,6 +546,21 @@ header("Expires: 0");
         font-weight: 600;
         margin-bottom: 8px;
         color: #f1f5f9;
+        line-height: 1.7;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      #export-card .export-course-title {
+        direction: rtl;
+        unicode-bidi: isolate;
+      }
+      #export-card .export-course-code {
+        direction: ltr;
+        unicode-bidi: isolate;
+        color: #93c5fd;
+        font-size: 16px;
       }
       #export-card .export-exam-row {
         display: flex;
@@ -561,71 +587,28 @@ header("Expires: 0");
         font-size: 12px;
         color: #475569;
       }
-      #course-share-card {
-        position: absolute;
-        left: -9999px;
-        top: -9999px;
-        width: 560px;
-        padding: 28px;
-        background: linear-gradient(145deg, #0b1120 0%, #182033 100%);
-        border-radius: 22px;
-        color: #e2e8f0;
-        font-family: "Cairo", sans-serif;
-        direction: rtl;
-        border: 2px solid rgba(96, 165, 250, 0.42);
-        box-shadow: 0 22px 45px rgba(0, 0, 0, 0.55);
-      }
-      #course-share-card .share-header {
-        border-bottom: 2px solid rgba(96, 165, 250, 0.22);
-        padding-bottom: 16px;
-        margin-bottom: 18px;
-      }
-      #course-share-card .share-course-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #f8fafc;
-        margin-bottom: 6px;
-      }
-      #course-share-card .share-code {
-        display: inline-block;
-        color: #93c5fd;
-        background: rgba(59, 130, 246, 0.15);
-        border-radius: 999px;
-        padding: 3px 12px;
-        font-weight: 700;
-      }
-      #course-share-card .share-student {
-        color: #cbd5e1;
-        font-size: 15px;
-        margin-top: 12px;
-      }
-      #course-share-card .share-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-      }
-      #course-share-card .share-row span {
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(148, 163, 184, 0.16);
-        border-radius: 999px;
-        padding: 6px 12px;
-        color: #dbeafe;
-        font-size: 14px;
-      }
-      #course-share-card .share-note {
-        color: #fcd34d;
-        font-size: 14px;
-        margin-top: 14px;
-      }
-      #course-share-card .watermark {
-        text-align: center;
-        margin-top: 20px;
-        color: #64748b;
-        font-size: 12px;
-      }
-
       @media (max-width: 600px) {
+        body {
+          padding-top: 64px;
+        }
+        .top-nav {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 4px;
+          padding: 7px 5px;
+        }
+        .nav-btn {
+          justify-content: center;
+          gap: 4px;
+          min-width: 0;
+          padding: 7px 3px;
+          font-size: 11px;
+          white-space: nowrap;
+        }
+        .nav-btn svg {
+          width: 18px;
+          height: 18px;
+        }
         .course-topline,
         .pinned-header {
           flex-direction: column;
@@ -678,6 +661,44 @@ header("Expires: 0");
         transition: background-color 5000s ease-in-out 0s;
       }
     </style>
+
+<!-- with new label  -->
+  <style> 
+    .nav-btn.new-feature{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-icon-box{
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .new-label{
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 700;
+      color: #ef4444;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    
+    .btn-icon{
+      display: block;
+    }
+    
+    .btn-text{
+      white-space: nowrap;
+    }
+  </style>
+
   </head>
 
   <body>
@@ -689,6 +710,43 @@ header("Expires: 0");
         <span>المقررات</span>
       </button>
 
+<!-- with new label -->
+      <button class="nav-btn new-feature" onclick="goQA()">
+          <div class="btn-icon-box">
+            <small class="new-label">جديد</small>
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="btn-icon">
+          <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
+        </svg>
+         </div>
+        <span class="btn-text">أسئلة وروابط</span>
+      </button>
+
+      <button class="nav-btn new-feature" onclick="goGPA()">
+        <div class="btn-icon-box">
+            <small class="new-label">جديد</small>
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="btn-icon">
+          <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 4h10V4H7v2zm2 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v6h2v-6zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2z"/>
+        </svg>
+         </div>
+        <span class="btn-text">حساب GPA</span>
+      </button>
+
+<!-- without new label -->
+      <!-- <button class="nav-btn" onclick="goQA()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
+        </svg>
+        <span>أسئلة وروابط</span>
+      </button>
+
+      <button class="nav-btn" onclick="goGPA()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 4h10V4H7v2zm2 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v6h2v-6zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2z"/>
+        </svg>
+        <span>حساب GPA</span>
+      </button> -->
+<!--  -->
+ 
       <button class="nav-btn" onclick="refreshPage()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.45.83.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
@@ -729,12 +787,11 @@ header("Expires: 0");
     </div>
 
     <div id="export-card"></div>
-    <div id="course-share-card"></div>
     <div class="toast" id="toast"></div>
 
     <footer>
       StudentsCourses 2026 &middot; Developed by Ali Ashraf &middot;
-      <a href="http://wa.me/+201148727448" target="_blank">Contact Me</a>
+      <a href="http://wa.me/+201148727448" target="_blank">ContactMe</a>
     </footer>
 
     <script>
@@ -745,8 +802,8 @@ header("Expires: 0");
 
       // ════════ محاكاة الوقت للتجارب (احذف هذا القسم بالكامل بعد الاختبار) ════════
       const SIMULATION_ENABLED = false; // ⚠️ سطر محاكاة - احذف بعد الاختبار
-      // const SIMULATION_START = new Date("2026-06-08T11:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
-      const SIMULATION_START = new Date("2026-06-08T13:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
+      // const SIMULATION_START = new Date("2026-06-29T9:29:00"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
+      const SIMULATION_START = new Date("2026-06-01T13:59:50"); // ⚠️ سطر محاكاة - احذف بعد الاختبار (حدد وقت البداية هنا)
       const SIMULATION_PAGE_LOAD_REAL_TIME = Date.now(); // ⚠️ سطر محاكاة - احذف بعد الاختبار
       function getSimulatedNow() { // ⚠️ دالة محاكاة - احذف بعد الاختبار
           if (!SIMULATION_ENABLED) return new Date();
@@ -770,14 +827,38 @@ header("Expires: 0");
       const PINNED_COURSE_KEY = "pinned_course_card_v1";
 
       function goCourses() {
-        fetch("/counterFiles/course_counter.php?action=increment", { 
-          method: "GET", 
+        fetch("/counterFiles/counter?action=increment&counter=course", {
+          method: "POST",
           keepalive: true,
-          cache: "no-store" // ← أضيف
+          cache: "no-store"
         })
           .catch(() => {})
           .finally(() => {
             window.location.href = "/courses";
+          });
+      }
+
+      function goQA() {
+        fetch("/counterFiles/counter?action=increment&counter=qa", {
+          method: "POST",
+          keepalive: true,
+          cache: "no-store"
+        })
+          .catch(() => {})
+          .finally(() => {
+            window.location.href = "/qa";
+          });
+      }
+
+      function goGPA() {
+        fetch("/counterFiles/counter?action=increment&counter=gpa", {
+          method: "POST",
+          keepalive: true,
+          cache: "no-store"
+        })
+          .catch(() => {})
+          .finally(() => {
+            window.location.href = "/gpa";
           });
       }
 
@@ -878,7 +959,7 @@ header("Expires: 0");
       let remainingTimer = null;
 
       function loadCounter() {
-        fetch("/counterFiles/counter.php?action=get", { cache: "no-store" }) // ← أضيف
+        fetch("/counterFiles/counter?counter=users", { cache: "no-store" })
           .then((r) => r.json())
           .then((d) => {
             const el = document.getElementById("visitCount");
@@ -890,7 +971,7 @@ header("Expires: 0");
           });
       }
       loadCounter();
-      setInterval(loadCounter, 5000);
+      setInterval(loadCounter, 4000);
 
       function toggleClearButton() {
         clearBtn.style.display = searchInput.value.trim() ? "block" : "none";
@@ -899,6 +980,16 @@ header("Expires: 0");
       function escapeHTML(value) {
         const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
         return String(value ?? "").replace(/[&<>"']/g, (char) => map[char]);
+      }
+
+      function formatCourseDisplayName(name) {
+        return String(name || "")
+          .replace(/المشروع\s*([0-9٠-٩]+)/g, "المشروع $1")
+          .trim();
+      }
+
+      function formatCourseCodeDisplay(code) {
+        return String(code || "").replace(/[.\s]+$/g, "").trim();
       }
 
       function showToast(message) {
@@ -964,91 +1055,32 @@ header("Expires: 0");
           lines.push("لم تحدد اللجنة بعد");
         }
 
-        const safeFileName = `course_${student?.number || "student"}_${course.code || "course"}.png`.replace(/[^\w.-]+/g, "_");
-        return { title, text: lines.filter(Boolean).join("\n"), fileName: safeFileName };
-      }
-
-      function renderCourseShareCard(student, course) {
-        const shareCard = document.getElementById("course-share-card");
-        if (!shareCard) return null;
-        const examRows = course.exam
-          ? `
-            <div class="share-row">
-              <span>اللجنة: ${escapeHTML(course.exam.committee || "-")}</span>
-              <span>المكان: ${escapeHTML(course.exam.room || "-")}</span>
-              <span>${escapeHTML(course.exam.day || "")} ${escapeHTML(course.exam.date || "")}</span>
-              <span>${escapeHTML(course.exam.period || "")} (${escapeHTML(course.exam.time || "")})</span>
-              <span>${escapeHTML(getExamPlainStatus(course))}</span>
-            </div>`
-          : `<div class="share-note">لم تحدد اللجنة بعد</div>`;
-
-        shareCard.innerHTML = `
-          <div class="share-header">
-            <div class="share-course-title">${escapeHTML(course.name || "مادة")}</div>
-            <span class="share-code">${escapeHTML(course.code || "")}</span>
-            <div class="share-student">
-              ${escapeHTML(student?.name || "")}
-              ${student?.number ? ` - ${escapeHTML(student.number)}` : ""}
-            </div>
-          </div>
-          ${examRows}
-          ${course.driveLink ? `<div class="share-note">رابط المادة: ${escapeHTML(course.driveLink)}</div>` : ""}
-          <div class="watermark">StudentsCourses V2 &middot; Developed by Ali Ashraf</div>`;
-        return shareCard;
-      }
-
-      function canShareImageFiles() {
-        try {
-          return !!(
-            window.html2canvas &&
-            navigator.share &&
-            navigator.canShare &&
-            typeof File !== "undefined" &&
-            navigator.canShare({ files: [new File([""], "course.png", { type: "image/png" })] })
-          );
-        } catch (_) {
-          return false;
-        }
+        return { title, text: lines.filter(Boolean).join("\n") };
       }
 
       async function shareCourse(student, course) {
         if (!course) return;
         const payload = buildCourseSharePayload(student, course);
-        const canTryImageShare = canShareImageFiles();
 
         try {
-          if (canTryImageShare) {
-            const shareCard = renderCourseShareCard(student, course);
-            const canvas = shareCard
-              ? await html2canvas(shareCard, { backgroundColor: null, scale: 2, useCORS: true, allowTaint: true })
-              : null;
-            const blob = canvas
-              ? await new Promise((resolve) => canvas.toBlob(resolve, "image/png"))
-              : null;
-
-            if (blob) {
-              const file = new File([blob], payload.fileName, { type: "image/png" });
-              await navigator.share({ title: payload.title, text: payload.text, files: [file] });
-              showToast("تم فتح المشاركة كصورة");
-              return;
-            }
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(payload.text);
+          } else {
+            const textarea = document.createElement("textarea");
+            textarea.value = payload.text;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "fixed";
+            textarea.style.top = "-9999px";
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            textarea.remove();
           }
-
-          if (navigator.share) {
-            await navigator.share({ title: payload.title, text: payload.text });
-            showToast("تم فتح المشاركة");
-            return;
-          }
+          showToast("تم نسخ نص المادة");
         } catch (err) {
-          if (err && err.name === "AbortError") return;
-          console.error("Share failed:", err);
+          console.error("Copy failed:", err);
+          showToast("تعذر نسخ النص");
         }
-
-        if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(payload.text).catch(() => {});
-        }
-        window.open(`https://wa.me/?text=${encodeURIComponent(payload.text)}`, "_blank", "noopener,noreferrer");
-        showToast("تم تجهيز نص المشاركة");
       }
 
       function getCoursePinId(student, course) {
@@ -1069,6 +1101,44 @@ header("Expires: 0");
             time: course.exam.time || "",
           } : null,
         };
+      }
+
+      function normalizePinnedCourses(courses) {
+        return (courses || []).map((course) => normalizePinnedCourse(course));
+      }
+
+      function getUpcomingCourseFromCourses(courses) {
+        const now = getSimulatedNow();
+        const entries = (courses || [])
+          .filter((course) => course.exam)
+          .map((course) => {
+            const range = parseExamTimeRange(course.exam.date, course.exam.time, course.exam.period);
+            if (!range) return null;
+            return { course, start: range.start, end: range.end };
+          })
+          .filter(Boolean);
+
+        const activeExam = entries.find((entry) => now >= entry.start && now < entry.end);
+        const futureExam = entries.filter((entry) => entry.start > now).sort((a, b) => a.start - b.start)[0];
+        return (activeExam || futureExam || null)?.course || null;
+      }
+
+      function isPinnedCourseUpcoming(pinned) {
+        const course = pinned?.course;
+        const courses = pinned?.courses || [];
+        if (!course || !courses.length) return false;
+        const upcomingCourse = getUpcomingCourseFromCourses(courses);
+        return !!upcomingCourse && upcomingCourse.code === course.code;
+      }
+
+      function updatePinnedUpcomingVisual() {
+        if (!pinnedCourseDiv) return;
+        const card = pinnedCourseDiv.querySelector(".pinned-course-card");
+        if (!card) return;
+
+        const isUpcomingPinned = isPinnedCourseUpcoming(loadPinnedCourse());
+        card.classList.toggle("pinned-upcoming", isUpcomingPinned);
+
       }
 
       function loadPinnedCourse() {
@@ -1111,6 +1181,7 @@ header("Expires: 0");
 
         const student = pinned.student || {};
         const course = pinned.course || {};
+        const isUpcomingPinned = isPinnedCourseUpcoming(pinned);
         const courseTitle = course.driveLink
           ? `<a href="${escapeHTML(course.driveLink)}" target="_blank" style="color:#60a5fa;text-decoration:none;">${escapeHTML(course.name)} (${escapeHTML(course.code)})</a>`
           : `${escapeHTML(course.name)} (${escapeHTML(course.code)})`;
@@ -1118,14 +1189,14 @@ header("Expires: 0");
         pinnedCourseDiv.style.display = "block";
         pinnedCourseDiv.innerHTML = `
           <div class="pinned-course-label">المادة المثبتة</div>
-          <div class="pinned-course-card">
+          <div class="pinned-course-card${isUpcomingPinned ? " pinned-upcoming" : ""}">
             <div class="pinned-header">
               <div>
                 <div class="pinned-title">${courseTitle}</div>
                 <div class="pinned-meta">${escapeHTML(student.name || "")}${student.number ? ` - الرقم: ${escapeHTML(student.number)}` : ""}</div>
               </div>
               <div class="pinned-actions">
-                <button type="button" class="course-action-btn pinned-share-btn">مشاركة</button>
+                <button type="button" class="course-action-btn pinned-share-btn">نسخ</button>
                 <button type="button" class="course-action-btn pinned-remove-btn">إلغاء التثبيت</button>
               </div>
             </div>
@@ -1156,6 +1227,7 @@ header("Expires: 0");
           savedAt: Date.now(),
           student: { name: student?.name || "", number: student?.number || "" },
           course: normalizePinnedCourse(course),
+          courses: normalizePinnedCourses(student?.courses || []),
         };
         localStorage.setItem(PINNED_COURSE_KEY, JSON.stringify(payload));
         renderPinnedCourse();
@@ -1399,6 +1471,8 @@ header("Expires: 0");
           return;
         }
 
+        updatePinnedUpcomingVisual();
+
         if (nextUpdateInterval !== Infinity && nextUpdateInterval > 0) {
           remainingTimer = setTimeout(updateAllRemainingTimes, nextUpdateInterval);
         }
@@ -1435,9 +1509,9 @@ header("Expires: 0");
           return;
         }
         activeFetchCtrl = new AbortController();
-        fetch(`search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, { 
+        fetch(`search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, {
           signal: activeFetchCtrl.signal,
-          cache: "no-store" // ← أضيف
+          cache: "no-store"
         })
           .then((r) => r.json())
           .then((data) => {
@@ -1461,8 +1535,8 @@ header("Expires: 0");
         }
         clearTimeout(debounceTimer);
         fetch(
-          `search.php?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`,
-          { cache: "no-store" } // ← أضيف
+          `search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`,
+          { cache: "no-store" }
         )
           .then((r) => r.json())
           .then((data) => {
@@ -1535,7 +1609,7 @@ header("Expires: 0");
                   <div class="course-topline">
                     <div class="course-name">${titleHtml}</div>
                     <div class="course-actions">
-                      <button type="button" class="course-action-btn share-course-btn" title="مشاركة المادة">مشاركة</button>
+                      <button type="button" class="course-action-btn share-course-btn" title="نسخ نص المادة">نسخ</button>
                       <button type="button" class="course-action-btn pin-course-btn${pinned ? " is-pinned" : ""}" title="${pinned ? "إلغاء تثبيت المادة" : "تثبيت المادة"}">${pinned ? "مثبت" : "تثبيت"}</button>
                     </div>
                   </div>
@@ -1622,6 +1696,8 @@ header("Expires: 0");
         const student = currentStudentData;
         let coursesExportHtml = "";
         student.courses.forEach((course) => {
+          const courseName = escapeHTML(formatCourseDisplayName(course.name));
+          const courseCode = escapeHTML(formatCourseCodeDisplay(course.code));
           let examHtml = "";
           if (course.exam) {
             examHtml = `
@@ -1636,7 +1712,10 @@ header("Expires: 0");
           }
           coursesExportHtml += `
             <div class="export-course">
-              <div class="export-course-name">${course.name} (${course.code})</div>
+              <div class="export-course-name">
+                <span class="export-course-title">${courseName}</span>
+                <span class="export-course-code">(${courseCode})</span>
+              </div>
               ${examHtml}
             </div>`;
         });
@@ -1669,6 +1748,6 @@ header("Expires: 0");
       renderHistory();
       renderPinnedCourse();
     </script>
-    <script src="tour-guide.js?v=1.0"></script>
+    <script src="tour-guide.js?v=10"></script>
   </body>
 </html>

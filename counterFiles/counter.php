@@ -1,20 +1,51 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
+declare(strict_types=1);
 
-$file = "counter.txt";
+header('Content-Type: application/json; charset=UTF-8');
 
+require_once __DIR__ . '/counter-lib.php';
 
-if (!file_exists($file)) {
-    file_put_contents($file, "0");
+$allowedCounters = [
+    'qa'     => 'qa.jsonl',
+    'course' => 'course.jsonl',
+    'gpa'    => 'gpa.jsonl',
+    'users'  => 'users.jsonl',
+];
+
+$counter = $_REQUEST['counter'] ?? '';
+$action  = $_REQUEST['action'] ?? '';
+
+if (!isset($allowedCounters[$counter])) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid counter'
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
-$count = (int) file_get_contents($file);
+$file = __DIR__ . '/logs/' . $allowedCounters[$counter];
 
-$action = $_GET['action'] ?? '';
+try {
+    if ($action === 'increment') {
+        incrementCounter($file);
 
-if ($action === "increment") {
-    $count++;
-    file_put_contents($file, $count);
+        http_response_code(204);
+        exit;
+    }
+
+    $last = getCounter($file);
+
+    echo json_encode([
+        'success'   => true,
+        'count'     => $last['count'],
+        'last_time' => $last['time'],
+    ], JSON_UNESCAPED_UNICODE);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage(),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
 }
-
-echo json_encode(["count" => $count]);

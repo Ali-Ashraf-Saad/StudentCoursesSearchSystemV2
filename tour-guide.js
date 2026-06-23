@@ -43,17 +43,21 @@
       display: flex; justify-content: space-between; align-items: center;
     }
     .tour-step-count { font-size: 12px; color: #64748b; }
+    
+    .tour-nav-btns {
+      display: flex; gap: 12px; /* المسافة بين الزرين */
+    }
 
     .tour-btn {
       background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.5);
       color: #60a5fa; font-size: 14px; font-weight: 600;
       padding: 10px 22px; border-radius: 12px; cursor: pointer;
-      transition: 0.2s; margin-left: 10px;
+      transition: 0.2s;
     }
     .tour-btn:hover { background: rgba(59,130,246,0.3); }
     .tour-btn.skip {
       background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.5);
-      color: #f87171; margin-left: 0; margin-right: auto;
+      color: #f87171;
     }
     .tour-btn.skip:hover { background: rgba(239,68,68,0.25); }
 
@@ -66,10 +70,9 @@
       }
       .tour-tooltip h4 { font-size: 17px; }
       .tour-tooltip p { font-size: 13px; margin-bottom: 18px; }
-      .tour-buttons { gap: 10px; }
+      .tour-nav-btns { gap: 10px; } /* مسافة أصغر قليلاً في الموبايل */
       .tour-btn {
         padding: 9px 14px;
-        margin-left: 6px;
       }
     }
 
@@ -132,18 +135,35 @@
   }
 
   // ========== 3. منطق الجولة ==========
-  const pageKey = location.pathname.includes('/courses') ? 'tour_courses_final6' : 'tour_index_final6';
-  if (localStorage.getItem(pageKey)) return;
-
-  const isIndex = !location.pathname.includes('/courses');
   const isCourses = location.pathname.includes('/courses');
+  const isQA = location.pathname.includes('qa');
+  const isGPA = location.pathname.includes('gpa');
+  const isIndex = !isCourses && !isQA && !isGPA;
+
+  const pageKey = isCourses
+    ? 'tour_courses0'
+    : isQA
+      ? 'tour_qa0'
+      : isGPA
+        ? 'tour_gpa0'
+        : 'tour_index0';
+
+  if (localStorage.getItem(pageKey)) return;
 
   let steps = [];
   if (isIndex) {
     steps = [
       { selector: '#search', title: 'ابحث باسمك', desc: 'اكتب <b>الاسم</b> (أو جزء منه). يدعم أيضاً الرقم الأكاديمي.', position: 'bottom' },
-      { selector: '.nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'اضغط هنا للانتقال إلى متابعة مواد الفرق وتحديد ما أنجزته.', position: 'bottom' },
-      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
+      { selector: '.nav-btn[onclick*="goGPA"]',title: 'حاسبة المعدل التراكمي',desc: 'احسب معدلك الفصلي والتراكمي بسهولة بأكثر من طريقة، وتابع تقدمك الأكاديمي مع رسوم بيانية ومعلومات حسب وضعك.',position: 'bottom'},
+      { selector: '.nav-btn[onclick*="goQA"], .nav-btn[onclick*="goQa"], a[href*="qa.html"], a[href*="qa"]', title: 'سؤال وجواب', desc: 'هنا ستجد أشهر الأسئلة التي يسأل عنها الطالب، مع إجابات مختصرة وواضحة تساعدك بسرعة مع أهم الروابط التي ستحتاجها.', position: 'bottom' },
+      { selector: '.nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'الإطلاع على مواد الفرق بكل التخصصات ومتابعة وتحديد ما أنجزته.', position: 'bottom' },
+      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو سؤال، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
+    ];
+  } else if (isQA) {
+    steps = [
+      { selector: '.links-card', title: 'روابط مهمة ومفيدة', desc: 'هذه أكثر  الروابط التي يسأل عنها الطالب، والموقع على GitHub.', position: 'bottom' },
+      { selector: '.qa-card:has(.qa-question)', title: 'سؤال وجواب', desc: 'هذه أشهر الأسئلة التي يسأل عنها الطالب.', position: 'bottom' },
+      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو سؤال، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
     ];
   } else if (isCourses) {
     steps = [
@@ -154,9 +174,18 @@
       { selector: '.select-all-btn:first-child', title: 'تحديد الكل', desc: 'اضغط هذا الزر لتحديد جميع مواد هذا الترم كمكتملة دفعة واحدة (أو مسحها إن كانت مكتملة).', position: 'top', mobilePosition: 'bottom', fallbackSelector: '.semester-block:first-child .select-all-btn' },
       { selector: '.open-courses-btn:first-child', title: 'زر "يفتح"', desc: 'اضغط هذا الزر لترى جميع المواد التي تعتمد على هذه المادة كمتطلب سابق.', position: 'left', mobilePosition: 'bottom', fallbackSelector: '.open-courses-btn' },
       { selector: '#reminderSection', title: 'تذكير المواد المتبقية', desc: 'ملخص سريع للمواد غير المكتملة في كل فرقة، يساعدك على التخطيط.', position: 'top' },
-      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو فكرة تحسين، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
+      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو سؤال، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
+    ];
+  } else if (isGPA) {
+    steps = [
+      { selector: '.header-section h1, .header-section', title: 'حاسبة الـ GPA', desc: 'صُممت هذه الحاسبة خصيصًا لطلاب الكلية وفقًا للائحة وطريقة حساب ابن الهيثم. بعد تجربة العديد من المواقع واكتشاف أخطاء متكررة في حساب المواد الراسبة أو المُعادة مثلا، جمعنا أفضل المميزات في مكان واحد لنقدم تجربة أسهل، أدق، وأقرب لما يتم احتسابه فعليًا داخل الكلية.', position: 'bottom' },
+      { selector: '.term-card:first-child .term-header', title: 'إدارة الترم', desc: 'اضغط هنا لفتح أو طي الترم، ويمكنك الضغط على اسم "ترم 1" لتغيير اسمه (مثلاً: صيفي، الترم الأول..).', position: 'bottom', fallbackSelector: '.term-card' },
+      { selector: '.term-card:first-child .radio-group', title: 'طريقة الحساب', desc: 'مرونة كاملة! اختر الطريقة الأنسب لك: إما إدخال المعدل الفصلي الجاهز، أو إضافة المواد واختيار التقدير، أو إدخال الدرجة من 100 وكل الطريق تُؤدي لنفس النتيجة.', position: 'bottom', fallbackSelector: '.radio-group' },
+      { selector: '.terms-actions', title: 'إضافة وترتيب الترمات', desc: 'أضف المزيد من الترمات من هنا، أو فعّل وضع الترتيب (↕) لسحب وإفلات الترمات لتعديل ترتيبها بكل سهولة.', position: 'top' },
+      { selector: '.bottom-bar', title: 'حساب وعرض النتيجة', desc: 'عند الانتهاء، اضغط على "أعرض النتيجة" لرؤية التراكمي النهائي، تفاصيل وضعك الأكاديمي للترم القادم، والرسوم البيانية لمستواك  .', position: 'top' }
     ];
   }
+
 
   if (!steps.length) return;
 
@@ -167,7 +196,7 @@
     <div class="tour-content"></div>
     <div class="tour-buttons">
       <span class="tour-step-count"></span>
-      <div>
+      <div class="tour-nav-btns">
         <button class="tour-btn next">التالي ◀</button>
         <button class="tour-btn skip">تخطي</button>
       </div>
@@ -185,13 +214,11 @@
   let rafId = null;
 
   function scrollToElement(el) {
-    // ضمان ظهور العنصر كاملاً وعدم تغطيته بالتولتيب
     const tooltipHeight = 250;
     const rect = el.getBoundingClientRect();
     if (rect.top < tooltipHeight || rect.bottom > window.innerHeight - tooltipHeight) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
-      // فقط للتأكد من أنه مرئي
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
@@ -209,7 +236,6 @@
       right:  { top: rect.top + rect.height/2 - tipHeight/2, left: rect.right + margin }
     };
 
-    // ترتيب المحاولات
     const isMobile = innerWidth <= 640;
     const mobilePreferred = rect.top > (innerHeight - rect.bottom) ? 'top' : 'bottom';
     const preferredPlacement = isMobile
@@ -228,11 +254,11 @@
       const overlapY = Math.max(0, Math.min(constrainedTop + tipHeight, rect.bottom) - Math.max(constrainedTop, rect.top));
       const overlapX = Math.max(0, Math.min(constrainedLeft + tipWidth, rect.right) - Math.max(constrainedLeft, rect.left));
       const overlapPenalty = overlapX > 0 && overlapY > 0 ? (overlapX * overlapY) / 100 : 0;
-      // نفضل الموضع الذي لم يُضطر للتعديل
+      
       const score = 2000 - (topDiff + leftDiff) * 2 - overlapPenalty;
       if (constrainedTop === p.top && constrainedLeft === p.left) {
         best = { top: p.top, left: p.left, pos };
-        break; // وجدنا موضعاً مثالياً
+        break; 
       }
       if (score > bestScore) {
         bestScore = score;
@@ -289,7 +315,6 @@
     let target = document.querySelector(step.selector);
     if (!target && step.fallbackSelector) target = document.querySelector(step.fallbackSelector);
     if (!target) {
-      // تخطي الخطوة إذا لم يوجد العنصر
       if (index < steps.length - 1) {
         showStep(index + 1);
       } else {
@@ -305,7 +330,6 @@
 
     scrollToElement(target);
 
-    // انتظار قليل حتى يستقر التمرير ثم تحديث الموضع
     setTimeout(() => {
       updatePositions();
       tooltip.querySelector('.tour-content').innerHTML = `<h4>${step.title}</h4><p>${step.desc}</p>`;
@@ -335,17 +359,27 @@
 
   let attempts = 0;
   function tryStartTour() {
-    if (location.pathname.includes('/courses')) {
-      // انتظار ظهور العناصر المهمة في صفحة المقررات
+    if (isCourses) {
       const firstCard = document.querySelector('.course-card:first-child');
       if (!firstCard) {
+        if (attempts < 20) { attempts++; setTimeout(tryStartTour, 200); return; }
+      }
+    }
+    if (isQA) {
+      const heading = document.querySelector('main h1, h1');
+      if (!heading) {
+        if (attempts < 20) { attempts++; setTimeout(tryStartTour, 200); return; }
+      }
+    }
+    if (isGPA) {
+      const firstTerm = document.querySelector('.term-card');
+      if (!firstTerm) {
         if (attempts < 20) { attempts++; setTimeout(tryStartTour, 200); return; }
       }
     }
     showStep(0);
   }
 
-  // تأخير بداية الجولة لضمان تحميل DOM بالكامل
   window.addEventListener('load', () => {
     setTimeout(tryStartTour, 300);
   });

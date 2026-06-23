@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/images/faviconcalc.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة GPA | StudentsCourses</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<style>
+    @import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap");
+
+    * { box-sizing: border-box; outline: none; }
+    
+    :root {
+        --primary-color: #2196F3;
+        --dark-blue: #1565C0;
+        --danger-color: #ff4444;
+        --warning-color: #FF8F00; /* للتقدير الجيد */
+        --success-color: #00C851;
+        
+        --bg-color: #f8f9fa;
+        --card-bg: #ffffff;
+        --text-color: #333;
+        --input-bg: #fff;
+        --border-color: #ddd;
+        --header-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        --modal-bg: rgba(0, 0, 0, 0.5);
+        
+        /* القيم الافتراضية للدائرة (ستتغير بالجافاسكريبت) */
+        --dynamic-color: #00C851; 
+        
+        --circle-bg: #e6e6e6;
+        --radius-input: 30px;
+        --radius-card: 25px;
+        --radius-btn: 50px;
+    }
+
+    body.dark-mode {
+        --primary-color: #3b82f6;
+        --dark-blue: #60a5fa;
+        --bg-color: #020617;
+        --card-bg: #1e293b;
+        --text-color: #e2e8f0;
+        --input-bg: #0f172a;
+        --border-color: rgba(96, 165, 250, 0.28);
+        --danger-color: #f87171;
+        --header-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        --modal-bg: rgba(0, 0, 0, 0.85);
+        --circle-bg: #334155;
+    }
+
+    body {
+        font-family: "Cairo", sans-serif;
+        background-color: var(--bg-color);
+        margin: 0; padding: 0; padding-top: 64px; min-height: 100vh;
+        color: var(--text-color);
+        -webkit-tap-highlight-color: transparent;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark-mode {
+        background: linear-gradient(135deg, #0f172a, #020617);
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1e293b; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Navbar & Header --- */
+    .top-nav {
+        position: fixed; top: 0; left: 0; width: 100%;
+        min-height: 64px;
+        background: rgba(15, 23, 42, 0.92);
+        backdrop-filter: blur(12px);
+        display: flex; justify-content: center; align-items: center; gap: 20px;
+        padding: 10px 20px; z-index: 1000;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+        border-bottom: 1px solid rgba(59,130,246,0.3);
+    }
+    .top-nav .nav-btn {
+        width: auto; display: flex; align-items: center; gap: 8px;
+        background: transparent; border: none; color: #e2e8f0;
+        font-family: "Cairo", sans-serif; font-size: 16px; font-weight: 600;
+        padding: 8px 16px; border-radius: 10px; box-shadow: none;
+    }
+    .top-nav .nav-btn svg { width: 24px; height: 24px; fill: currentColor; }
+    .top-nav .nav-btn:hover {
+        background: rgba(59,130,246,0.2); color: #60a5fa;
+        transform: translateY(-2px); box-shadow: none;
+    }
+
+    .header-section {
+        background: var(--card-bg); padding: 25px 15px 15px 15px; 
+        text-align: center; box-shadow: var(--header-shadow); margin-bottom: 30px;
+        position: relative; transition: background-color 0.3s;
+        border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;
+    }
+    body.dark-mode .header-section {
+        background: rgba(30,41,59,0.82);
+        border-bottom: 1px solid rgba(59,130,246,0.25);
+    }
+
+    h1 { margin: 0 0 8px 0; font-size: 2rem; color: var(--dark-blue); }
+    .subtitle { font-size: 1rem; color: #888; margin-bottom: 15px; font-weight: 500; }
+    .separator { width: 80px; height: 4px; background: linear-gradient(90deg, var(--primary-color), var(--success-color)); margin: 0 auto; border-radius: 2px; }
+    .visitor-badge {
+        width: fit-content; margin: 14px auto 0; padding: 4px 16px;
+        color: #94a3b8; background: rgba(15,23,42,0.55);
+        border-radius: 20px; font-size: 14px;
+    }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 0 20px 100px 20px; }
+
+    button {
+        cursor: pointer; border: none; border-radius: var(--radius-btn);
+        padding: 12px 20px; font-size: 16px; font-weight: 600;
+        width: 100%; transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    button:active { transform: scale(0.98); }
+    button:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
+    .btn-add-term {
+        background-color: transparent; color: var(--primary-color);
+        border: 2px dashed var(--primary-color); margin-top: 15px;
+    }
+    .btn-add-term:hover { background-color: rgba(33, 150, 243, 0.1); }
+    .terms-actions { display: flex; gap: 10px; margin-top: 15px; }
+    .terms-actions .btn-add-term { margin-top: 0; flex: 2; }
+    .btn-reorder {
+        flex: 1; background: var(--input-bg); color: var(--text-color);
+        border: 1px solid var(--border-color);
+    }
+    .btn-reorder.active { color: white; background: var(--warning-color); border-color: var(--warning-color); }
+    
+    /* --- إصلاح بطاقة الترم (Accordion Style) --- */
+    .term-card {
+        background-color: var(--card-bg); /* ← هذا السطر يحل مشكلة الخلفية الشفافة */
+        border-radius: var(--radius-card);
+        padding: 0;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        border: 1px solid var(--border-color);
+        overflow: hidden; 
+        transition: all 0.3s ease;
+        animation: slideDown 0.4s ease-out;
+    }
+
+    /* --- وضع الترتيب والسحب السلس --- */
+    .reorder-mode .term-card {
+        cursor: grab;
+        user-select: none;
+        touch-action: none; /* مهم لمنع تمرير الشاشة بالخطأ على الموبايل */
+    }
+    .reorder-mode .term-card:active { cursor: grabbing; }
+    .reorder-mode .term-card.dragging {
+        opacity: 0.25; transform: scale(0.97);
+        box-shadow: 0 14px 35px rgba(0,0,0,0.3);
+    }
+    .reorder-mode .term-card.drag-over {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.22);
+    }
+
+    .term-drop-placeholder {
+        border: 2px dashed var(--primary-color);
+        background: rgba(33, 150, 243, 0.1);
+        border-radius: var(--radius-card);
+        margin-bottom: 20px;
+        transition: height 0.2s ease, margin 0.2s ease;
+    }
+
+    .term-ghost {
+        position: fixed; pointer-events: none; z-index: 9999;
+        margin: 0 !important; border-radius: var(--radius-card);
+        background-color: var(--card-bg) !important;
+        border: 1px solid var(--border-color);
+        transform: scale(1.03) rotate(-2deg);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        overflow: hidden;
+    }
+    .term-ghost.dropping {
+        transform: scale(1) rotate(0deg);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: top 0.25s cubic-bezier(0.2, 1, 0.1, 1), 
+                    left 0.25s cubic-bezier(0.2, 1, 0.1, 1), 
+                    transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    /* --- رأس الكرت (الجزء القابل للنقر) --- */
+    .term-header { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding: 20px; gap: 10px; cursor: pointer;
+        background: rgba(0,0,0,0.02);
+        border-bottom: 1px solid transparent;
+        transition: background 0.2s;
+    }
+    .term-header:hover { background: rgba(0,0,0,0.04); }
+    .term-card.expanded .term-header { border-bottom: 1px solid var(--border-color); }
+
+    .arrow-icon { font-size: 1.2rem; color: #888; transition: transform 0.3s ease; margin-left: 10px; }
+    .term-card.expanded .arrow-icon { transform: rotate(180deg); }
+
+    .term-header input[type="text"] {
+        font-size: 1.1rem; font-weight: bold; border: 1px solid var(--border-color);
+        padding: 8px 15px; border-radius: var(--radius-input); flex: 1;
+        color: var(--primary-color); background: var(--input-bg);
+        cursor: text;
+    }
+    
+    /* --- جسم الكرت (المحتوى المخفي/الظاهر) --- */
+    .term-body {
+        max-height: 0; opacity: 0; overflow: hidden;
+        transition: max-height 0.4s ease, opacity 0.3s ease;
+        padding: 0 20px;
+    }
+    .term-card.expanded .term-body { max-height: 2000px; opacity: 1; padding-top: 20px; padding-bottom: 20px; }
+
+    .btn-delete-term {
+        width: 40px; padding: 0; height: 40px;
+        background-color: rgba(255, 68, 68, 0.1); color: var(--danger-color);
+        border: 1px solid var(--danger-color); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; flex-shrink: 0;
+    }
+    
+    .term-result-badge {
+        background: var(--input-bg); color: var(--text-color); padding: 8px 15px; border-radius: var(--radius-btn);
+        font-weight: bold; font-size: 0.9rem; display: none; margin-left: 5px;
+        white-space: nowrap; border: 1px solid var(--border-color);
+    }
+    .term-result-badge.visible { display: block; color: var(--primary-color); }
+
+    .radio-group { 
+        display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; 
+        background: rgba(0,0,0,0.03); padding: 15px; border-radius: 20px; 
+    }
+    .radio-title { font-size: 0.9rem; font-weight: bold; color: #888; margin-bottom: 5px; padding-right: 10px; }
+    .radio-options-row { display: flex; gap: 10px; }
+    
+    .radio-option {
+        flex: 1; display: flex; align-items: center; justify-content: center; padding: 12px 5px;
+        border: 1px solid var(--border-color); border-radius: var(--radius-btn); cursor: pointer; transition: all 0.2s; 
+        background: var(--input-bg); font-size: 0.9rem; text-align: center; color: var(--text-color);
+    }
+    .radio-option:has(input:checked) { border-color: var(--primary-color); background-color: rgba(33, 150, 243, 0.15); color: var(--primary-color); font-weight: bold;}
+    .radio-option input { display: none; }
+
+    .input-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+    .hidden { display: none; }
+
+    .direct-inputs-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+    .direct-input-field label { display: block; margin-bottom: 7px; font-size: 0.9rem; font-weight: 600; }
+    
+    .repeated-subjects-section {
+        margin: 15px 0; padding: 15px; border-radius: 20px;
+        border: 1px solid var(--warning-color); background: rgba(255, 143, 0, 0.08);
+    }
+    .repeated-subjects-section label { display: block; margin-bottom: 7px; font-size: 0.9rem; font-weight: 700; }
+    .repeated-subjects-hint { color: #888; font-size: 0.82rem; margin-top: 7px; }
+
+    input, select {
+        width: 100%; padding: 12px 20px; border: 1px solid var(--border-color); border-radius: var(--radius-input);
+        font-size: 16px; background: var(--input-bg); color: var(--text-color); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .input-error {
+        border-color: var(--danger-color) !important; background-color: rgba(255, 68, 68, 0.05) !important;
+        box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.1);
+        animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    .error-feedback {
+        color: var(--danger-color); font-size: 0.85rem; margin-top: 6px; padding: 0 15px;
+        font-weight: 600; display: flex; align-items: center; opacity: 0; max-height: 0;
+        overflow: hidden; transition: all 0.3s ease;
+    }
+    .error-feedback.visible { opacity: 1; max-height: 30px; transform: translateY(0); }
+
+    .subject-row { 
+        display: flex; flex-wrap: nowrap; gap: 10px; margin-bottom: 12px; 
+        background: rgba(0,0,0,0.03); padding: 10px; border-radius: 20px; 
+        border: 1px solid var(--border-color); align-items: flex-start; 
+        animation: slideDown 0.3s ease-out;
+    }
+    .subject-name { flex: 2; min-width: 0; }
+    .subject-input-group { flex: 1.5; min-width: 140px; display: flex; flex-direction: column; } 
+    
+    .btn-delete { 
+        flex: 0 0 auto; width: 45px; height: 45px; background-color: var(--danger-color); color: white; 
+        padding: 0; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+    }
+    .btn-delete::after { content: '✕'; font-weight: bold; } 
+    .btn-add-subject { background-color: var(--success-color); color: white; margin-top: 15px; }
+
+    /* Bottom Bar & Results Modal */
+    .bottom-bar {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: rgba(15, 23, 42, 0.92); padding: 15px 20px;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 100;
+        display: flex; gap: 15px; border-top: 1px solid var(--border-color);
+        justify-content: center;
+        border-top-left-radius: 30px; border-top-right-radius: 30px;
+    }
+    .bottom-bar button { max-width: 400px; }
+    .btn-calculate { background-color: var(--dark-blue); color: #fff; flex: 2; }
+    body.dark-mode .btn-calculate { color: #121212; font-weight: 800; }
+    .btn-reset { background-color: transparent; color: var(--danger-color); border: 1px solid var(--danger-color); flex: 1; }
+
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: var(--modal-bg); z-index: 2000; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        backdrop-filter: blur(3px); cursor: pointer;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    #result-modal { overflow-y: auto; justify-content: flex-start; padding: 30px 0; }
+
+    .message-card, .result-card {
+        cursor: default; background: var(--card-bg); width: 90%; max-width: 450px;
+        padding: 30px; border-radius: 30px; text-align: center;
+        transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+    }
+    
+    .result-card { max-width: 700px; transform: translateY(20px); transition: transform 0.3s ease; }
+    .modal-overlay.active .message-card { transform: scale(1); }
+    .modal-overlay.active .result-card { transform: translateY(0); }
+
+    /* SVG Circle Progress */
+    .gpa-circle-container { position: relative; width: 200px; height: 200px; margin: 0 auto 15px auto; }
+    .progress-ring__circle-bg { stroke: var(--circle-bg); transition: stroke 0.3s; }
+    .progress-ring__circle { stroke: var(--dynamic-color); transition: stroke-dashoffset 1s ease-in-out, stroke 0.5s ease; }
+
+    .gpa-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .gpa-number { font-size: 3.8rem; font-weight: bold; line-height: 1; color: var(--dynamic-color); transition: color 0.5s ease; }
+    .gpa-label { font-size: 1rem; opacity: 0.9; margin-top: 5px; color: var(--text-color); }
+    
+    .result-details { width: 100%; margin-bottom: 35px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #888; font-size: 1rem; }
+    .detail-value { font-weight: bold; color: var(--text-color); }
+
+    .charts-section { display: none; gap: 18px; margin-bottom: 30px; }
+    .charts-section.visible { display: grid; }
+    .chart-card {
+        background: linear-gradient(145deg, var(--input-bg), var(--card-bg));
+        border: 1px solid var(--border-color); border-radius: 24px; padding: 18px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+    .chart-title { margin: 0 0 14px; font-size: 1.05rem; color: var(--text-color); }
+    .chart-container { position: relative; width: 100%; height: 260px; }
+    
+    .terms-result-summary {
+        display: none; margin-bottom: 26px; overflow: hidden;
+        border: 1px solid var(--border-color); border-radius: 22px; background: var(--input-bg);
+    }
+    .terms-result-summary.visible { display: block; }
+    .summary-title { margin: 0; padding: 14px 16px; color: var(--text-color); font-size: 1.05rem; border-bottom: 1px solid var(--border-color); }
+    .summary-term-row {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 12px; align-items: center; padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color); font-size: 0.92rem;
+    }
+    .summary-term-row:last-child { border-bottom: none; }
+    .summary-term-name { text-align: right; font-weight: 700; overflow-wrap: anywhere; }
+    .summary-semester { color: #64b5f6; font-weight: 700; }
+    .summary-cumulative { color: #ffb74d; font-weight: 700; }
+    
+    .academic-status {
+        display: none; margin-bottom: 26px; text-align: right;
+        border: 1px solid var(--border-color); border-radius: 22px;
+        background: linear-gradient(145deg, rgba(33,150,243,0.10), var(--input-bg)); overflow: hidden;
+    }
+    .academic-status.visible { display: block; }
+    .academic-status-title { margin: 0; padding: 14px 16px; font-size: 1.05rem; border-bottom: 1px solid var(--border-color); }
+    .academic-status-list { display: grid; gap: 0; }
+    .academic-status-item { display: flex; justify-content: space-between; gap: 16px; padding: 13px 16px; border-bottom: 1px solid var(--border-color); }
+    .academic-status-item:last-child { border-bottom: none; }
+    .academic-status-label { color: #999; }
+    .academic-status-value { font-weight: 800; text-align: left; }
+
+    .btn-share { background-color: var(--success-color); color: white; margin-bottom: 10px; }
+    
+    .msg-icon { font-size: 3.5rem; margin-bottom: 15px; display: block; }
+    .msg-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; color: var(--text-color); }
+    .msg-desc { color: #888; margin-bottom: 25px; font-size: 1rem; line-height: 1.6; }
+    .msg-actions { display: flex; gap: 15px; justify-content: center; }
+    .btn-ok { background-color: var(--primary-color); color: white; flex: 1; }
+    .btn-danger-confirm { background-color: var(--danger-color); color: white; flex: 1; }
+    .btn-cancel { background-color: #eee; color: #333; flex: 1; }
+
+    /* Media Queries */
+    @media (max-width: 640px) {
+        body { padding-top: 60px; }
+        .top-nav { min-height: 60px; gap: 8px; padding: 8px 10px; }
+        .top-nav .nav-btn { font-size: 14px; padding: 7px 10px; gap: 5px; }
+        .top-nav .nav-btn svg { width: 20px; height: 20px; }
+        .header-section {
+            padding: 20px 12px 16px; margin-bottom: 20px;
+            border-bottom-left-radius: 22px; border-bottom-right-radius: 22px;
+        }
+        h1 { font-size: 1.55rem; }
+        .subtitle { font-size: 0.86rem; line-height: 1.7; }
+        .container { padding: 0 12px 105px; }
+        .term-header { padding: 14px 12px; gap: 7px; }
+        .term-header input[type="text"] { min-width: 0; padding: 8px 10px; font-size: 0.95rem; }
+        .term-result-badge { padding: 7px 9px; font-size: 0.78rem; }
+        .term-body { padding-right: 12px; padding-left: 12px; }
+        .radio-options-row { flex-wrap: wrap; }
+        .radio-option { flex: 1 1 130px; }
+        .direct-inputs-grid { grid-template-columns: 1fr; }
+        .terms-actions { flex-direction: column; }
+        .terms-actions .btn-add-term, .btn-reorder { flex: auto; }
+        .bottom-bar { gap: 8px; padding: 10px 12px; border-radius: 20px 20px 0 0; }
+        .bottom-bar button { padding: 11px 10px; font-size: 14px; }
+        .message-card, .result-card { width: calc(100% - 24px); padding: 22px 15px; }
+        .charts-section.visible { grid-template-columns: 1fr; }
+        .chart-container { height: 220px; }
+        .summary-term-row { grid-template-columns: 1fr; gap: 5px; text-align: right; }
+        .academic-status-item { gap: 10px; font-size: 0.9rem; }
+        footer { margin-bottom: 73px; padding: 13px 10px; font-size: 12px; line-height: 1.8; }
+    }
+
+    @media (max-width: 400px) {
+        .subject-row { flex-wrap: wrap; }
+        .subject-name { flex: 1 1 100%; }
+        .subject-input-group { flex: 1 1 calc(50% - 30px); min-width: 0; }
+        .btn-delete { width: 42px; height: 42px; }
+    }
+</style>
+</head>
+<body class="dark-mode">
+
+<nav class="top-nav">
+    <button class="nav-btn" onclick="window.location.href='/'">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        <span>العودة</span>
+    </button>
+    <button class="nav-btn" onclick="location.reload()">
+        <svg viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.45.83.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
+        <span>تحديث</span>
+    </button>
+</nav>
+
+<div class="header-section">
+    <h1>حاسبة الـ GPA</h1>
+    <div class="subtitle">كلية الحاسبات والمعلومات – جامعة المنوفية</div>
+    <div class="separator"></div>
+    <div class="visitor-badge">عدد الزوار: <span id="visitCount">...</span></div>
+</div>
+
+<div class="container">
+    <div id="terms-container"></div>
+    <div class="terms-actions">
+        <button class="btn-add-term" onclick="addTerm()">+ إضافة ترم جديد</button>
+        <button class="btn-reorder" id="reorder-btn" onclick="toggleReorderMode()">↕ ترتيب الترمات</button>
+    </div>
+</div>
+
+<div class="bottom-bar">
+    <button class="btn-reset" onclick="confirmResetAction()">مسح الكل</button>
+    <button class="btn-calculate" onclick="calculateOverallGPA()">أعرض النتيجة</button>
+</div>
+
+<div id="result-modal" class="modal-overlay" onclick="closeModalOutside(event, 'result-modal')">
+    <div class="result-card" id="capture-area">
+        
+        <div class="gpa-circle-container">
+            <svg class="progress-ring" width="200" height="200">
+                <circle class="progress-ring__circle-bg" stroke-width="8" fill="transparent" r="90" cx="100" cy="100" transform="rotate(-90 100 100)"/>
+                <circle id="progress-circle" class="progress-ring__circle" stroke-width="8" fill="transparent" r="90" cx="100" cy="100"
+                        stroke-dasharray="565.5" stroke-dashoffset="565.5" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+            </svg>
+            <div class="gpa-content">
+                <span class="gpa-number" id="final-gpa">0.00</span>
+                <span class="gpa-label">المعدل التراكمي</span>
+            </div>
+        </div>
+        
+        <div class="result-details">
+            <div class="detail-row">
+                <span class="detail-label">التقدير العام</span>
+                <span class="detail-value" id="final-grade">-</span>
+            </div>
+        </div>
+        <div class="terms-result-summary" id="terms-result-summary">
+            <h3 class="summary-title">ملخص الترمات</h3>
+            <div id="terms-summary-list"></div>
+        </div>
+        <div class="academic-status" id="academic-status">
+            <h3 class="academic-status-title">وضعك الأكاديمي للترم القادم</h3>
+            <div class="academic-status-list" id="academic-status-list"></div>
+        </div>
+        <div class="charts-section" id="charts-section">
+            <div class="chart-card">
+                <h3 class="chart-title">المعدلات الفصلية</h3>
+                <div class="chart-container"><canvas id="semester-gpa-chart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">المعدلات التراكمية</h3>
+                <div class="chart-container"><canvas id="cumulative-gpa-chart"></canvas></div>
+            </div>
+        </div>
+        <button class="btn-share" onclick="shareResult()">تحميل النتيجة كصورة</button>
+        <button class="btn-calculate" onclick="closeModal('result-modal')">رجوع للتعديل</button>
+    </div>
+</div>
+
+<div id="general-modal" class="modal-overlay" onclick="closeModalOutside(event, 'general-modal')">
+    <div class="message-card">
+        <span class="msg-icon" id="msg-icon">⚠️</span>
+        <div class="msg-title" id="msg-title">عنوان</div>
+        <div class="msg-desc" id="msg-desc">نص الرسالة</div>
+        <div class="msg-actions" id="msg-actions"></div>
+    </div>
+</div>
+
+<script>
+    let termCounter = 0;
+    let termIdToDelete = null;
+    let reorderModeEnabled = false;
+    let semesterGpaChart = null;
+    let cumulativeGpaChart = null;
+
+    const gradePoints = {
+        'A+': 4.0, 'A': 3.7, 'B+': 3.3, 'B': 3.0,
+        'C+': 2.7, 'C': 2.4, 'D+': 2.2, 'D': 2.0, 'F': 0.0
+    };
+
+    function saveData() {
+        const termsData = [];
+        const terms = document.querySelectorAll('.term-card');
+        
+        terms.forEach(term => {
+            const termId = term.id;
+            const checkedRadio = term.querySelector(`input[name="mode-${termId}"]:checked`);
+            const modeValue = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+
+            const termObj = {
+                name: term.querySelector('.term-header input').value,
+                mode: modeValue,
+                directGpa: term.querySelector('.term-gpa-input').value,
+                registeredSubjects: term.querySelector('.registered-subjects-input').value,
+                failedSubjects: term.querySelector('.failed-subjects-input').value,
+                repeatedSubjects: term.querySelector('.repeated-subjects-input').value,
+                isExpanded: term.classList.contains('expanded'),
+                subjects: []
+            };
+
+            const subjects = term.querySelectorAll('.subject-row');
+            subjects.forEach(sub => {
+                const subObj = {
+                    name: sub.querySelector('.subject-name').value,
+                    letterGrade: sub.querySelector('.grade-input') ? sub.querySelector('.grade-input').value : '',
+                    percentGrade: sub.querySelector('.percent-input') ? sub.querySelector('.percent-input').value : ''
+                };
+                termObj.subjects.push(subObj);
+            });
+            termsData.push(termObj);
+        });
+
+        localStorage.setItem('gpaData', JSON.stringify(termsData));
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('gpaData');
+        if (saved) {
+            const termsData = JSON.parse(saved);
+            const container = document.getElementById('terms-container');
+            container.innerHTML = '';
+            termCounter = 0;
+
+            if (termsData.length === 0) { addTerm(); return; }
+
+            termsData.forEach(tData => {
+                addTerm(false, tData.isExpanded !== false); 
+                
+                const currentId = `term-${termCounter}`;
+                const termDiv = document.getElementById(currentId);
+
+                termDiv.querySelector('.term-header input').value = tData.name;
+                
+                const radios = document.getElementsByName(`mode-${currentId}`);
+                radios.forEach(r => { if (r.value === tData.mode) r.checked = true; });
+                termDiv.dataset.currentMode = tData.mode;
+                updateTermView(currentId, false);
+                termDiv.querySelector('.repeated-subjects-input').value = tData.repeatedSubjects ?? 0;
+
+                if (tData.mode === 'term-gpa') {
+                    termDiv.querySelector('.term-gpa-input').value = tData.directGpa;
+                    termDiv.querySelector('.registered-subjects-input').value = tData.registeredSubjects ?? 6;
+                    termDiv.querySelector('.failed-subjects-input').value = tData.failedSubjects ?? 0;
+                } else {
+                    const list = document.getElementById(`${currentId}-list`);
+                    list.innerHTML = ''; 
+                    tData.subjects.forEach(sub => {
+                        addSubject(currentId, false);
+                        const rows = list.querySelectorAll('.subject-row');
+                        const lastRow = rows[rows.length - 1];
+                        
+                        lastRow.querySelector('.subject-name').value = sub.name;
+                        if (tData.mode === 'subjects-letter') {
+                             if(sub.letterGrade) lastRow.querySelector('.grade-input').value = sub.letterGrade;
+                        } else {
+                             if(sub.percentGrade) lastRow.querySelector('.percent-input').value = sub.percentGrade;
+                        }
+                    });
+                }
+
+                updateTermBadgePreview(termDiv);
+            });
+            updateRepeatedSubjectsFields();
+        } else {
+            addTerm();
+        }
+    }
+
+    document.addEventListener('input', event => {
+        updateRepeatedSubjectsFields();
+        saveData();
+        const term = event.target.closest('.term-card');
+        if (term) updateTermBadgePreview(term);
+    });
+    document.addEventListener('change', event => {
+        updateRepeatedSubjectsFields();
+        saveData();
+        const term = event.target.closest('.term-card');
+        if (term) updateTermBadgePreview(term);
+    });
+
+    function toggleTerm(termId) {
+        if (reorderModeEnabled) return;
+        const termCard = document.getElementById(termId);
+        termCard.classList.toggle('expanded');
+        saveData();
+    }
+
+    function clearError(input) {
+        input.classList.remove('input-error');
+        const parent = input.parentElement;
+        const errorMsg = parent.querySelector('.error-feedback');
+        if (errorMsg) errorMsg.classList.remove('visible');
+    }
+
+    function validateInput(input, min, max) {
+        const valStr = input.value;
+        const parent = input.parentElement;
+        let errorMsg = parent.querySelector('.error-feedback');
+        if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.className = 'error-feedback';
+            parent.appendChild(errorMsg);
+        }
+
+        if (valStr.trim() === "") {
+            input.classList.add('input-error');
+            errorMsg.innerText = "هذا الحقل مطلوب";
+            errorMsg.classList.add('visible');
+            return false;
+        }
+
+        if (min !== undefined && max !== undefined) {
+            const val = parseFloat(valStr);
+            if (val < min || val > max) {
+                input.classList.add('input-error');
+                errorMsg.innerText = `بين ${min} و ${max}`;
+                errorMsg.classList.add('visible');
+                return false;
+            }
+        }
+
+        clearError(input);
+        return true;
+    }
+
+    function formatDirectGpa(input) {
+        let value = input.value.replace(/[^\d.]/g, '');
+        value = value.replace(/^\.+/, '');
+        const firstDot = value.indexOf('.');
+
+        if (firstDot !== -1) {
+            value = value.slice(0, firstDot + 1) + value.slice(firstDot + 1).replace(/\./g, '');
+            const parts = value.split('.');
+            value = parts[0].slice(0, 1) + '.' + parts[1].slice(0, 2);
+        } else if (value.length > 1) {
+            value = value[0] + '.' + value.slice(1, 3);
+        }
+
+        input.value = value;
+    }
+
+    function addTerm(shouldSave = true, isExpanded = true) {
+        // حماية إضافية: منع تنفيذ الدالة إذا كان وضع الترتيب مفعلاً
+        if (reorderModeEnabled) return; 
+
+        termCounter++;
+        const container = document.getElementById('terms-container');
+        const termNumber = container.querySelectorAll('.term-card').length + 1;
+        const termId = `term-${termCounter}`;
+        const termDiv = document.createElement('div');
+        
+        termDiv.className = `term-card ${isExpanded ? 'expanded' : ''}`;
+        termDiv.id = termId;
+        termDiv.dataset.currentMode = 'term-gpa';
+
+        termDiv.innerHTML = `
+            <div class="term-header" onclick="toggleTerm('${termId}')">
+                <span class="arrow-icon">▼</span>
+                <input type="text" value="ترم ${termNumber}" onclick="event.stopPropagation(); this.select()">
+                <div class="term-result-badge">GPA: 0.00</div>
+                <button class="btn-delete-term" onclick="event.stopPropagation(); confirmDeleteTerm('${termId}')">✕</button>
+            </div>
+            
+            <div class="term-body">
+                <div class="radio-group">
+                    <div class="radio-title">طريقة حساب الترم:</div>
+                    <div class="radio-options-row">
+                        <label class="radio-option">
+                            <input type="radio" name="mode-${termId}" value="term-gpa" onchange="updateTermView('${termId}')" checked> المعدل الفصلي
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="mode-${termId}" value="subjects-letter" onchange="updateTermView('${termId}')"> المواد (تقدير)
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="mode-${termId}" value="subjects-percent" onchange="updateTermView('${termId}')"> المواد (درجة)
+                        </label>
+                    </div>
+                </div>
+                <div class="repeated-subjects-section hidden">
+                    <label>عدد المواد المُعادة (المسجلة أكثر من مرة):</label>
+                    <input type="number" step="1" min="0" max="0" class="repeated-subjects-input" value="0" oninput="clearError(this)">
+                    <div class="repeated-subjects-hint">متاح للإعادة من الترمات السابقة: <span class="available-repeats">0</span></div>
+                </div>
+                <div id="${termId}-direct" class="input-section">
+                    <div class="direct-inputs-grid">
+                        <div class="direct-input-field">
+                            <label>المعدل الفصلي (GPA):</label>
+                            <input type="text" inputmode="decimal" maxlength="4" class="term-gpa-input" placeholder="مثلاً: 3.5" oninput="formatDirectGpa(this); clearError(this)">
+                        </div>
+                        <div class="direct-input-field">
+                            <label>عدد المواد المسجلة:</label>
+                            <input type="number" step="1" min="1" max="10" class="registered-subjects-input" value="6" oninput="clearError(this)">
+                        </div>
+                        <div class="direct-input-field">
+                            <label>عدد مواد الرسوب:</label>
+                            <input type="number" step="1" min="0" max="10" class="failed-subjects-input" value="0" oninput="clearError(this)">
+                        </div>
+                    </div>
+                </div>
+                <div id="${termId}-subjects" class="input-section hidden">
+                    <div class="subjects-list" id="${termId}-list"></div>
+                    <button class="btn-add-subject" onclick="addSubject('${termId}')">+ إضافة مادة</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(termDiv);
+        
+        if (shouldSave) {
+            addSubject(termId);
+            updateRepeatedSubjectsFields();
+            saveData();
+        }
+    }
+    
+    // --- متغيرات ونظام السحب والإفلات الموحد ---
+    let pointerGhost = null;
+    let dragTarget = null;
+    let placeholder = null;
+    let pointerOffset = { x: 0, y: 0 };
+    let autoScrollInterval = null;
+    let currentPointerY = 0;
+
+function toggleReorderMode() {
+        reorderModeEnabled = !reorderModeEnabled;
+        const container = document.getElementById('terms-container');
+        const button = document.getElementById('reorder-btn');
+        const addTermBtn = document.querySelector('.btn-add-term'); // جلب زر إضافة ترم
+
+        container.classList.toggle('reorder-mode', reorderModeEnabled);
+        button.classList.toggle('active', reorderModeEnabled);
+        button.innerText = reorderModeEnabled ? '✓ إنهاء الترتيب' : '↕ ترتيب الترمات';
+
+        // تعطيل زر "إضافة ترم" وتغيير مظهره أثناء وضع الترتيب
+        if (addTermBtn) {
+            addTermBtn.disabled = reorderModeEnabled;
+            addTermBtn.style.opacity = reorderModeEnabled ? '0.4' : '1';
+            addTermBtn.style.cursor = reorderModeEnabled ? 'not-allowed' : 'pointer';
+        }
+
+        container.querySelectorAll('.term-card').forEach(term => {
+            if (reorderModeEnabled) {
+                // حفظ حالة الترم (مفتوح أم مغلق) قبل طيه
+                term.dataset.wasExpanded = term.classList.contains('expanded');
+                term.classList.remove('expanded'); // طي الترم
+            } else {
+                // استرجاع حالة الترم السابقة عند إنهاء الترتيب
+                if (term.dataset.wasExpanded === 'true') {
+                    term.classList.add('expanded');
+                }
+                // تنظيف المتغير بعد الاسترجاع
+                delete term.dataset.wasExpanded;
+            }
+        });
+        
+        if (reorderModeEnabled) {
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+        
+        // حفظ البيانات في الحالتين (لضمان حفظ حالة الفتح والإغلاق الجديدة في التخزين المحلي)
+        saveData();
+    }
+    
+    document.getElementById('terms-container').addEventListener('pointerdown', startDrag);
+    document.addEventListener('pointermove', moveDrag, { passive: false });
+    document.addEventListener('pointerup', endDrag);
+    document.addEventListener('pointercancel', endDrag);
+
+    function startDrag(e) {
+        if (!reorderModeEnabled || dragTarget) return; // يمنع السحب بأكثر من إصبع في نفس الوقت
+        
+        const term = e.target.closest('.term-card');
+        if (!term || e.target.closest('.btn-delete-term')) return;
+
+        e.preventDefault();
+        if (navigator.vibrate) navigator.vibrate(40);
+
+        dragTarget = term;
+        const rect = term.getBoundingClientRect();
+        
+        pointerOffset.x = e.clientX - rect.left;
+        pointerOffset.y = e.clientY - rect.top;
+        currentPointerY = e.clientY;
+
+        pointerGhost = term.cloneNode(true);
+        pointerGhost.className = 'term-ghost'; 
+        pointerGhost.removeAttribute('id'); // يمنع اختلاط الـ IDs بالمتصفح
+        
+        // يعزل أزرار الراديو في الكرت الوهمي حتى لا تلغي تحديد الكرت الأصلي
+        pointerGhost.querySelectorAll('input[type="radio"]').forEach(r => {
+            r.name += '-ghost';
+        });
+
+        pointerGhost.style.width = rect.width + 'px';
+        pointerGhost.style.height = rect.height + 'px';
+        pointerGhost.style.left = rect.left + 'px';
+        pointerGhost.style.top = rect.top + 'px';
+        document.body.appendChild(pointerGhost);
+
+        placeholder = document.createElement('div');
+        placeholder.className = 'term-drop-placeholder';
+        placeholder.style.height = rect.height + 'px';
+        term.after(placeholder);
+
+        term.style.display = 'none';
+        startAutoScroll();
+    }
+
+    function moveDrag(e) {
+        if (!reorderModeEnabled || !pointerGhost || !dragTarget) return;
+        e.preventDefault(); 
+        
+        currentPointerY = e.clientY;
+
+        pointerGhost.style.top = (e.clientY - pointerOffset.y) + 'px';
+        pointerGhost.style.left = (e.clientX - pointerOffset.x) + 'px';
+
+        pointerGhost.style.visibility = 'hidden';
+        const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+        pointerGhost.style.visibility = 'visible';
+
+        if (!elementBelow) return;
+
+        const overTerm = elementBelow.closest('.term-card:not([style*="display: none"])');
+        
+        if (overTerm && overTerm !== dragTarget) {
+            const overRect = overTerm.getBoundingClientRect();
+            const isAfter = e.clientY > overRect.top + (overRect.height / 2);
+            overTerm.parentElement.insertBefore(
+                placeholder, 
+                isAfter ? overTerm.nextSibling : overTerm
+            );
+        }
+    }
+
+    function endDrag(e) {
+        if (!reorderModeEnabled || !pointerGhost || !dragTarget) return;
+        
+        stopAutoScroll();
+        
+        const placeholderRect = placeholder.getBoundingClientRect();
+        
+        pointerGhost.classList.add('dropping');
+        pointerGhost.style.top = placeholderRect.top + 'px';
+        pointerGhost.style.left = placeholderRect.left + 'px';
+        
+        if (navigator.vibrate) navigator.vibrate(30);
+
+        // عزل المراجع لتفادي أي مشكلة وميض مزدوج أو تداخل
+        const localGhost = pointerGhost;
+        const localTarget = dragTarget;
+        const localPlaceholder = placeholder;
+        
+        pointerGhost = null;
+        dragTarget = null;
+        placeholder = null;
+
+        setTimeout(() => {
+            if (localPlaceholder && localTarget) {
+                localPlaceholder.replaceWith(localTarget);
+                localTarget.style.display = '';
+            }
+            if (localGhost) localGhost.remove();
+            
+            renumberDefaultTermNames();
+            updateRepeatedSubjectsFields();
+            saveData();
+        }, 250); 
+    }
+
+    function startAutoScroll() {
+        if (autoScrollInterval) return;
+        const scrollZone = 80; 
+        const scrollSpeed = 12;
+
+        autoScrollInterval = setInterval(() => {
+            if (!pointerGhost) return stopAutoScroll();
+            
+            let scrolled = false;
+            if (currentPointerY < scrollZone) {
+                window.scrollBy(0, -scrollSpeed);
+                scrolled = true;
+            } else if (currentPointerY > window.innerHeight - scrollZone) {
+                window.scrollBy(0, scrollSpeed);
+                scrolled = true;
+            }
+
+            if (scrolled) {
+                moveDrag({ clientX: pointerGhost.getBoundingClientRect().left + pointerOffset.x, clientY: currentPointerY, preventDefault: ()=>{} });
+            }
+        }, 16);
+    }
+
+    function stopAutoScroll() {
+        if (autoScrollInterval) {
+            clearInterval(autoScrollInterval);
+            autoScrollInterval = null;
+        }
+    }
+
+    function updateTermView(termId, shouldSync = true) {
+        const term = document.getElementById(termId);
+        const checkedRadio = term.querySelector(`input[name="mode-${termId}"]:checked`);
+        const mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+        
+        const previousMode = term.dataset.currentMode || 'term-gpa';
+        const directDiv = document.getElementById(`${termId}-direct`);
+        const subjectsDiv = document.getElementById(`${termId}-subjects`);
+        
+        term.querySelector('.term-result-badge').classList.remove('visible');
+
+        const allInputs = term.querySelectorAll('input, select');
+        allInputs.forEach(inp => clearError(inp));
+
+        if (shouldSync && previousMode !== mode) {
+            syncTermMode(term, previousMode, mode);
+        }
+
+        if (mode === 'term-gpa') {
+            directDiv.classList.remove('hidden'); subjectsDiv.classList.add('hidden');
+        } else {
+            directDiv.classList.add('hidden'); subjectsDiv.classList.remove('hidden');
+        }
+
+        term.dataset.currentMode = mode;
+        updateRepeatedSubjectsFields();
+        updateTermBadgePreview(term);
+    }
+
+    function updateTermBadgePreview() {
+        let totalCoursePoints = 0;
+        let totalRegisteredHours = 0;
+        let previousTermsComplete = true;
+
+        document.querySelectorAll('.term-card').forEach(term => {
+            const badge = term.querySelector('.term-result-badge'); 
+            const termData = getTermPreviewData(term);
+
+            if (!termData || !previousTermsComplete) {
+                badge.classList.remove('visible');
+                previousTermsComplete = false;
+                return;
+            }
+
+            totalCoursePoints += termData.totalPoints;
+            totalRegisteredHours += termData.registeredHours;
+
+            if (totalRegisteredHours <= 0) {
+                badge.classList.remove('visible');
+                return;
+            }
+
+            const cumulativeGpa = totalCoursePoints / totalRegisteredHours;
+            badge.innerText = `فصلي: ${termData.gpa.toFixed(2)} | تراكمي: ${cumulativeGpa.toFixed(2)}`;
+            badge.classList.add('visible');
+        });
+    }
+
+    function getTermPreviewData(term) {
+        const checkedRadio = term.querySelector(`input[name="mode-${term.id}"]:checked`);
+        const mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+
+        const repeatedInput = term.querySelector('.repeated-subjects-input');
+        if (!repeatedInput) return null;
+        
+        const repeatedSubjects = Number(repeatedInput.value);
+        const availableRepeats = Number(repeatedInput.dataset.available || 0);
+
+        if (!Number.isInteger(repeatedSubjects) || repeatedSubjects < 0 || repeatedSubjects > availableRepeats) return null;
+
+        if (mode === 'term-gpa') {
+            const gpaInput = term.querySelector('.term-gpa-input');
+            const registeredInput = term.querySelector('.registered-subjects-input');
+            const failedInput = term.querySelector('.failed-subjects-input');
+            
+            if (!gpaInput || !registeredInput || !failedInput) return null;
+
+            const gpaValue = gpaInput.value.trim();
+            const gpa = Number(gpaValue);
+            const registeredSubjects = Number(registeredInput.value);
+            const failedSubjects = Number(failedInput.value);
+
+            if (
+                gpaValue === '' || isNaN(gpa) || gpa < 0 || gpa > 4 ||
+                !Number.isInteger(registeredSubjects) || registeredSubjects < 1 || registeredSubjects > 10 ||
+                !Number.isInteger(failedSubjects) || failedSubjects < 0 || failedSubjects > registeredSubjects
+            ) return null;
+
+            const fullRegisteredHours = registeredSubjects * 3;
+            return {
+                gpa,
+                totalPoints: gpa * fullRegisteredHours,
+                registeredHours: fullRegisteredHours - (repeatedSubjects * 3)
+            };
+        }
+
+        const rows = Array.from(term.querySelectorAll('.subject-row'));
+        if (rows.length === 0) return null;
+        let totalPoints = 0;
+        let allComplete = true;
+
+        for (const row of rows) {
+            if (mode === 'subjects-letter') {
+                const value = row.querySelector('.grade-input')?.value;
+                if (!value) { allComplete = false; break; }
+                totalPoints += gradePoints[value] * 3;
+            } else {
+                const value = row.querySelector('.percent-input')?.value;
+                const percent = Number(value);
+                if (!value || value === '' || isNaN(percent) || percent < 0 || percent > 100) { allComplete = false; break; }
+                totalPoints += convertPercentToPoints(percent) * 3;
+            }
+        }
+
+        if (!allComplete) return null;
+
+        const fullRegisteredHours = rows.length * 3;
+        return {
+            gpa: totalPoints / fullRegisteredHours,
+            totalPoints,
+            registeredHours: fullRegisteredHours - (repeatedSubjects * 3)
+        };
+    }
+
+    function getTermFailedSubjects(term) {
+        const checkedRadio = term.querySelector(`input[name="mode-${term.id}"]:checked`);
+        const mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+
+        if (mode === 'term-gpa') {
+            const value = Number(term.querySelector('.failed-subjects-input').value);
+            return Number.isInteger(value) && value >= 0 ? value : 0;
+        }
+
+        let failedSubjects = 0;
+        term.querySelectorAll('.subject-row').forEach(row => {
+            if (mode === 'subjects-letter') {
+                if (row.querySelector('.grade-input')?.value === 'F') failedSubjects++;
+            } else {
+                const value = row.querySelector('.percent-input')?.value;
+                if (value !== '' && !isNaN(Number(value)) && Number(value) < 50) failedSubjects++;
+            }
+        });
+        return failedSubjects;
+    }
+
+    function getTermRegisteredSubjects(term) {
+        const checkedRadio = term.querySelector(`input[name="mode-${term.id}"]:checked`);
+        const mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+        
+        if (mode === 'term-gpa') {
+            const value = Number(term.querySelector('.registered-subjects-input').value);
+            return Number.isInteger(value) && value > 0 ? value : 0;
+        }
+        return term.querySelectorAll('.subject-row').length;
+    }
+
+    function updateRepeatedSubjectsFields() {
+        let pendingFailedSubjects = 0;
+
+        document.querySelectorAll('.term-card').forEach(term => {
+            const section = term.querySelector('.repeated-subjects-section');
+            const input = term.querySelector('.repeated-subjects-input');
+            const hint = term.querySelector('.available-repeats');
+            const maxRepeated = Math.min(pendingFailedSubjects, getTermRegisteredSubjects(term), 10);
+
+            input.max = maxRepeated;
+            input.dataset.available = maxRepeated;
+            hint.innerText = maxRepeated;
+            section.classList.toggle('hidden', pendingFailedSubjects === 0);
+
+            let repeatedSubjects = Number(input.value);
+            if (!Number.isInteger(repeatedSubjects) || repeatedSubjects < 0) repeatedSubjects = 0;
+            if (repeatedSubjects > maxRepeated) repeatedSubjects = maxRepeated;
+            input.value = repeatedSubjects;
+
+            pendingFailedSubjects -= repeatedSubjects;
+            pendingFailedSubjects += getTermFailedSubjects(term);
+        });
+
+        updateTermBadgePreview();
+    }
+
+    function syncTermMode(term, previousMode, newMode) {
+        const list = term.querySelector('.subjects-list');
+        const rows = Array.from(list.querySelectorAll('.subject-row'));
+
+        if (previousMode === 'subjects-letter' || previousMode === 'subjects-percent') {
+            storeSubjectValues(rows, previousMode);
+        }
+
+        if (newMode === 'term-gpa') {
+            const summary = summarizeSubjectRows(rows, previousMode);
+            term.querySelector('.registered-subjects-input').value = Math.min(rows.length, 10) || 1;
+            term.querySelector('.failed-subjects-input').value = summary.failedSubjects;
+            term.querySelector('.term-gpa-input').value = summary.gpa === null ? '' : summary.gpa.toFixed(2);
+            return;
+        }
+
+        if (previousMode === 'term-gpa') {
+            const requestedCount = Number(term.querySelector('.registered-subjects-input').value);
+            const subjectCount = Number.isInteger(requestedCount) ? Math.min(Math.max(requestedCount, 1), 10) : 1;
+
+            while (list.querySelectorAll('.subject-row').length < subjectCount) { addSubject(term.id, false); }
+            while (list.querySelectorAll('.subject-row').length > subjectCount) { list.lastElementChild.remove(); }
+
+            list.querySelectorAll('.subject-row').forEach(row => { renderSubjectInput(row, newMode); });
+            renumberDefaultSubjectNames(list);
+            return;
+        }
+
+        rows.forEach(row => {
+            if (previousMode === 'subjects-percent' && newMode === 'subjects-letter') {
+                const percentValue = row.dataset.percentGrade || '';
+                if (percentValue !== '') {
+                    const percent = Number(percentValue);
+                    if (!isNaN(percent) && percent >= 0 && percent <= 100) row.dataset.letterGrade = convertPercentToLetter(percent);
+                }
+            }
+            renderSubjectInput(row, newMode);
+        });
+    }
+
+    function storeSubjectValues(rows, mode) {
+        rows.forEach(row => {
+            if (mode === 'subjects-letter') {
+                const input = row.querySelector('.grade-input');
+                if (input) row.dataset.letterGrade = input.value;
+            } else {
+                const input = row.querySelector('.percent-input');
+                if (input) row.dataset.percentGrade = input.value;
+            }
+        });
+    }
+
+    function renderSubjectInput(row, mode) {
+        const inputGroup = row.querySelector('.subject-input-group');
+        inputGroup.innerHTML = getSubjectInputHTML(mode);
+
+        if (mode === 'subjects-letter') {
+            const savedValue = row.dataset.letterGrade || '';
+            if (savedValue) row.querySelector('.grade-input').value = savedValue;
+        } else {
+            row.querySelector('.percent-input').value = row.dataset.percentGrade || '';
+        }
+    }
+
+    function summarizeSubjectRows(rows, mode) {
+        let totalPoints = 0;
+        let failedSubjects = 0;
+        let allComplete = rows.length > 0;
+
+        rows.forEach(row => {
+            if (mode === 'subjects-letter') {
+                const value = row.querySelector('.grade-input')?.value;
+                if (!value) { allComplete = false; return; }
+                totalPoints += gradePoints[value];
+                if (value === 'F') failedSubjects++;
+            } else {
+                const value = row.querySelector('.percent-input')?.value;
+                const percent = Number(value);
+                if (!value || value === '' || isNaN(percent) || percent < 0 || percent > 100) { allComplete = false; return; }
+                totalPoints += convertPercentToPoints(percent);
+                if (percent < 50) failedSubjects++;
+            }
+        });
+
+        return { gpa: allComplete ? totalPoints / rows.length : null, failedSubjects };
+    }
+
+    function getSubjectInputHTML(mode) {
+        if (mode === 'subjects-letter') {
+            return `<select class="grade-input" onchange="clearError(this)">
+                    <option value="" disabled selected>التقدير</option>
+                    <option value="A+">A+ / أ+</option><option value="A">A / أ</option>
+                    <option value="B+">B+ / ب+</option><option value="B">B / ب</option>
+                    <option value="C+">C+ / ج+</option><option value="C">C / ج</option>
+                    <option value="D+">D+ / د+</option><option value="D">D / د</option>
+                    <option value="F">F / ر / رن / رل</option>
+                    </select>`;
+        } else {
+            return `<input type="number" class="percent-input" placeholder="الدرجة" min="0" max="100" oninput="clearError(this)">`;
+        }
+    }
+
+    function handleGradeKeyboard(event, select) {
+        if (event.ctrlKey || event.altKey || event.metaKey) return;
+        const key = event.key.toLowerCase();
+        const gradeMap = { 'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D', 'f': 'F' };
+        const grade = gradeMap[key];
+        if (!grade) return;
+        event.preventDefault();
+        select.value = grade;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    document.addEventListener('keydown', event => {
+        if (event.target.matches('.grade-input')) handleGradeKeyboard(event, event.target);
+    }, true);
+
+    function addSubject(termId, shouldSave = true) {
+        const listContainer = document.getElementById(`${termId}-list`);
+        if (listContainer.querySelectorAll('.subject-row').length >= 10) {
+            if (shouldSave) showAlert("تنبيه", "الحد الأقصى لعدد المواد هو 10.", "⚠️");
+            return;
+        }
+        
+        const term = document.getElementById(termId);
+        const checkedRadio = term.querySelector(`input[name="mode-${termId}"]:checked`);
+        let mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+        if (mode === 'term-gpa') mode = 'subjects-letter';
+        
+        const currentCount = listContainer.querySelectorAll('.subject-row').length + 1;
+        const row = document.createElement('div');
+        row.className = 'subject-row';
+        row.innerHTML = `<input type="text" class="subject-name" placeholder="اسم المادة" value="مادة ${currentCount}">
+            <div class="subject-input-group">${getSubjectInputHTML(mode)}</div>
+            <button class="btn-delete" onclick="removeSubject(this)"></button>`;
+        listContainer.appendChild(row);
+        
+        if (shouldSave) {
+            updateTermBadgePreview(document.getElementById(termId));
+            saveData();
+        }
+    }
+    
+    function removeSubject(btn) {
+        const term = btn.closest('.term-card');
+        const listContainer = btn.closest('.subjects-list');
+        btn.parentElement.remove();
+        renumberDefaultSubjectNames(listContainer);
+        updateRepeatedSubjectsFields();
+        updateTermBadgePreview(term);
+        saveData();
+    }
+
+    function renumberDefaultSubjectNames(listContainer) {
+        const rows = listContainer.querySelectorAll('.subject-row');
+        rows.forEach((row, index) => {
+            const nameInput = row.querySelector('.subject-name');
+            if (/^مادة\s+\d+$/.test(nameInput.value.trim())) nameInput.value = `مادة ${index + 1}`;
+        });
+    }
+
+    function convertPercentToPoints(percent) {
+        if (percent >= 90) return 4.0; if (percent >= 85) return 3.7;
+        if (percent >= 80) return 3.3; if (percent >= 75) return 3.0;
+        if (percent >= 70) return 2.7; if (percent >= 65) return 2.4;
+        if (percent >= 60) return 2.2; if (percent >= 50) return 2.0;
+        return 0.0;
+    }
+
+    function convertPercentToLetter(percent) {
+        if (percent >= 90) return 'A+'; if (percent >= 85) return 'A';
+        if (percent >= 80) return 'B+'; if (percent >= 75) return 'B';
+        if (percent >= 70) return 'C+'; if (percent >= 65) return 'C';
+        if (percent >= 60) return 'D+'; if (percent >= 50) return 'D';
+        return 'F';
+    }
+
+    function showInputError(input, message) {
+        const parent = input.parentElement;
+        let errorMsg = parent.querySelector('.error-feedback');
+        if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.className = 'error-feedback';
+            parent.appendChild(errorMsg);
+        }
+        input.classList.add('input-error');
+        errorMsg.innerText = message;
+        errorMsg.classList.add('visible');
+    }
+
+    function validateWholeNumber(input, min, max) {
+        if (!validateInput(input, min, max)) return false;
+        if (!Number.isInteger(Number(input.value))) {
+            showInputError(input, "يجب إدخال عدد صحيح");
+            return false;
+        }
+        return true;
+    }
+
+    function getTermCalculationData(term) {
+        const checkedRadio = term.querySelector(`input[name="mode-${term.id}"]:checked`);
+        const mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+        
+        const repeatedInput = term.querySelector('.repeated-subjects-input');
+        const maxRepeatedSubjects = Number(repeatedInput.dataset.available || 0);
+        const repeatedIsValid = validateWholeNumber(repeatedInput, 0, maxRepeatedSubjects);
+
+        if (!repeatedIsValid) return null;
+        const repeatedSubjects = Number(repeatedInput.value);
+
+        if (mode === 'term-gpa') {
+            const gpaInput = term.querySelector('.term-gpa-input');
+            const registeredInput = term.querySelector('.registered-subjects-input');
+            const failedInput = term.querySelector('.failed-subjects-input');
+            
+            if (!validateInput(gpaInput, 0, 4) || !validateWholeNumber(registeredInput, 1, 10) || !validateWholeNumber(failedInput, 0, 10)) return null;
+
+            const gpa = Number(gpaInput.value);
+            if(isNaN(gpa)) return null;
+
+            const registeredSubjects = Number(registeredInput.value);
+            const failedSubjects = Number(failedInput.value);
+            
+            if (failedSubjects > registeredSubjects) {
+                showInputError(failedInput, "لا يمكن أن يزيد الرسوب عن المواد المسجلة");
+                return null;
+            }
+
+            const registeredHours = registeredSubjects * 3;
+            return {
+                gpa: gpa,
+                totalPoints: gpa * registeredHours,
+                registeredHours: registeredHours - (repeatedSubjects * 3)
+            };
+        }
+
+        const rows = term.querySelectorAll('.subject-row');
+        let totalCoursePoints = 0, failedSubjects = 0, isValid = rows.length > 0;
+
+        rows.forEach(row => {
+            if (mode === 'subjects-letter') {
+                const gradeSelect = row.querySelector('.grade-input');
+                if (!validateInput(gradeSelect)) { isValid = false; return; }
+                totalCoursePoints += gradePoints[gradeSelect.value] * 3;
+                if (gradeSelect.value === 'F') failedSubjects++;
+            } else {
+                const percentInput = row.querySelector('.percent-input');
+                if (!validateInput(percentInput, 0, 100)) { isValid = false; return; }
+                const percent = Number(percentInput.value);
+                if (isNaN(percent)) { isValid = false; return; }
+                totalCoursePoints += convertPercentToPoints(percent) * 3;
+                if (percent < 50) failedSubjects++;
+            }
+        });
+
+        if (!isValid) return null;
+
+        const registeredHours = rows.length * 3;
+        return {
+            gpa: totalCoursePoints / registeredHours,
+            totalPoints: totalCoursePoints,
+            registeredHours: registeredHours - (repeatedSubjects * 3)
+        };
+    }
+
+    function calculateOverallGPA() {
+        updateRepeatedSubjectsFields();
+        const terms = document.querySelectorAll('.term-card');
+        let totalCoursePoints = 0, totalRegisteredHours = 0, validTermsCount = 0, pendingFailedSubjects = 0;
+        let hasError = false, hasAnyFailedSubject = false;
+        const chartLabels = [], semesterGpas = [], cumulativeGpas = [];
+
+        terms.forEach(term => {
+            const badge = term.querySelector('.term-result-badge');
+            const termData = getTermCalculationData(term);
+            const failedSubjects = getTermFailedSubjects(term);
+            const repeatedSubjects = Number(term.querySelector('.repeated-subjects-input').value) || 0;
+            
+            if (failedSubjects > 0) hasAnyFailedSubject = true;
+            pendingFailedSubjects = Math.max(0, pendingFailedSubjects - repeatedSubjects) + failedSubjects;
+
+            if (termData) {
+                totalCoursePoints += termData.totalPoints;
+                totalRegisteredHours += termData.registeredHours;
+                validTermsCount++;
+                chartLabels.push(term.querySelector('.term-header input[type="text"]').value);
+                semesterGpas.push(Number(termData.gpa.toFixed(2)));
+                cumulativeGpas.push(totalRegisteredHours > 0 ? Number((totalCoursePoints / totalRegisteredHours).toFixed(2)) : null);
+                
+                badge.innerText = `فصلي: ${termData.gpa.toFixed(2)} | تراكمي: ${(totalCoursePoints / totalRegisteredHours).toFixed(2)}`;
+                badge.classList.add('visible');
+            } else {
+                hasError = true;
+                badge.classList.remove('visible');
+            }
+        });
+
+        if (hasError) {
+             showAlert("تنبيه", "توجد حقول ناقصة أو خاطئة (باللون الأحمر).", "⚠️");
+        } else if (validTermsCount > 0) {
+            const finalGPA = totalCoursePoints / totalRegisteredHours;
+            document.getElementById('final-gpa').innerText = finalGPA.toFixed(2);
+            const finalGrade = getGradeText(finalGPA);
+            document.getElementById('final-grade').innerText = hasAnyFailedSubject ? finalGrade : `${finalGrade} مع مرتبة الشرف`;
+            
+            const passedHours = Math.max(0, totalRegisteredHours - (pendingFailedSubjects * 3));
+            renderAcademicStatus(finalGPA, passedHours);
+            
+            let dynamicColor = getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim();
+            if (finalGPA >= 3.0) dynamicColor = getComputedStyle(document.documentElement).getPropertyValue('--success-color').trim();
+            else if (finalGPA >= 2.0) dynamicColor = getComputedStyle(document.documentElement).getPropertyValue('--warning-color').trim();
+            
+            document.documentElement.style.setProperty('--dynamic-color', dynamicColor);
+
+            const circle = document.getElementById('progress-circle');
+            const radius = circle.r.baseVal.value;
+            const circumference = 2 * Math.PI * radius;
+            circle.style.strokeDashoffset = circumference - (Math.min(finalGPA / 4.0, 1) * circumference);
+
+            renderTermsSummary(chartLabels, semesterGpas, cumulativeGpas);
+            renderGpaCharts(chartLabels, semesterGpas, cumulativeGpas);
+            document.getElementById('result-modal').classList.add('active');
+            if (finalGPA >= 3.0) triggerConfetti();
+        } else {
+            showAlert("تنبيه", "الرجاء إدخال بيانات صحيحة في ترم واحد على الأقل للمتابعة.", "⚠️");
+        }
+    }
+
+    function renderAcademicStatus(gpa, passedHours) {
+        const status = document.getElementById('academic-status');
+        const list = document.getElementById('academic-status-list');
+        const allowedSubjects = gpa >= 2 ? 6 : gpa >= 1.5 ? 5 : 4;
+        const allowedHours = allowedSubjects * 3;
+
+        let level = 'المستوى الأول';
+        if (passedHours >= 102) level = 'المستوى الرابع';
+        else if (passedHours >= 66) level = 'المستوى الثالث';
+        else if (passedHours >= 30) level = 'المستوى الثاني';
+
+        const items = [
+            ['الحد الأقصى للتسجيل', `${allowedSubjects} مواد (${allowedHours} ساعة)`],
+            ['المستوى الحالي', level],
+            ['الساعات المجتازة', `${passedHours} ساعة`]
+        ];
+
+        if (passedHours >= 102 && passedHours <= 126) {
+            items.push(['مشروع التخرج', 'يمكنك تسجيل مشروع التخرج (6 ساعات على فصلين دراسيين)']);
+        } else if (passedHours >= 90) {
+            items.push(['مشروع التخرج', `متبقي ${102 - passedHours} ساعة لتسجيل مادة المشروع`]);
+        }
+
+        if (passedHours < 60) items.push(['التخصص', `لا يمكنك التخصص في الترم القادم — متبقي ${Math.ceil((60 - passedHours) / 3)} مادة`]);
+        else if (passedHours <= 72) items.push(['التخصص', 'يمكنك التخصص في أي قسم الترم القادم']);
+
+        if (passedHours >= 144) items.push(['التخرج', 'استوفيت شرط الساعات المطلوبة للتخرج (144 ساعة)']);
+        else if (passedHours >= 126) items.push(['التخرج', `متبقي ${144 - passedHours} ساعة للتخرج`]);
+
+        list.innerHTML = items.map(([label, value]) => `
+            <div class="academic-status-item"><span class="academic-status-label">${label}</span><span class="academic-status-value">${value}</span></div>
+        `).join('');
+        status.classList.add('visible');
+    }
+
+    function renderTermsSummary(labels, semesterValues, cumulativeValues) {
+        document.getElementById('terms-summary-list').innerHTML = labels.map((label, index) => `
+            <div class="summary-term-row">
+                <span class="summary-term-name">${escapeHtml(label)}</span>
+                <span class="summary-semester">فصلي ${semesterValues[index].toFixed(2)}</span>
+                <span class="summary-cumulative">تراكمي ${cumulativeValues[index].toFixed(2)}</span>
+            </div>
+        `).join('');
+        document.getElementById('terms-result-summary').classList.toggle('visible', labels.length > 0);
+    }
+
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value;
+        return div.innerHTML;
+    }
+
+    function renderGpaCharts(labels, semesterValues, cumulativeValues) {
+        const section = document.getElementById('charts-section');
+
+        if (semesterGpaChart) { semesterGpaChart.destroy(); semesterGpaChart = null; }
+        if (cumulativeGpaChart) { cumulativeGpaChart.destroy(); cumulativeGpaChart = null; }
+
+        if (labels.length < 2 || typeof Chart === 'undefined') { section.classList.remove('visible'); return; }
+
+        section.classList.add('visible');
+        const isDark = document.body.classList.contains('dark-mode');
+        const textColor = isDark ? '#e0e0e0' : '#333333';
+        const gridColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.09)';
+        const suggestedMax = Math.ceil(Math.max(4, ...semesterValues, ...cumulativeValues.filter(v => v !== null)) * 10 + 2) / 10;
+
+        const createOptions = () => ({
+            responsive: true, maintainAspectRatio: false, locale: 'ar', animation: { duration: 700 },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    rtl: true, displayColors: false, backgroundColor: isDark ? 'rgba(20,20,24,0.97)' : 'rgba(255,255,255,0.98)',
+                    titleColor: textColor, bodyColor: textColor, borderColor: isDark ? 'rgba(255,255,255,0.22)' : 'rgba(33,150,243,0.35)',
+                    borderWidth: 1, padding: 13, cornerRadius: 12, callbacks: { label: c => `GPA: ${Number(c.parsed.y).toFixed(2)}` }
+                }
+            },
+            scales: {
+                x: { ticks: { color: textColor, font: { weight: '600' } }, grid: { display: false }, border: { color: gridColor } },
+                y: { beginAtZero: true, suggestedMax, ticks: { color: textColor, stepSize: 0.5 }, grid: { color: gridColor }, border: { display: false } }
+            },
+            interaction: { mode: 'index', intersect: false }
+        });
+
+        semesterGpaChart = new Chart(document.getElementById('semester-gpa-chart'), {
+            type: 'line',
+            data: { labels, datasets: [{ data: semesterValues, borderColor: '#2196F3', backgroundColor: 'rgba(33, 150, 243, 0.16)', pointBackgroundColor: '#2196F3', pointBorderColor: isDark ? '#1e1e1e' : '#ffffff', borderWidth: 3, fill: true, tension: 0.3 }] },
+            options: createOptions()
+        });
+
+        cumulativeGpaChart = new Chart(document.getElementById('cumulative-gpa-chart'), {
+            type: 'line',
+            data: { labels, datasets: [{ data: cumulativeValues, borderColor: '#FF8F00', backgroundColor: 'rgba(255, 143, 0, 0.16)', pointBackgroundColor: '#FF8F00', pointBorderColor: isDark ? '#1e1e1e' : '#ffffff', borderWidth: 3, fill: true, tension: 0.3, spanGaps: true }] },
+            options: createOptions()
+        });
+    }
+
+    async function shareResult() {
+        const card = document.getElementById('capture-area');
+        try {
+            const currentColor = getComputedStyle(document.documentElement).getPropertyValue('--dynamic-color').trim();
+            const canvas = await html2canvas(card, {
+                backgroundColor: '#1e1e1e', scale: 3, logging: false, useCORS: true,
+                onclone: (doc) => {
+                    doc.body.classList.add('dark-mode');
+                    const clonedCard = doc.getElementById('capture-area');
+                    clonedCard.querySelectorAll('button').forEach(b => b.style.display = 'none');
+                    const clonedCharts = doc.getElementById('charts-section');
+                    if (clonedCharts) clonedCharts.style.display = 'none';
+                    if (clonedCard) { clonedCard.style.backgroundColor = '#1e1e1e'; clonedCard.style.color = '#e0e0e0'; clonedCard.style.boxShadow = 'none'; }
+                    const progressCircle = doc.getElementById('progress-circle');
+                    if (progressCircle) progressCircle.style.stroke = currentColor;
+                    const gpaNum = doc.querySelector('.gpa-number');
+                    if (gpaNum) gpaNum.style.color = currentColor;
+                    const svgBg = doc.querySelector('.progress-ring__circle-bg');
+                    if(svgBg) svgBg.style.stroke = '#333333'; 
+                    const gpaLbl = doc.querySelector('.gpa-label');
+                    if(gpaLbl) gpaLbl.style.color = '#e0e0e0';
+                }
+            });
+            const link = document.createElement('a'); link.download = 'GPA-Result.png'; link.href = canvas.toDataURL(); link.click();
+        } catch (err) { console.error(err); alert('حدث خطأ أثناء حفظ الصورة'); }
+    }
+
+    function showAlert(title, message, icon) {
+        document.getElementById('msg-icon').innerText = icon || "ℹ️";
+        document.getElementById('msg-title').innerText = title;
+        document.getElementById('msg-desc').innerText = message;
+        document.getElementById('msg-actions').innerHTML = `<button class="btn-ok" onclick="closeModal('general-modal')">حسناً</button>`;
+        document.getElementById('general-modal').classList.add('active');
+    }
+
+    function confirmDeleteTerm(termId) {
+        termIdToDelete = termId;
+        document.getElementById('msg-icon').innerText = "🗑️";
+        document.getElementById('msg-title').innerText = "حذف الترم؟";
+        document.getElementById('msg-desc').innerText = "سيتم حذف هذا الترم بجميع بياناته.";
+        document.getElementById('msg-actions').innerHTML = `
+            <button class="btn-cancel" onclick="closeModal('general-modal')">إلغاء</button>
+            <button class="btn-danger-confirm" onclick="executeDeleteTerm()">حذف</button>
+        `;
+        document.getElementById('general-modal').classList.add('active');
+    }
+
+    function renumberDefaultTermNames() {
+        document.querySelectorAll('.term-card').forEach((term, index) => {
+            const nameInput = term.querySelector('.term-header input[type="text"]');
+            if (/^ترم\s+\d+$/.test(nameInput.value.trim())) nameInput.value = `ترم ${index + 1}`;
+        });
+    }
+
+    function executeDeleteTerm() {
+        if (termIdToDelete) {
+            const termElement = document.getElementById(termIdToDelete);
+            if (termElement) termElement.remove();
+            termIdToDelete = null;
+            renumberDefaultTermNames();
+            updateRepeatedSubjectsFields();
+            saveData();
+        }
+        closeModal('general-modal');
+    }
+
+    function confirmResetAction() {
+        document.getElementById('msg-icon').innerText = "⚠️";
+        document.getElementById('msg-title').innerText = "مسح الكل؟";
+        document.getElementById('msg-desc').innerText = "سيتم حذف جميع الترمات نهائياً.";
+        document.getElementById('msg-actions').innerHTML = `
+            <button class="btn-cancel" onclick="closeModal('general-modal')">إلغاء</button>
+            <button class="btn-danger-confirm" onclick="executeReset()">مسح</button>
+        `;
+        document.getElementById('general-modal').classList.add('active');
+    }
+
+    function executeReset() {
+        const container = document.getElementById('terms-container');
+        container.innerHTML = ''; termCounter = 0; addTerm();
+        localStorage.removeItem('gpaData'); 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        closeModal('general-modal');
+    }
+
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+    function closeModalOutside(event, modalId) { if (event.target.id === modalId) closeModal(modalId); }
+
+    function getGradeText(gpa) {
+        if (gpa >= 3.5) return "ممتاز"; if (gpa >= 3.0) return "جيد جداً";
+        if (gpa >= 2.5) return "جيد"; if (gpa >= 2.0) return "مقبول";
+        if (gpa >= 1.5) return "ضعيف"; return "ضعيف جداً";
+    }
+
+    function triggerConfetti() {
+        var duration = 3000; var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 3000 };
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random()*0.2 + 0.1, y: Math.random()-0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random()*0.2 + 0.7, y: Math.random()-0.2 } }));
+        }, 250);
+    }
+
+    document.addEventListener('wheel', event => {
+        if (event.target.matches('input[type="number"]')) event.target.blur();
+    }, { passive: true });
+
+    function loadGPACounter() {
+        fetch("/counterFiles/counter?counter=gpa", { cache: "no-store" })
+            .then(res => res.json()).then(data => { document.getElementById("visitCount").innerText = data.count ?? 0; })
+            .catch(() => { document.getElementById("visitCount").innerText = "--"; });
+    }
+
+    loadGPACounter();
+    setInterval(loadGPACounter, 4000);
+    window.onload = loadData;
+
+</script>
+  <script src="tour-guide.js?v=10"></script>
+</body>
+</html>

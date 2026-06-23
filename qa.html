@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سؤال وجواب | StudentsCourses</title>
+  <link rel="icon" href="/images/favicon.ico?v=2">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap");
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Cairo", sans-serif;
+      background: linear-gradient(135deg, #0f172a, #020617);
+      color: #fff;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-top: 70px;
+      scrollbar-width: thin;
+      scrollbar-color: #3b82f6 #1e293b;
+    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1e293b; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+
+    .top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+      border-bottom: 1px solid rgba(59,130,246,0.3);
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: none;
+      color: #e2e8f0;
+      font-family: "Cairo", sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 10px;
+      transition: background 0.3s, color 0.3s, transform 0.2s;
+    }
+    .nav-btn svg { width: 24px; height: 24px; fill: currentColor; transition: transform 0.25s; }
+    .nav-btn:hover { background: rgba(59,130,246,0.2); color: #60a5fa; transform: translateY(-2px); }
+    .nav-btn:hover svg { transform: scale(1.1); }
+    .nav-btn:active { transform: scale(0.96); }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px 42px;
+      flex: 1;
+    }
+    h1 {
+      text-align: center;
+      margin: 8px 0 12px;
+      font-weight: 700;
+      font-size: 28px;
+    }
+    .visitor-badge {
+      text-align: center;
+      margin: 0 auto 24px;
+      color: #94a3b8;
+      font-size: 14px;
+      background: rgba(30,41,59,0.5);
+      padding: 4px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+      width: fit-content;
+    }
+    .qa-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .qa-card {
+      background: rgba(30, 41, 59, 0.82);
+      border: 1px solid rgba(59,130,246,0.22);
+      border-right: 5px solid #3b82f6;
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+    }
+    /* كارت الروابط الهامة - تصميم المربعات */
+    .links-card {
+      border-right: 5px solid #fbbf24;
+    }
+    .links-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #fbbf24;
+    }
+    .links-header svg {
+      width: 26px;
+      height: 26px;
+      fill: #fbbf24;
+    }
+    .links-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    .link-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      border-radius: 14px;
+      padding: 14px 20px;
+      text-decoration: none;
+      color: #e2e8f0;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.25s ease;
+      min-width: 150px;
+      flex: 1 1 auto;
+      backdrop-filter: blur(4px);
+    }
+    .link-item i {
+      font-size: 1.4rem;
+      color: #fbbf24;
+      transition: transform 0.25s;
+    }
+    .link-item span {
+      white-space: nowrap;
+    }
+    .link-item:hover {
+      background: rgba(59, 130, 246, 0.25);
+      border-color: #60a5fa;
+      color: #fff;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.4);
+    }
+    .link-item:hover i {
+      transform: scale(1.2);
+      color: #93c5fd;
+    }
+
+    .qa-question {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #f8fafc;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .qa-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      background: rgba(59,130,246,0.18);
+      color: #93c5fd;
+      font-size: 14px;
+      border: 1px solid rgba(96,165,250,0.35);
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .qa-answer {
+      color: #cbd5e1;
+      font-size: 15px;
+      line-height: 1.9;
+      padding-right: 40px;
+    }
+    .qa-answer p { margin: 0 0 8px; }
+    .qa-answer p:last-child { margin-bottom: 0; }
+    .qa-answer ul {
+      margin: 8px 0 0;
+      padding-right: 22px;
+    }
+    .qa-answer li { margin: 6px 0; }
+    .qa-answer a {
+      color: #60a5fa;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(96,165,250,0.45);
+    }
+    .qa-answer a:hover { color: #93c5fd; }
+    strong { color: #fcd34d; font-weight: 700; }
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: rgba(15,23,42,0.9);
+      color: #94a3b8;
+      font-size: 14px;
+      border-top: 1px solid rgba(148,163,184,0.2);
+    }
+    footer a { color: #60a5fa; text-decoration: none; }
+    footer a:hover { color: #93c5fd; }
+
+    @media (max-width: 640px) {
+      body { padding-top: 66px; }
+      .top-nav { gap: 8px; padding: 8px 10px; }
+      .nav-btn { font-size: 14px; padding: 8px 10px; }
+      .nav-btn svg { width: 22px; height: 22px; }
+      .container { padding: 18px 14px 34px; }
+      h1 { font-size: 24px; }
+      .qa-card { padding: 16px 14px; border-radius: 14px; }
+      .qa-question { font-size: 16px; gap: 8px; }
+      .qa-answer { padding-right: 0; font-size: 14px; }
+      .links-header { font-size: 18px; }
+      .link-item {
+        min-width: 130px;
+        padding: 12px 14px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <button class="nav-btn" onclick="window.location.href='/'">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      <span>العودة</span>
+    </button>
+    <button class="nav-btn" onclick="location.reload()">
+      <svg viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.45.83.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
+      <span>تحديث</span>
+    </button>
+  </nav>
+
+  <main class="container">
+    <h1>روابط مهمة وسؤال وجواب</h1>
+    <div class="visitor-badge">عدد الزوار: <span id="visitCount">...</span></div>
+
+    <section class="qa-list">
+      <!-- قسم روابط هامة بشكل مربعات احترافية -->
+      <article class="qa-card links-card">
+        <div class="links-header">
+          <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+          <span>روابط هامة</span>
+        </div>
+        <div class="links-grid">
+          <a href="https://stdch.menofia.education/static/index.html" target="_blank" rel="noopener noreferrer" class="link-item">
+            <i class="fa-solid fa-user-graduate"></i>
+            <span>ابن الهيثم</span>
+          </a>
+          <a href="https://menofia.education/" target="_blank" rel="noopener noreferrer" class="link-item">
+            <i class="fa-solid fa-book-open-reader"></i>
+            <span>منصة الكلية الماتريل</span>
+          </a>
+          <a href="https://drive.google.com/file/d/1vHjemEIAFJMn6p99IizWqpLq1jKyhHom/view?pli=1" target="_blank" rel="noopener noreferrer" class="link-item">
+            <i class="fa-solid fa-file-lines"></i>
+            <span>لائحة الكلية</span>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61562808369114" target="_blank" rel="noopener noreferrer" class="link-item">
+            <i class="fa-solid fa-users-gear"></i>
+            <span>صفحة شؤون الطلاب (فيسبوك)</span>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=100063596096736" target="_blank" rel="noopener noreferrer" class="link-item">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>صفحة الكلية (فيسبوك)</span>
+          </a>
+          <a href="https://github.com/Ali-Ashraf-Saad/StudentCoursesSearchSystemV2" target="_blank" rel="noopener noreferrer" class="link-item">
+            <i class="fa-brands fa-github"></i>
+            <span>مفتوح المصدر</span>
+          </a>
+        </div>
+      </article>
+
+      <!-- الأسئلة -->
+      <article class="qa-card">
+        <div class="qa-question"><span class="qa-num">1</span><span>كم ساعة معتمدة يجب على الطالب أن يجتازها للحصول على درجة البكالوريوس؟</span></div>
+        <div class="qa-answer">
+          <p>يتطلب الحصول على درجة البكالوريوس أن يجتاز الطالب بنجاح <strong>144 ساعة معتمدة</strong>.</p>
+        </div>
+      </article>
+
+      <article class="qa-card">
+        <div class="qa-question"><span class="qa-num">2</span><span>ما الحد الأدنى والحد الأقصى للساعات المعتمدة المسموح بالتسجيل فيها في الفصل الدراسي الأساسي؟ وهل توجد استثناءات؟</span></div>
+        <div class="qa-answer">
+          <p>الحد الأدنى للتسجيل في كل فصل دراسي أساسي هو <strong>9 ساعات معتمدة</strong>، والحد الأقصى هو <strong>18 ساعة معتمدة</strong>.</p>
+          <p>ويجوز لمجلس الكلية الترخيص بتجاوز الحد الأدنى أو الأقصى <strong>لدواعي تخرج الطالب</strong> على ألا يزيد هذا التجاوز عن <strong>3 ساعات</strong> بالنقص أو الزيادة.</p>
+          <p>أما في <strong>الفصل الصيفي</strong>، فالحد الأقصى للتسجيل هو <strong>6 ساعات معتمدة</strong>، ويجوز أن يزيد إلى <strong>9 ساعات</strong> <strong>لدواعي تخرج الطالب</strong>.</p>
+        </div>
+      </article>
+
+      <article class="qa-card">
+        <div class="qa-question"><span class="qa-num">3</span><span>كم ساعة يمكن للطالب تسجيلها حسب المعدل التراكمي (GPA)؟</span></div>
+        <div class="qa-answer">
+          <p>يعتمد عدد الساعات المسجلة على المعدل التراكمي كما يلي:</p>
+          <ul>
+            <li>إذا كان <strong>GPA = 2.0 فأعلى</strong>: يسجل الطالب <strong>18 ساعة</strong>، أي <strong>6 مواد</strong>.</li>
+            <li>إذا كان <strong>GPA من 1.5 إلى أقل من 2.0</strong>: يسجل الطالب <strong>15 ساعة</strong>، أي <strong>5 مواد</strong>.</li>
+            <li>إذا كان <strong>GPA أقل من 1.5</strong>: يسجل الطالب <strong>12 ساعة</strong>، أي <strong>4 مواد</strong>.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="qa-card">
+        <div class="qa-question"><span class="qa-num">4</span><span>متى ينتقل الطالب من مستوى إلى مستوى أعلى؟</span></div>
+        <div class="qa-answer">
+          <p>ينتقل الطالب بين المستويات الدراسية وفق عدد الساعات المعتمدة المجتازة، وذلك على النحو الآتي:</p>
+          <ul>
+            <li>من <strong>المستوى الأول إلى المستوى الثاني</strong>: بعد اجتياز <strong>30 ساعة معتمدة</strong> على الأقل.</li>
+            <li>من <strong>المستوى الثاني إلى المستوى الثالث</strong>: بعد اجتياز <strong>66 ساعة معتمدة</strong> على الأقل.</li>
+            <li>من <strong>المستوى الثالث إلى المستوى الرابع</strong>: بعد اجتياز <strong>102 ساعة معتمدة</strong> على الأقل.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="qa-card">
+        <div class="qa-question"><span class="qa-num">5</span><span>متى يحق للطالب التقدم للتخصص في أحد الأقسام؟</span></div>
+        <div class="qa-answer">
+          <p>يحق لأي طالب التقدم للتخصص في قسم من الأقسام الثلاثة (CS, IT, IS) بعد إكمال <strong>60 ساعة معتمدة</strong>.</p>
+        </div>
+      </article>
+
+      <article class="qa-card">
+        <div class="qa-question"><span class="qa-num">6</span><span>متى يسجل الطالب لمقرر المشروع؟ وكم عدد ساعاته؟ وما شرط التخرج منه؟</span></div>
+        <div class="qa-answer">
+          <p>يسجل الطالب لمقرر المشروع في <strong>المستوى الرابع</strong>، وذلك بعد اجتياز <strong>102 ساعة معتمدة</strong> على الأقل.</p>
+          <p>ويكون المشروع بواقع <strong>6 ساعات معتمدة</strong>، ويُدرس على مدى <strong>فصلين دراسيين متتاليين</strong>.</p>
+          <p>ولا يتخرج الطالب إلا بعد استيفاء <strong>شروط النجاح في المشروع</strong>.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer>StudentsCourses 2026 &middot; Developed by Ali Ashraf &middot; <a href="http://wa.me/+201148727448" target="_blank">ContactMe</a></footer>
+
+  <script>
+    function loadQACounter() {
+      fetch("/counterFiles/counter?counter=qa", { cache: "no-store" })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById("visitCount").innerText = data.count ?? 0;
+        })
+        .catch(() => {
+          document.getElementById("visitCount").innerText = "--";
+        });
+    }
+
+    loadQACounter();
+    setInterval(loadQACounter, 4000);
+  </script>
+  <script src="tour-guide.js?v=10"></script>
+</body>
+</html>
