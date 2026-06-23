@@ -8,6 +8,7 @@ require_once __DIR__ . '/counter-lib.php';
 $allowedCounters = [
     'qa'     => 'qa.jsonl',
     'course' => 'course.jsonl',
+    'gpa'    => 'gpa.jsonl',
     'users'  => 'users.jsonl',
 ];
 

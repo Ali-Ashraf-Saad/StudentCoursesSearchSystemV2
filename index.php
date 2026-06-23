@@ -589,21 +589,25 @@ header("Expires: 0");
       }
       @media (max-width: 600px) {
         body {
-          padding-top: 66px;
+          padding-top: 64px;
         }
         .top-nav {
-          gap: 6px;
-          padding: 8px 6px;
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 4px;
+          padding: 7px 5px;
         }
         .nav-btn {
-          gap: 5px;
-          padding: 7px 6px;
-          font-size: 13px;
+          justify-content: center;
+          gap: 4px;
+          min-width: 0;
+          padding: 7px 3px;
+          font-size: 11px;
           white-space: nowrap;
         }
         .nav-btn svg {
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
         }
         .course-topline,
         .pinned-header {
@@ -657,6 +661,44 @@ header("Expires: 0");
         transition: background-color 5000s ease-in-out 0s;
       }
     </style>
+
+<!-- with new label  -->
+  <style> 
+    .nav-btn.new-feature{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-icon-box{
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .new-label{
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      font-weight: 700;
+      color: #ef4444;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    
+    .btn-icon{
+      display: block;
+    }
+    
+    .btn-text{
+      white-space: nowrap;
+    }
+  </style>
+
   </head>
 
   <body>
@@ -668,13 +710,43 @@ header("Expires: 0");
         <span>المقررات</span>
       </button>
 
-      <button class="nav-btn" onclick="goQA()">
+<!-- with new label -->
+      <button class="nav-btn new-feature" onclick="goQA()">
+          <div class="btn-icon-box">
+            <small class="new-label">جديد</small>
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="btn-icon">
+          <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
+        </svg>
+         </div>
+        <span class="btn-text">أسئلة وروابط</span>
+      </button>
+
+      <button class="nav-btn new-feature" onclick="goGPA()">
+        <div class="btn-icon-box">
+            <small class="new-label">جديد</small>
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="btn-icon">
+          <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 4h10V4H7v2zm2 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v6h2v-6zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2z"/>
+        </svg>
+         </div>
+        <span class="btn-text">حساب GPA</span>
+      </button>
+
+<!-- without new label -->
+      <!-- <button class="nav-btn" onclick="goQA()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
         </svg>
-        <span>سؤال وجواب</span>
+        <span>أسئلة وروابط</span>
       </button>
 
+      <button class="nav-btn" onclick="goGPA()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 4h10V4H7v2zm2 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v6h2v-6zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2z"/>
+        </svg>
+        <span>حساب GPA</span>
+      </button> -->
+<!--  -->
+ 
       <button class="nav-btn" onclick="refreshPage()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.45.83.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/>
@@ -719,7 +791,7 @@ header("Expires: 0");
 
     <footer>
       StudentsCourses 2026 &middot; Developed by Ali Ashraf &middot;
-      <a href="http://wa.me/+201148727448" target="_blank">Contact Me</a>
+      <a href="http://wa.me/+201148727448" target="_blank">ContactMe</a>
     </footer>
 
     <script>
@@ -775,6 +847,18 @@ header("Expires: 0");
           .catch(() => {})
           .finally(() => {
             window.location.href = "/qa";
+          });
+      }
+
+      function goGPA() {
+        fetch("/counterFiles/counter?action=increment&counter=gpa", {
+          method: "POST",
+          keepalive: true,
+          cache: "no-store"
+        })
+          .catch(() => {})
+          .finally(() => {
+            window.location.href = "/gpa";
           });
       }
 

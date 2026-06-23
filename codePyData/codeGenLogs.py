@@ -8,25 +8,26 @@ from pathlib import Path
 # الإعدادات
 # =========================
 
+# توليد داتا تاريخية
+GENERATE_HISTORY = 1 #choose
+# تشغيل التوليد اللحظي
+RUN_REALTIME = 0 #choose
+
+
+
 # مدة التشغيل اللحظي
 RUN_DURATION_HOURS = 5 / 60  # 5 minutes
 
-# توليد داتا تاريخية
-GENERATE_HISTORY = 0
-# تشغيل التوليد اللحظي
-RUN_REALTIME = 1
-
 # عدد الأيام التي سيولدها في الداتا التاريخية
-HISTORY_DAYS = 1
+HISTORY_DAYS = 10
 
 # الفاصل الزمني بين شخص وشخص
-
 # في التشغيل اللحظي
 MIN_WAIT_SECONDS = 2
 MAX_WAIT_SECONDS = 7
 # في الداتا التاريخية
-HISTORY_MIN_STEP_MINUTES = 2
-HISTORY_MAX_STEP_MINUTES = 10
+HISTORY_MIN_STEP_MINUTES = 1
+HISTORY_MAX_STEP_MINUTES = 20
 
 # مجلد اللوج
 LOG_DIR = Path("counterFiles/logs")
@@ -43,6 +44,10 @@ FILE_SETTINGS = {
         "start_range": (10, 20),
     },
     "qa.jsonl": {
+        "enabled": True,
+        "start_range": (10, 20),
+    },
+    "gpa.jsonl": {
         "enabled": True,
         "start_range": (10, 20),
     },

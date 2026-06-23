@@ -9,6 +9,7 @@ date_default_timezone_set('Africa/Cairo');
 define('LOGS_DIR', __DIR__ . '/counterFiles/logs');
 define('CACHE_DIR', __DIR__ . '/counterFiles/stats_cache');
 define('CACHE_TTL', 5); // 5 second
+define('NO_PEAK_HOUR_LABEL', 'لا يوجد'); // يظهر بدل "00:00" عندما لا توجد أي زيارات لحساب ساعة ذروة
 
 if (!is_dir(CACHE_DIR)) {
     @mkdir(CACHE_DIR, 0755, true);
@@ -32,8 +33,14 @@ $logFiles = [
         'title' => 'عمليات بحث الطلاب',
         'icon' => 'fa-magnifying-glass',
         'color' => '#f59e0b'
+    ],
+    'gpa' => [
+        'file' => LOGS_DIR . '/gpa.jsonl',
+        'title' => 'استخدام حاسبة المعدل',
+        'icon' => 'fa-calculator',
+        'color' => '#8b5cf6'
     ]
-];
+]; // add here New counter
 
 // ============================================
 // دالة تنسيق المدة الزمنية بالعربية
@@ -197,7 +204,7 @@ function processJsonlFile($filePath, $id) {
     for ($i = 29; $i >= 0; $i--) {
         $t = clone $now; $t->modify("-{$i} days");
         $daily30Data[] = 0;
-        $daily30Labels[] = $t->format('d/m');
+        $daily30Labels[] = $arabicDays[(int)$t->format('w')] . ' ' . $t->format('d/m');
         $daily30IsCurrent[] = ($i === 0);
         $daily30Keys[] = $t->format('Y-m-d');
     }
@@ -353,14 +360,17 @@ function processJsonlFile($filePath, $id) {
     $totalLast30 = array_sum($daily30Data);
     $avgPerDay = round($totalLast30 / 30, 1);
     
-    // ساعة الذروة
-    $peakHour = ''; $maxHourVal = 0;
+    // ساعة الذروة (قد تكون أكثر من ساعة واحدة إذا تساوت أعلى قيمة بين عدة ساعات)
+    $peakHours = []; $maxHourVal = 0;
     for ($i = 0; $i < 24; $i++) {
         if ($hourlyData[$i] > $maxHourVal) {
             $maxHourVal = $hourlyData[$i];
-            $peakHour = $hourlyLabels[$i];
+            $peakHours = [$hourlyLabels[$i]];
+        } elseif ($maxHourVal > 0 && $hourlyData[$i] === $maxHourVal) {
+            $peakHours[] = $hourlyLabels[$i];
         }
     }
+    $peakHourLabel = $peakHours ? implode('، ', $peakHours) : NO_PEAK_HOUR_LABEL;
     
     $stats = [
         'id' => $id,
@@ -372,7 +382,7 @@ function processJsonlFile($filePath, $id) {
         'thisWeek' => $thisWeekCount,
         'lastWeek' => $lastWeekCount,
         'avgPerDay' => $avgPerDay,
-        'peakHour' => $peakHour ?: '00:00',
+        'peakHour' => $peakHourLabel,
         'lastVisitMinutes' => $lastVisitMinutes,
         'lastVisitFormatted' => $lastVisitFormatted,
         'minutelyData' => $minutelyData,
@@ -460,7 +470,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_stats') {
                 'id' => $id, 'total' => 0, 'today' => 0, 'yesterday' => 0,
                 'thisHour' => 0, 'thisMonth' => 0, 'thisWeek' => 0, 'lastWeek' => 0,
                 'avgPerDay' => 0,
-                'peakHour' => '00:00', 
+                'peakHour' => NO_PEAK_HOUR_LABEL, 
                 'lastVisitMinutes' => 0, 'lastVisitFormatted' => 'غير متوفر',
                 'minutelyData' => array_fill(0, 12, 0), 'minutelyLabels' => [], 'minutelyIsCurrent' => array_fill(0, 12, false), 'minutelyCumulative' => array_fill(0, 12, 0),
                 'hourly6Data' => array_fill(0, 6, 0), 'hourly6Labels' => [], 'hourly6IsCurrent' => array_fill(0, 6, false), 'hourly6Cumulative' => array_fill(0, 6, 0),
@@ -513,19 +523,57 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             --glass-blur: blur(20px);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            min-height: 100%;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
             background: var(--bg-gradient);
             color: var(--text-main);
             min-height: 100vh;
-            padding: 2rem;
+            display: flex;
+            flex-direction: column;
             overflow-x: hidden;
         }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            padding: 2rem;
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.9);
+            color: #94a3b8;
+            font-size: 14px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            backdrop-filter: blur(10px);
+            width: 100%;
+        }
+
+        footer a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 5px;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary-blue); }
-        .container { max-width: 1400px; margin: 0 auto; }
         header { 
             text-align: center; 
             margin-bottom: 3.5rem; 
@@ -804,7 +852,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             .dashboard-grid { grid-template-columns: 1fr; }
             header h1 { font-size: 2rem; }
             .main-counter { font-size: 3rem; }
-            body { padding: 1rem; }
+            .container { padding: 1rem; }
             .toggle-btn { font-size: 0.7rem; padding: 6px 4px; min-width: 50px; }
             body.show-hints .stat-item::after {
                 max-width: 200px;
@@ -812,7 +860,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             }
         }
     </style>
-</head>
+    </head>
 <body>
 
 <div class="container">
@@ -843,13 +891,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         </button>
     </div>
 </div>
-
+    <footer>
+      StudentsCourses 2026 &middot; Developed by Ali Ashraf &middot;
+      <a href="http://wa.me/+201148727448" target="_blank">ContactMe</a>
+    </footer>
+    
 <script>
-    const countersConfig = [
-        { id: 'courses', title: 'زيارات المقررات', icon: 'fa-book-open', color: '#3b82f6' },
-        { id: 'qa', title: 'زيارات سؤال وجواب', icon: 'fa-comments', color: '#10b981' },
-        { id: 'users', title: 'عمليات بحث الطلاب', icon: 'fa-magnifying-glass', color: '#f59e0b' }
-    ];
+const countersConfig = [
+    { id: 'courses', title: 'زيارات المقررات', icon: 'fa-book-open', color: '#3b82f6' },
+    { id: 'qa', title: 'زيارات سؤال وجواب', icon: 'fa-comments', color: '#10b981' },
+    { id: 'users', title: 'عمليات بحث الطلاب', icon: 'fa-magnifying-glass', color: '#f59e0b' },
+    { id: 'gpa', title: 'استخدام حاسبة المعدل', icon: 'fa-calculator', color: '#8b5cf6' }
+]; // add here New counter
 
     const chartDataStore = {};
     const chartInstances = {};
