@@ -359,6 +359,33 @@ header("Expires: 0");
       .exam-details span {
         white-space: nowrap;
       }
+      .location-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 26px;
+        padding: 2px 10px;
+        border: 1px solid rgba(96, 165, 250, 0.55);
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.16);
+        color: #bfdbfe;
+        font-weight: 700;
+        line-height: 1.4;
+        text-decoration: none;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+        transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+      }
+      .location-link:hover,
+      .location-link:focus-visible {
+        background: rgba(59, 130, 246, 0.32);
+        border-color: rgba(147, 197, 253, 0.85);
+        color: #eff6ff;
+        transform: translateY(-1px);
+        outline: none;
+      }
+      .location-link:active {
+        transform: translateY(0);
+      }
       .no-exam {
         color: #f59e0b;
         font-style: italic;
@@ -574,6 +601,12 @@ header("Expires: 0");
         padding: 4px 12px;
         border-radius: 20px;
         white-space: nowrap;
+      }
+      #export-card .location-link {
+        min-height: 24px;
+        padding: 1px 9px;
+        background: rgba(59, 130, 246, 0.2);
+        box-shadow: none;
       }
       #export-card .no-exam-export {
         color: #f59e0b;
@@ -982,6 +1015,20 @@ header("Expires: 0");
         return String(value ?? "").replace(/[&<>"']/g, (char) => map[char]);
       }
 
+      function formatExamRoomHtml(room) {
+        if (String(room || "").trim() === "اضغط هنا") {
+          return `<a class="location-link" href="images/location.jpg" target="_blank" rel="noopener noreferrer">اضغط هنا</a>`;
+        }
+        return escapeHTML(room);
+      }
+
+      function formatExamRoomText(room) {
+        if (String(room || "").trim() === "اضغط هنا") {
+          return "اضغط هنا: images/location.jpg";
+        }
+        return room || "-";
+      }
+
       function formatCourseDisplayName(name) {
         return String(name || "")
           .replace(/المشروع\s*([0-9٠-٩]+)/g, "المشروع $1")
@@ -1017,7 +1064,7 @@ header("Expires: 0");
         return `
           <div class="exam-details">
             <span>اللجنة: ${escapeHTML(course.exam.committee)}</span>
-            <span>المكان: ${escapeHTML(course.exam.room)}</span>
+            <span>المكان: ${formatExamRoomHtml(course.exam.room)}</span>
             <span>التاريخ: ${escapeHTML(course.exam.day)} ${escapeHTML(course.exam.date)}</span>
             <span>الوقت: ${escapeHTML(course.exam.period)} (${escapeHTML(course.exam.time)})</span>
           </div>
@@ -1049,7 +1096,7 @@ header("Expires: 0");
           lines.push(
             `التاريخ: ${course.exam.day || ""} ${course.exam.date || ""}`.trim(),
             `الوقت: ${course.exam.period || ""} (${course.exam.time || ""})`.trim(),
-            `المكان: لجنة ${course.exam.committee || "-"} ${course.exam.room || "-"}`,
+            `المكان: لجنة ${course.exam.committee || "-"} ${formatExamRoomText(course.exam.room)}`,
           );
         } else {
           lines.push("لم تحدد اللجنة بعد");
@@ -1703,7 +1750,7 @@ header("Expires: 0");
             examHtml = `
               <div class="export-exam-row">
                 <span>اللجنة: ${course.exam.committee}</span>
-                <span>المكان: ${course.exam.room}</span>
+                <span>المكان: ${formatExamRoomHtml(course.exam.room)}</span>
                 <span>التاريخ: ${course.exam.day} ${course.exam.date}</span>
                 <span>الوقت: ${course.exam.period} (${course.exam.time})</span>
               </div>`;
@@ -1748,6 +1795,6 @@ header("Expires: 0");
       renderHistory();
       renderPinnedCourse();
     </script>
-    <script src="tour-guide.js?v=10"></script>
+    <script src="tour-guide.js?v=0"></script>
   </body>
 </html>

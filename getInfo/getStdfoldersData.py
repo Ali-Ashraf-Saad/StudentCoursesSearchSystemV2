@@ -18,6 +18,10 @@ def parse_committee_line(line):
     # مثال: لجنة 1 مدرج 5
     # أو: لجنة 5 معمل 301
     # أو: لجنة 3 مدرج غير محدد
+    m_location = re.match(r'^لجنة\s+(\d+)\s+<a\b[^>]*>\s*(اضغط هنا)\s*</a>$', line.strip())
+    if m_location:
+        return m_location.group(1), "رابط", m_location.group(2)
+
     m = re.match(r'^لجنة\s+(\d+)\s+(مدرج|معمل)(?:\s+(.+))?$', line.strip())
     if m:
         committee_num = m.group(1)

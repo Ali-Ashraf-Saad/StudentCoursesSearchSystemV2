@@ -254,6 +254,13 @@ raw_room_schedule = {
     "IS331": [2],                                   # ذكاء الأعمال
     "CS132": [2, 1],                                   # برمجة حاسبات1
     "CS233": [5, 5, 5, 5, 301, 302, 303, 305, 306, 307, 4, 4, 3, 3],                                   # برمجة حاسبات2
+    
+    "CS482.": [-2], # المشروع
+    "IT482.": [-2], # المشروع
+    "IS482.": [-2], # المشروع
+    "IT482": [-2], # المشروع
+    "IS482": [-2], # المشروع
+    "CS482": [-2] # المشروع
     }
 
 def clean_filename(name):
@@ -371,6 +378,8 @@ for department_file in department_files:
                     committee_line = f"لجنة {committee_number} الصالة أعلى مدرج 5"
                 elif room_number == 0:
                     committee_line = f"لجنة {committee_number} الصالة أمام الخزينة"
+                elif room_number == -2:
+                    committee_line = f'لجنة {committee_number} <a class="location-link" href="images/location.jpg" target="_blank" rel="noopener noreferrer">اضغط هنا</a>'
                 else:
                     room_type = "معمل" if room_number > 100 else "مدرج"
                     committee_line = f"لجنة {committee_number} {room_type} {room_number}"

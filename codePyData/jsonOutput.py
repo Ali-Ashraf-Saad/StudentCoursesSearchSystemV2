@@ -28,6 +28,10 @@ def parse_room_info(room_text):
     if match_special0:
         return match_special0.group(1), 0
 
+    match_location_link = re.match(r'لجنة\s+\d+\s+<a\b[^>]*>\s*(اضغط هنا)\s*</a>', room_text)
+    if match_location_link:
+        return match_location_link.group(1), -2
+
     # الحالة العادية: مدرج أو معمل + رقم
     match = re.search(r'(مدرج|معمل)\s*(\d+)', room_text)
     if match:

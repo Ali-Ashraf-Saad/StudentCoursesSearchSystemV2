@@ -539,6 +539,8 @@
     let reorderModeEnabled = false;
     let semesterGpaChart = null;
     let cumulativeGpaChart = null;
+    const MAX_SUBJECTS_PER_TERM = 50;
+    const liveValidationTimers = new WeakMap();
 
     const gradePoints = {
         'A+': 4.0, 'A': 3.7, 'B+': 3.3, 'B': 3.0,
@@ -638,13 +640,18 @@
         saveData();
         const term = event.target.closest('.term-card');
         if (term) updateTermBadgePreview(term);
+        scheduleLiveValidation(event.target);
     });
     document.addEventListener('change', event => {
         updateRepeatedSubjectsFields();
         saveData();
         const term = event.target.closest('.term-card');
         if (term) updateTermBadgePreview(term);
+        scheduleLiveValidation(event.target);
     });
+    document.addEventListener('blur', event => {
+        validateLiveInput(event.target);
+    }, true);
 
     function toggleTerm(termId) {
         if (reorderModeEnabled) return;
@@ -707,6 +714,72 @@
         input.value = value;
     }
 
+    function scheduleLiveValidation(input) {
+        if (!isLiveValidatedInput(input)) return;
+
+        const existingTimer = liveValidationTimers.get(input);
+        if (existingTimer) clearTimeout(existingTimer);
+
+        const timer = setTimeout(() => validateLiveInput(input), 650);
+        liveValidationTimers.set(input, timer);
+    }
+
+    function isLiveValidatedInput(input) {
+        return input.matches?.('.term-gpa-input, .registered-subjects-input, .failed-subjects-input, .percent-input');
+    }
+
+    function validateLiveInput(input) {
+        if (!isLiveValidatedInput(input)) return true;
+
+        const existingTimer = liveValidationTimers.get(input);
+        if (existingTimer) clearTimeout(existingTimer);
+        liveValidationTimers.delete(input);
+
+        if (input.value.trim() === '') {
+            clearError(input);
+            return true;
+        }
+
+        if (input.classList.contains('term-gpa-input')) {
+            return validateInput(input, 0, 4);
+        }
+
+        if (input.classList.contains('percent-input')) {
+            return validateInput(input, 0, 100);
+        }
+
+        const term = input.closest('.term-card');
+        const registeredInput = term?.querySelector('.registered-subjects-input');
+        const failedInput = term?.querySelector('.failed-subjects-input');
+
+        if (input.classList.contains('registered-subjects-input')) {
+            const isRegisteredValid = validateWholeNumber(input, 1, MAX_SUBJECTS_PER_TERM);
+            if (failedInput && failedInput.value.trim() !== '') validateLiveInput(failedInput);
+            return isRegisteredValid;
+        }
+
+        if (input.classList.contains('failed-subjects-input')) {
+            if (!validateWholeNumber(input, 0, MAX_SUBJECTS_PER_TERM)) return false;
+            if (!registeredInput || registeredInput.value.trim() === '') return true;
+
+            const failedSubjects = Number(input.value);
+            const registeredSubjects = Number(registeredInput.value);
+            if (
+                Number.isInteger(failedSubjects) &&
+                Number.isInteger(registeredSubjects) &&
+                failedSubjects > registeredSubjects
+            ) {
+                showInputError(input, "لا يمكن أن يزيد الرسوب عن المواد المسجلة");
+                return false;
+            }
+
+            clearError(input);
+            return true;
+        }
+
+        return true;
+    }
+
     function addTerm(shouldSave = true, isExpanded = true) {
         // حماية إضافية: منع تنفيذ الدالة إذا كان وضع الترتيب مفعلاً
         if (reorderModeEnabled) return; 
@@ -757,11 +830,11 @@
                         </div>
                         <div class="direct-input-field">
                             <label>عدد المواد المسجلة:</label>
-                            <input type="number" step="1" min="1" max="10" class="registered-subjects-input" value="6" oninput="clearError(this)">
+                            <input type="number" step="1" min="1" max="${MAX_SUBJECTS_PER_TERM}" class="registered-subjects-input" value="6" oninput="clearError(this)">
                         </div>
                         <div class="direct-input-field">
                             <label>عدد مواد الرسوب:</label>
-                            <input type="number" step="1" min="0" max="10" class="failed-subjects-input" value="0" oninput="clearError(this)">
+                            <input type="number" step="1" min="0" max="${MAX_SUBJECTS_PER_TERM}" class="failed-subjects-input" value="0" oninput="clearError(this)">
                         </div>
                     </div>
                 </div>
@@ -1049,7 +1122,7 @@ function toggleReorderMode() {
 
             if (
                 gpaValue === '' || isNaN(gpa) || gpa < 0 || gpa > 4 ||
-                !Number.isInteger(registeredSubjects) || registeredSubjects < 1 || registeredSubjects > 10 ||
+                !Number.isInteger(registeredSubjects) || registeredSubjects < 1 || registeredSubjects > MAX_SUBJECTS_PER_TERM ||
                 !Number.isInteger(failedSubjects) || failedSubjects < 0 || failedSubjects > registeredSubjects
             ) return null;
 
@@ -1128,7 +1201,7 @@ function toggleReorderMode() {
             const section = term.querySelector('.repeated-subjects-section');
             const input = term.querySelector('.repeated-subjects-input');
             const hint = term.querySelector('.available-repeats');
-            const maxRepeated = Math.min(pendingFailedSubjects, getTermRegisteredSubjects(term), 10);
+            const maxRepeated = Math.min(pendingFailedSubjects, getTermRegisteredSubjects(term), MAX_SUBJECTS_PER_TERM);
 
             input.max = maxRepeated;
             input.dataset.available = maxRepeated;
@@ -1157,7 +1230,7 @@ function toggleReorderMode() {
 
         if (newMode === 'term-gpa') {
             const summary = summarizeSubjectRows(rows, previousMode);
-            term.querySelector('.registered-subjects-input').value = Math.min(rows.length, 10) || 1;
+            term.querySelector('.registered-subjects-input').value = Math.min(rows.length, MAX_SUBJECTS_PER_TERM) || 1;
             term.querySelector('.failed-subjects-input').value = summary.failedSubjects;
             term.querySelector('.term-gpa-input').value = summary.gpa === null ? '' : summary.gpa.toFixed(2);
             return;
@@ -1165,7 +1238,7 @@ function toggleReorderMode() {
 
         if (previousMode === 'term-gpa') {
             const requestedCount = Number(term.querySelector('.registered-subjects-input').value);
-            const subjectCount = Number.isInteger(requestedCount) ? Math.min(Math.max(requestedCount, 1), 10) : 1;
+            const subjectCount = Number.isInteger(requestedCount) ? Math.min(Math.max(requestedCount, 1), MAX_SUBJECTS_PER_TERM) : 1;
 
             while (list.querySelectorAll('.subject-row').length < subjectCount) { addSubject(term.id, false); }
             while (list.querySelectorAll('.subject-row').length > subjectCount) { list.lastElementChild.remove(); }
@@ -1266,8 +1339,8 @@ function toggleReorderMode() {
 
     function addSubject(termId, shouldSave = true) {
         const listContainer = document.getElementById(`${termId}-list`);
-        if (listContainer.querySelectorAll('.subject-row').length >= 10) {
-            if (shouldSave) showAlert("تنبيه", "الحد الأقصى لعدد المواد هو 10.", "⚠️");
+        if (listContainer.querySelectorAll('.subject-row').length >= MAX_SUBJECTS_PER_TERM) {
+            if (shouldSave) showAlert("تنبيه", `الحد الأقصى لعدد المواد هو ${MAX_SUBJECTS_PER_TERM}.`, "⚠️");
             return;
         }
         
@@ -1362,7 +1435,7 @@ function toggleReorderMode() {
             const registeredInput = term.querySelector('.registered-subjects-input');
             const failedInput = term.querySelector('.failed-subjects-input');
             
-            if (!validateInput(gpaInput, 0, 4) || !validateWholeNumber(registeredInput, 1, 10) || !validateWholeNumber(failedInput, 0, 10)) return null;
+            if (!validateInput(gpaInput, 0, 4) || !validateWholeNumber(registeredInput, 1, MAX_SUBJECTS_PER_TERM) || !validateWholeNumber(failedInput, 0, MAX_SUBJECTS_PER_TERM)) return null;
 
             const gpa = Number(gpaInput.value);
             if(isNaN(gpa)) return null;
@@ -1692,6 +1765,6 @@ function toggleReorderMode() {
     window.onload = loadData;
 
 </script>
-  <script src="tour-guide.js?v=10"></script>
+  <script src="tour-guide.js?v=0"></script>
 </body>
 </html>
