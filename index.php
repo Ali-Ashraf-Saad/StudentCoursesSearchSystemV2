@@ -696,7 +696,7 @@ header("Expires: 0");
     </style>
 
 <!-- with new label  -->
-  <style> 
+  <!-- <style> 
     .nav-btn.new-feature{
       display: flex;
       align-items: center;
@@ -730,7 +730,7 @@ header("Expires: 0");
     .btn-text{
       white-space: nowrap;
     }
-  </style>
+  </style> -->
 
   </head>
 
@@ -744,7 +744,7 @@ header("Expires: 0");
       </button>
 
 <!-- with new label -->
-      <button class="nav-btn new-feature" onclick="goQA()">
+      <!-- <button class="nav-btn new-feature" onclick="goQA()">
           <div class="btn-icon-box">
             <small class="new-label">جديد</small>
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="btn-icon">
@@ -762,10 +762,10 @@ header("Expires: 0");
         </svg>
          </div>
         <span class="btn-text">حساب GPA</span>
-      </button>
+      </button> -->
 
 <!-- without new label -->
-      <!-- <button class="nav-btn" onclick="goQA()">
+      <button class="nav-btn" onclick="goQA()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
         </svg>
@@ -777,7 +777,7 @@ header("Expires: 0");
           <path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 4h10V4H7v2zm2 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v6h2v-6zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2z"/>
         </svg>
         <span>حساب GPA</span>
-      </button> -->
+      </button>
 <!--  -->
  
       <button class="nav-btn" onclick="refreshPage()">
@@ -1017,14 +1017,14 @@ header("Expires: 0");
 
       function formatExamRoomHtml(room) {
         if (String(room || "").trim() === "اضغط هنا") {
-          return `<a class="location-link" href="images/location.jpg" target="_blank" rel="noopener noreferrer">اضغط هنا</a>`;
+          return `<a class="location-link" href="images/locationV2.jpg" target="_blank" rel="noopener noreferrer">اضغط هنا</a>`;
         }
         return escapeHTML(room);
       }
 
       function formatExamRoomText(room) {
         if (String(room || "").trim() === "اضغط هنا") {
-          return "اضغط هنا: images/location.jpg";
+          return "اضغط هنا: images/locationV2.jpg";
         }
         return room || "-";
       }
