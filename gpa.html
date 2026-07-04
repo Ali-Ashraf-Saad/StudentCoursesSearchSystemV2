@@ -287,20 +287,32 @@
     }
 
     .error-feedback {
-        color: var(--danger-color); font-size: 0.85rem; margin-top: 6px; padding: 0 15px;
+        color: var(--danger-color); font-size: 0.85rem; margin-top: 0; padding: 0 15px;
         font-weight: 600; display: flex; align-items: center; opacity: 0; max-height: 0;
         overflow: hidden; transition: all 0.3s ease;
     }
-    .error-feedback.visible { opacity: 1; max-height: 30px; transform: translateY(0); }
+    .error-feedback.visible { opacity: 1; max-height: 40px; margin-top: 6px; transform: translateY(0); }
 
     .subject-row { 
-        display: flex; flex-wrap: nowrap; gap: 10px; margin-bottom: 12px; 
+        display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; 
         background: rgba(0,0,0,0.03); padding: 10px; border-radius: 20px; 
         border: 1px solid var(--border-color); align-items: flex-start; 
         animation: slideDown 0.3s ease-out;
     }
-    .subject-name { flex: 2; min-width: 0; }
-    .subject-input-group { flex: 1.5; min-width: 140px; display: flex; flex-direction: column; } 
+    .subject-name { flex: 5 1 150px; min-width: 130px; }
+    /* حقل الساعات داخل حاوية عمودية حتى تظهر رسالة الخطأ أسفله دون إزاحة الصف */
+    .hours-group { flex: 0 0 68px; min-width: 60px; display: flex; flex-direction: column; }
+    .hours-input { width: 100%; padding: 12px 5px; text-align: center; }
+    .hours-group .error-feedback { padding: 0 2px; justify-content: center; text-align: center; font-size: 0.72rem; line-height: 1.25; word-break: break-word; }
+    .hours-group .error-feedback.visible { max-height: 60px; }
+    .subject-input-group { flex: 2 1 130px; min-width: 120px; display: flex; flex-direction: column; } 
+
+    /* --- وضع الساعات الثابتة (3 ساعات لكل مادة): إخفاء حقل الساعات --- */
+    body.fixed-hours-mode .hours-group { display: none !important; }
+    body.fixed-hours-mode .subject-name { flex-grow: 6; }
+    body.fixed-hours-mode .subject-input-group { flex-grow: 3; }
+
+    .hours-mode-card { margin-bottom: 20px; }
     
     .btn-delete { 
         flex: 0 0 auto; width: 45px; height: 45px; background-color: var(--danger-color); color: white; 
@@ -440,8 +452,8 @@
     }
 
     @media (max-width: 400px) {
-        .subject-row { flex-wrap: wrap; }
         .subject-name { flex: 1 1 100%; }
+        .hours-group { flex: 1 1 calc(50% - 30px); min-width: 0; }
         .subject-input-group { flex: 1 1 calc(50% - 30px); min-width: 0; }
         .btn-delete { width: 42px; height: 42px; }
     }
@@ -472,6 +484,18 @@
     <div class="terms-actions">
         <button class="btn-add-term" onclick="addTerm()">+ إضافة ترم جديد</button>
         <button class="btn-reorder" id="reorder-btn" onclick="toggleReorderMode()">↕ ترتيب الترمات</button>
+    </div>
+
+    <div class="radio-group hours-mode-card">
+        <div class="radio-title">طريقة إدخال ساعات المواد:</div>
+        <div class="radio-options-row">
+            <label class="radio-option">
+                <input type="radio" name="global-hours-mode" id="hours-mode-fixed" value="fixed" onchange="requestHoursModeChange('fixed')"> 3 ساعات ثابتة لكل مادة
+            </label>
+            <label class="radio-option">
+                <input type="radio" name="global-hours-mode" id="hours-mode-variable" value="variable" onchange="requestHoursModeChange('variable')"> ساعات مختلفة لكل مادة
+            </label>
+        </div>
     </div>
 </div>
 
@@ -540,7 +564,60 @@
     let semesterGpaChart = null;
     let cumulativeGpaChart = null;
     const MAX_SUBJECTS_PER_TERM = 50;
+    const MAX_HOURS_PER_TERM = 100;
     const liveValidationTimers = new WeakMap();
+
+    // --- وضع إدخال الساعات: "variable" (ساعات مختلفة لكل مادة) أو "fixed" (3 ساعات ثابتة لكل مادة) ---
+    let fixedHoursMode = (localStorage.getItem('gpaHoursMode') !== 'variable');
+    let pendingHoursMode = null;
+    document.body.classList.toggle('fixed-hours-mode', fixedHoursMode);
+
+    function getRegUnit() { return fixedHoursMode ? 3 : 1; }
+    function getRegMax() { return fixedHoursMode ? MAX_SUBJECTS_PER_TERM : MAX_HOURS_PER_TERM; }
+    function getStorageKey() { return fixedHoursMode ? 'gpaDataFixed' : 'gpaData'; }
+    function getFailedErrorMessage() {
+        return fixedHoursMode
+            ? "لا يمكن أن يزيد عدد مواد الرسوب عن المواد المسجلة"
+            : "لا يمكن أن تزيد ساعات الرسوب عن الساعات المسجلة";
+    }
+
+    function syncHoursModeRadios() {
+        document.getElementById('hours-mode-variable').checked = !fixedHoursMode;
+        document.getElementById('hours-mode-fixed').checked = fixedHoursMode;
+    }
+
+    function requestHoursModeChange(mode) {
+        const newFixed = (mode === 'fixed');
+        if (newFixed === fixedHoursMode) return;
+        pendingHoursMode = newFixed;
+
+        document.getElementById('msg-icon').innerText = "🔄";
+        document.getElementById('msg-title').innerText = "تغيير طريقة إدخال الساعات؟";
+        document.getElementById('msg-desc').innerText = newFixed
+            ? "سيتم التحويل إلى وضع الساعات الثابتة (3 ساعات لكل مادة). سيتم حفظ بيانات الوضع الحالي والانتقال إلى بيانات هذا الوضع بشكل منفصل."
+            : "سيتم التحويل إلى وضع إدخال عدد ساعات مختلف لكل مادة. سيتم حفظ بيانات الوضع الحالي والانتقال إلى بيانات هذا الوضع بشكل منفصل.";
+        document.getElementById('msg-actions').innerHTML = `
+            <button class="btn-cancel" onclick="cancelHoursModeChange()">إلغاء</button>
+            <button class="btn-danger-confirm" onclick="applyHoursModeChange()">تأكيد</button>
+        `;
+        document.getElementById('general-modal').classList.add('active');
+    }
+
+    function cancelHoursModeChange() {
+        pendingHoursMode = null;
+        syncHoursModeRadios();
+        closeModal('general-modal');
+    }
+
+    function applyHoursModeChange() {
+        fixedHoursMode = pendingHoursMode;
+        pendingHoursMode = null;
+        localStorage.setItem('gpaHoursMode', fixedHoursMode ? 'fixed' : 'variable');
+        document.body.classList.toggle('fixed-hours-mode', fixedHoursMode);
+        syncHoursModeRadios();
+        closeModal('general-modal');
+        loadData();
+    }
 
     const gradePoints = {
         'A+': 4.0, 'A': 3.7, 'B+': 3.3, 'B': 3.0,
@@ -562,7 +639,7 @@
                 directGpa: term.querySelector('.term-gpa-input').value,
                 registeredSubjects: term.querySelector('.registered-subjects-input').value,
                 failedSubjects: term.querySelector('.failed-subjects-input').value,
-                repeatedSubjects: term.querySelector('.repeated-subjects-input').value,
+                repeatedHours: term.querySelector('.repeated-subjects-input').value,
                 isExpanded: term.classList.contains('expanded'),
                 subjects: []
             };
@@ -571,6 +648,7 @@
             subjects.forEach(sub => {
                 const subObj = {
                     name: sub.querySelector('.subject-name').value,
+                    hours: sub.querySelector('.hours-input') ? sub.querySelector('.hours-input').value : 3,
                     letterGrade: sub.querySelector('.grade-input') ? sub.querySelector('.grade-input').value : '',
                     percentGrade: sub.querySelector('.percent-input') ? sub.querySelector('.percent-input').value : ''
                 };
@@ -579,16 +657,17 @@
             termsData.push(termObj);
         });
 
-        localStorage.setItem('gpaData', JSON.stringify(termsData));
+        localStorage.setItem(getStorageKey(), JSON.stringify(termsData));
     }
 
     function loadData() {
-        const saved = localStorage.getItem('gpaData');
+        const saved = localStorage.getItem(getStorageKey());
+        const container = document.getElementById('terms-container');
+        container.innerHTML = '';
+        termCounter = 0;
+
         if (saved) {
             const termsData = JSON.parse(saved);
-            const container = document.getElementById('terms-container');
-            container.innerHTML = '';
-            termCounter = 0;
 
             if (termsData.length === 0) { addTerm(); return; }
 
@@ -604,11 +683,11 @@
                 radios.forEach(r => { if (r.value === tData.mode) r.checked = true; });
                 termDiv.dataset.currentMode = tData.mode;
                 updateTermView(currentId, false);
-                termDiv.querySelector('.repeated-subjects-input').value = tData.repeatedSubjects ?? 0;
+                termDiv.querySelector('.repeated-subjects-input').value = tData.repeatedHours ?? tData.repeatedSubjects ?? 0;
 
                 if (tData.mode === 'term-gpa') {
                     termDiv.querySelector('.term-gpa-input').value = tData.directGpa;
-                    termDiv.querySelector('.registered-subjects-input').value = tData.registeredSubjects ?? 6;
+                    termDiv.querySelector('.registered-subjects-input').value = tData.registeredSubjects ?? (fixedHoursMode ? 6 : 18);
                     termDiv.querySelector('.failed-subjects-input').value = tData.failedSubjects ?? 0;
                 } else {
                     const list = document.getElementById(`${currentId}-list`);
@@ -619,6 +698,7 @@
                         const lastRow = rows[rows.length - 1];
                         
                         lastRow.querySelector('.subject-name').value = sub.name;
+                        if (lastRow.querySelector('.hours-input')) lastRow.querySelector('.hours-input').value = sub.hours ?? 3;
                         if (tData.mode === 'subjects-letter') {
                              if(sub.letterGrade) lastRow.querySelector('.grade-input').value = sub.letterGrade;
                         } else {
@@ -725,7 +805,7 @@
     }
 
     function isLiveValidatedInput(input) {
-        return input.matches?.('.term-gpa-input, .registered-subjects-input, .failed-subjects-input, .percent-input');
+        return input.matches?.('.term-gpa-input, .registered-subjects-input, .failed-subjects-input, .percent-input, .hours-input');
     }
 
     function validateLiveInput(input) {
@@ -748,18 +828,22 @@
             return validateInput(input, 0, 100);
         }
 
+        if (input.classList.contains('hours-input')) {
+            return validateWholeNumber(input, 1, 6);
+        }
+
         const term = input.closest('.term-card');
         const registeredInput = term?.querySelector('.registered-subjects-input');
         const failedInput = term?.querySelector('.failed-subjects-input');
 
         if (input.classList.contains('registered-subjects-input')) {
-            const isRegisteredValid = validateWholeNumber(input, 1, MAX_SUBJECTS_PER_TERM);
+            const isRegisteredValid = validateWholeNumber(input, 1, getRegMax());
             if (failedInput && failedInput.value.trim() !== '') validateLiveInput(failedInput);
             return isRegisteredValid;
         }
 
         if (input.classList.contains('failed-subjects-input')) {
-            if (!validateWholeNumber(input, 0, MAX_SUBJECTS_PER_TERM)) return false;
+            if (!validateWholeNumber(input, 0, getRegMax())) return false;
             if (!registeredInput || registeredInput.value.trim() === '') return true;
 
             const failedSubjects = Number(input.value);
@@ -769,7 +853,7 @@
                 Number.isInteger(registeredSubjects) &&
                 failedSubjects > registeredSubjects
             ) {
-                showInputError(input, "لا يمكن أن يزيد الرسوب عن المواد المسجلة");
+                showInputError(input, getFailedErrorMessage());
                 return false;
             }
 
@@ -818,9 +902,9 @@
                     </div>
                 </div>
                 <div class="repeated-subjects-section hidden">
-                    <label>عدد المواد المُعادة (المسجلة أكثر من مرة):</label>
+                    <label>${fixedHoursMode ? 'عدد المواد المُعادة (المسجلة أكثر من مرة):' : 'عدد الساعات المُعادة (لمواد مسجلة أكثر من مرة):'}</label>
                     <input type="number" step="1" min="0" max="0" class="repeated-subjects-input" value="0" oninput="clearError(this)">
-                    <div class="repeated-subjects-hint">متاح للإعادة من الترمات السابقة: <span class="available-repeats">0</span></div>
+                    <div class="repeated-subjects-hint">متاح للإعادة من الترمات السابقة: <span class="available-repeats">0</span>${fixedHoursMode ? '' : ' ساعة'}</div>
                 </div>
                 <div id="${termId}-direct" class="input-section">
                     <div class="direct-inputs-grid">
@@ -829,12 +913,12 @@
                             <input type="text" inputmode="decimal" maxlength="4" class="term-gpa-input" placeholder="مثلاً: 3.5" oninput="formatDirectGpa(this); clearError(this)">
                         </div>
                         <div class="direct-input-field">
-                            <label>عدد المواد المسجلة:</label>
-                            <input type="number" step="1" min="1" max="${MAX_SUBJECTS_PER_TERM}" class="registered-subjects-input" value="6" oninput="clearError(this)">
+                            <label>${fixedHoursMode ? 'عدد المواد المسجلة:' : 'عدد الساعات المسجلة:'}</label>
+                            <input type="number" step="1" min="1" max="${getRegMax()}" class="registered-subjects-input" value="${fixedHoursMode ? 6 : 18}" oninput="clearError(this)">
                         </div>
                         <div class="direct-input-field">
-                            <label>عدد مواد الرسوب:</label>
-                            <input type="number" step="1" min="0" max="${MAX_SUBJECTS_PER_TERM}" class="failed-subjects-input" value="0" oninput="clearError(this)">
+                            <label>${fixedHoursMode ? 'عدد مواد الرسوب:' : 'عدد ساعات الرسوب:'}</label>
+                            <input type="number" step="1" min="0" max="${getRegMax()}" class="failed-subjects-input" value="0" oninput="clearError(this)">
                         </div>
                     </div>
                 </div>
@@ -1103,10 +1187,11 @@ function toggleReorderMode() {
         const repeatedInput = term.querySelector('.repeated-subjects-input');
         if (!repeatedInput) return null;
         
-        const repeatedSubjects = Number(repeatedInput.value);
+        const repeatedRaw = Number(repeatedInput.value);
         const availableRepeats = Number(repeatedInput.dataset.available || 0);
 
-        if (!Number.isInteger(repeatedSubjects) || repeatedSubjects < 0 || repeatedSubjects > availableRepeats) return null;
+        if (!Number.isInteger(repeatedRaw) || repeatedRaw < 0 || repeatedRaw > availableRepeats) return null;
+        const repeatedHours = repeatedRaw * getRegUnit();
 
         if (mode === 'term-gpa') {
             const gpaInput = term.querySelector('.term-gpa-input');
@@ -1117,48 +1202,53 @@ function toggleReorderMode() {
 
             const gpaValue = gpaInput.value.trim();
             const gpa = Number(gpaValue);
-            const registeredSubjects = Number(registeredInput.value);
-            const failedSubjects = Number(failedInput.value);
+            const registeredRaw = Number(registeredInput.value);
+            const failedRaw = Number(failedInput.value);
 
             if (
                 gpaValue === '' || isNaN(gpa) || gpa < 0 || gpa > 4 ||
-                !Number.isInteger(registeredSubjects) || registeredSubjects < 1 || registeredSubjects > MAX_SUBJECTS_PER_TERM ||
-                !Number.isInteger(failedSubjects) || failedSubjects < 0 || failedSubjects > registeredSubjects
+                !Number.isInteger(registeredRaw) || registeredRaw < 1 || registeredRaw > getRegMax() ||
+                !Number.isInteger(failedRaw) || failedRaw < 0 || failedRaw > registeredRaw
             ) return null;
 
-            const fullRegisteredHours = registeredSubjects * 3;
+            const fullRegisteredHours = registeredRaw * getRegUnit();
             return {
                 gpa,
                 totalPoints: gpa * fullRegisteredHours,
-                registeredHours: fullRegisteredHours - (repeatedSubjects * 3)
+                registeredHours: fullRegisteredHours - repeatedHours
             };
         }
 
         const rows = Array.from(term.querySelectorAll('.subject-row'));
         if (rows.length === 0) return null;
         let totalPoints = 0;
+        let totalHours = 0;
         let allComplete = true;
 
         for (const row of rows) {
+            const hoursInput = row.querySelector('.hours-input');
+            const hours = Number(hoursInput?.value);
+            if (!hoursInput || !Number.isInteger(hours) || hours < 1) { allComplete = false; break; }
+
             if (mode === 'subjects-letter') {
                 const value = row.querySelector('.grade-input')?.value;
                 if (!value) { allComplete = false; break; }
-                totalPoints += gradePoints[value] * 3;
+                totalPoints += gradePoints[value] * hours;
             } else {
                 const value = row.querySelector('.percent-input')?.value;
                 const percent = Number(value);
                 if (!value || value === '' || isNaN(percent) || percent < 0 || percent > 100) { allComplete = false; break; }
-                totalPoints += convertPercentToPoints(percent) * 3;
+                totalPoints += convertPercentToPoints(percent) * hours;
             }
+            totalHours += hours;
         }
 
-        if (!allComplete) return null;
+        if (!allComplete || totalHours === 0) return null;
 
-        const fullRegisteredHours = rows.length * 3;
         return {
-            gpa: totalPoints / fullRegisteredHours,
+            gpa: totalPoints / totalHours,
             totalPoints,
-            registeredHours: fullRegisteredHours - (repeatedSubjects * 3)
+            registeredHours: totalHours - repeatedHours
         };
     }
 
@@ -1194,27 +1284,69 @@ function toggleReorderMode() {
         return term.querySelectorAll('.subject-row').length;
     }
 
+    function getTermFailedHours(term) {
+        const checkedRadio = term.querySelector(`input[name="mode-${term.id}"]:checked`);
+        const mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+
+        if (mode === 'term-gpa') {
+            const value = Number(term.querySelector('.failed-subjects-input').value);
+            const raw = Number.isInteger(value) && value >= 0 ? value : 0;
+            return raw * getRegUnit();
+        }
+
+        let failedHours = 0;
+        term.querySelectorAll('.subject-row').forEach(row => {
+            const hours = Number(row.querySelector('.hours-input')?.value) || 0;
+            if (mode === 'subjects-letter') {
+                if (row.querySelector('.grade-input')?.value === 'F') failedHours += hours;
+            } else {
+                const value = row.querySelector('.percent-input')?.value;
+                if (value !== '' && !isNaN(Number(value)) && Number(value) < 50) failedHours += hours;
+            }
+        });
+        return failedHours;
+    }
+
+    function getTermRegisteredHours(term) {
+        const checkedRadio = term.querySelector(`input[name="mode-${term.id}"]:checked`);
+        const mode = checkedRadio ? checkedRadio.value : term.dataset.currentMode;
+
+        if (mode === 'term-gpa') {
+            const value = Number(term.querySelector('.registered-subjects-input').value);
+            const raw = Number.isInteger(value) && value > 0 ? value : 0;
+            return raw * getRegUnit();
+        }
+
+        let totalHours = 0;
+        term.querySelectorAll('.subject-row').forEach(row => {
+            totalHours += Number(row.querySelector('.hours-input')?.value) || 3;
+        });
+        return totalHours;
+    }
+
     function updateRepeatedSubjectsFields() {
-        let pendingFailedSubjects = 0;
+        let pendingFailedHours = 0;
+        const unit = getRegUnit();
 
         document.querySelectorAll('.term-card').forEach(term => {
             const section = term.querySelector('.repeated-subjects-section');
             const input = term.querySelector('.repeated-subjects-input');
             const hint = term.querySelector('.available-repeats');
-            const maxRepeated = Math.min(pendingFailedSubjects, getTermRegisteredSubjects(term), MAX_SUBJECTS_PER_TERM);
+            const maxRepeatedHours = Math.max(0, Math.min(pendingFailedHours, getTermRegisteredHours(term)));
+            const maxRepeatedDisplay = Math.floor(maxRepeatedHours / unit);
 
-            input.max = maxRepeated;
-            input.dataset.available = maxRepeated;
-            hint.innerText = maxRepeated;
-            section.classList.toggle('hidden', pendingFailedSubjects === 0);
+            input.max = maxRepeatedDisplay;
+            input.dataset.available = maxRepeatedDisplay;
+            hint.innerText = maxRepeatedDisplay;
+            section.classList.toggle('hidden', pendingFailedHours === 0);
 
-            let repeatedSubjects = Number(input.value);
-            if (!Number.isInteger(repeatedSubjects) || repeatedSubjects < 0) repeatedSubjects = 0;
-            if (repeatedSubjects > maxRepeated) repeatedSubjects = maxRepeated;
-            input.value = repeatedSubjects;
+            let repeatedRaw = Number(input.value);
+            if (!Number.isInteger(repeatedRaw) || repeatedRaw < 0) repeatedRaw = 0;
+            if (repeatedRaw > maxRepeatedDisplay) repeatedRaw = maxRepeatedDisplay;
+            input.value = repeatedRaw;
 
-            pendingFailedSubjects -= repeatedSubjects;
-            pendingFailedSubjects += getTermFailedSubjects(term);
+            pendingFailedHours -= (repeatedRaw * unit);
+            pendingFailedHours += getTermFailedHours(term);
         });
 
         updateTermBadgePreview();
@@ -1230,15 +1362,20 @@ function toggleReorderMode() {
 
         if (newMode === 'term-gpa') {
             const summary = summarizeSubjectRows(rows, previousMode);
-            term.querySelector('.registered-subjects-input').value = Math.min(rows.length, MAX_SUBJECTS_PER_TERM) || 1;
-            term.querySelector('.failed-subjects-input').value = summary.failedSubjects;
+            const totalHours = summary.totalHours || rows.reduce((sum, row) => sum + (Number(row.querySelector('.hours-input')?.value) || 3), 0);
+            const unit = getRegUnit();
+            const registeredDisplay = Math.round(totalHours / unit);
+            const failedDisplay = Math.round((summary.failedHours || 0) / unit);
+            term.querySelector('.registered-subjects-input').value = Math.min(Math.max(registeredDisplay, 1), getRegMax()) || 1;
+            term.querySelector('.failed-subjects-input').value = Math.min(failedDisplay, getRegMax());
             term.querySelector('.term-gpa-input').value = summary.gpa === null ? '' : summary.gpa.toFixed(2);
             return;
         }
 
         if (previousMode === 'term-gpa') {
-            const requestedCount = Number(term.querySelector('.registered-subjects-input').value);
-            const subjectCount = Number.isInteger(requestedCount) ? Math.min(Math.max(requestedCount, 1), MAX_SUBJECTS_PER_TERM) : 1;
+            const requestedRaw = Number(term.querySelector('.registered-subjects-input').value);
+            const requestedHours = requestedRaw * getRegUnit();
+            const subjectCount = Number.isInteger(requestedRaw) ? Math.min(Math.max(Math.round(requestedHours / 3), 1), MAX_SUBJECTS_PER_TERM) : 1;
 
             while (list.querySelectorAll('.subject-row').length < subjectCount) { addSubject(term.id, false); }
             while (list.querySelectorAll('.subject-row').length > subjectCount) { list.lastElementChild.remove(); }
@@ -1286,25 +1423,30 @@ function toggleReorderMode() {
 
     function summarizeSubjectRows(rows, mode) {
         let totalPoints = 0;
+        let totalHours = 0;
         let failedSubjects = 0;
+        let failedHours = 0;
         let allComplete = rows.length > 0;
 
         rows.forEach(row => {
+            const hours = Number(row.querySelector('.hours-input')?.value) || 3;
             if (mode === 'subjects-letter') {
                 const value = row.querySelector('.grade-input')?.value;
                 if (!value) { allComplete = false; return; }
-                totalPoints += gradePoints[value];
-                if (value === 'F') failedSubjects++;
+                totalPoints += gradePoints[value] * hours;
+                totalHours += hours;
+                if (value === 'F') { failedSubjects++; failedHours += hours; }
             } else {
                 const value = row.querySelector('.percent-input')?.value;
                 const percent = Number(value);
                 if (!value || value === '' || isNaN(percent) || percent < 0 || percent > 100) { allComplete = false; return; }
-                totalPoints += convertPercentToPoints(percent);
-                if (percent < 50) failedSubjects++;
+                totalPoints += convertPercentToPoints(percent) * hours;
+                totalHours += hours;
+                if (percent < 50) { failedSubjects++; failedHours += hours; }
             }
         });
 
-        return { gpa: allComplete ? totalPoints / rows.length : null, failedSubjects };
+        return { gpa: allComplete && totalHours > 0 ? totalPoints / totalHours : null, failedSubjects, failedHours, totalHours };
     }
 
     function getSubjectInputHTML(mode) {
@@ -1353,6 +1495,7 @@ function toggleReorderMode() {
         const row = document.createElement('div');
         row.className = 'subject-row';
         row.innerHTML = `<input type="text" class="subject-name" placeholder="اسم المادة" value="مادة ${currentCount}">
+            <div class="hours-group"><input type="number" class="hours-input" placeholder="الساعات" title="عدد الساعات المعتمدة" min="1" max="6" step="1" value="3" oninput="clearError(this)"></div>
             <div class="subject-input-group">${getSubjectInputHTML(mode)}</div>
             <button class="btn-delete" onclick="removeSubject(this)"></button>`;
         listContainer.appendChild(row);
@@ -1428,67 +1571,72 @@ function toggleReorderMode() {
         const repeatedIsValid = validateWholeNumber(repeatedInput, 0, maxRepeatedSubjects);
 
         if (!repeatedIsValid) return null;
-        const repeatedSubjects = Number(repeatedInput.value);
+        const repeatedRaw = Number(repeatedInput.value);
+        const repeatedHours = repeatedRaw * getRegUnit();
 
         if (mode === 'term-gpa') {
             const gpaInput = term.querySelector('.term-gpa-input');
             const registeredInput = term.querySelector('.registered-subjects-input');
             const failedInput = term.querySelector('.failed-subjects-input');
             
-            if (!validateInput(gpaInput, 0, 4) || !validateWholeNumber(registeredInput, 1, MAX_SUBJECTS_PER_TERM) || !validateWholeNumber(failedInput, 0, MAX_SUBJECTS_PER_TERM)) return null;
+            if (!validateInput(gpaInput, 0, 4) || !validateWholeNumber(registeredInput, 1, getRegMax()) || !validateWholeNumber(failedInput, 0, getRegMax())) return null;
 
             const gpa = Number(gpaInput.value);
             if(isNaN(gpa)) return null;
 
-            const registeredSubjects = Number(registeredInput.value);
-            const failedSubjects = Number(failedInput.value);
+            const registeredRaw = Number(registeredInput.value);
+            const failedRaw = Number(failedInput.value);
             
-            if (failedSubjects > registeredSubjects) {
-                showInputError(failedInput, "لا يمكن أن يزيد الرسوب عن المواد المسجلة");
+            if (failedRaw > registeredRaw) {
+                showInputError(failedInput, getFailedErrorMessage());
                 return null;
             }
 
-            const registeredHours = registeredSubjects * 3;
+            const registeredHours = registeredRaw * getRegUnit();
             return {
                 gpa: gpa,
                 totalPoints: gpa * registeredHours,
-                registeredHours: registeredHours - (repeatedSubjects * 3)
+                registeredHours: registeredHours - repeatedHours
             };
         }
 
         const rows = term.querySelectorAll('.subject-row');
-        let totalCoursePoints = 0, failedSubjects = 0, isValid = rows.length > 0;
+        let totalCoursePoints = 0, failedSubjects = 0, totalHours = 0, isValid = rows.length > 0;
 
         rows.forEach(row => {
+            const hoursInput = row.querySelector('.hours-input');
+            if (!validateWholeNumber(hoursInput, 1, 6)) { isValid = false; return; }
+            const hours = Number(hoursInput.value);
+
             if (mode === 'subjects-letter') {
                 const gradeSelect = row.querySelector('.grade-input');
                 if (!validateInput(gradeSelect)) { isValid = false; return; }
-                totalCoursePoints += gradePoints[gradeSelect.value] * 3;
+                totalCoursePoints += gradePoints[gradeSelect.value] * hours;
                 if (gradeSelect.value === 'F') failedSubjects++;
             } else {
                 const percentInput = row.querySelector('.percent-input');
                 if (!validateInput(percentInput, 0, 100)) { isValid = false; return; }
                 const percent = Number(percentInput.value);
                 if (isNaN(percent)) { isValid = false; return; }
-                totalCoursePoints += convertPercentToPoints(percent) * 3;
+                totalCoursePoints += convertPercentToPoints(percent) * hours;
                 if (percent < 50) failedSubjects++;
             }
+            totalHours += hours;
         });
 
-        if (!isValid) return null;
+        if (!isValid || totalHours === 0) return null;
 
-        const registeredHours = rows.length * 3;
         return {
-            gpa: totalCoursePoints / registeredHours,
+            gpa: totalCoursePoints / totalHours,
             totalPoints: totalCoursePoints,
-            registeredHours: registeredHours - (repeatedSubjects * 3)
+            registeredHours: totalHours - repeatedHours
         };
     }
 
     function calculateOverallGPA() {
         updateRepeatedSubjectsFields();
         const terms = document.querySelectorAll('.term-card');
-        let totalCoursePoints = 0, totalRegisteredHours = 0, validTermsCount = 0, pendingFailedSubjects = 0;
+        let totalCoursePoints = 0, totalRegisteredHours = 0, validTermsCount = 0, pendingFailedHours = 0;
         let hasError = false, hasAnyFailedSubject = false;
         const chartLabels = [], semesterGpas = [], cumulativeGpas = [];
 
@@ -1496,10 +1644,11 @@ function toggleReorderMode() {
             const badge = term.querySelector('.term-result-badge');
             const termData = getTermCalculationData(term);
             const failedSubjects = getTermFailedSubjects(term);
-            const repeatedSubjects = Number(term.querySelector('.repeated-subjects-input').value) || 0;
+            const failedHours = getTermFailedHours(term);
+            const repeatedHours = (Number(term.querySelector('.repeated-subjects-input').value) || 0) * getRegUnit();
             
             if (failedSubjects > 0) hasAnyFailedSubject = true;
-            pendingFailedSubjects = Math.max(0, pendingFailedSubjects - repeatedSubjects) + failedSubjects;
+            pendingFailedHours = Math.max(0, pendingFailedHours - repeatedHours) + failedHours;
 
             if (termData) {
                 totalCoursePoints += termData.totalPoints;
@@ -1525,7 +1674,7 @@ function toggleReorderMode() {
             const finalGrade = getGradeText(finalGPA);
             document.getElementById('final-grade').innerText = hasAnyFailedSubject ? finalGrade : `${finalGrade} مع مرتبة الشرف`;
             
-            const passedHours = Math.max(0, totalRegisteredHours - (pendingFailedSubjects * 3));
+            const passedHours = Math.max(0, totalRegisteredHours - pendingFailedHours);
             renderAcademicStatus(finalGPA, passedHours);
             
             let dynamicColor = getComputedStyle(document.documentElement).getPropertyValue('--danger-color').trim();
@@ -1762,7 +1911,7 @@ function toggleReorderMode() {
 
     loadGPACounter();
     setInterval(loadGPACounter, 4000);
-    window.onload = loadData;
+    window.onload = function() { syncHoursModeRadios(); loadData(); };
 
 </script>
   <script src="tour-guide.js?v=0"></script>

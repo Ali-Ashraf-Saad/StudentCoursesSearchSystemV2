@@ -593,6 +593,7 @@
     let currentAutocompleteItems = [];
     let activeAutocompleteIndex = -1;
     let pendingSearchHistoryText = '';
+    const SPECIALIZED_DEPTS = ['CS', 'IT', 'IS'];
 
     // ---------- دوال البحث المرن ----------
     function normalizeForSearch(str) {
@@ -1146,27 +1147,60 @@
     loadCoursesCounter();
     setInterval(loadCoursesCounter, 4000);
 
+    function getSemesterMeta(title) {
+      let year = null, term = null, dept = null;
+      if (title.includes('أولى')) year = 1;
+      else if (title.includes('ثانية')) year = 2;
+      else if (title.includes('ثالثة')) year = 3;
+      else if (title.includes('رابعة')) year = 4;
+      if (title.includes('الأول')) term = 1;
+      else if (title.includes('الثاني')) term = 2;
+      if (title.includes('CS')) dept = 'CS';
+      else if (title.includes('IT')) dept = 'IT';
+      else if (title.includes('IS')) dept = 'IS';
+      else if (title.includes('عام')) dept = 'عام';
+      return { year, term, dept: dept || 'عام', termLabel: term===1?'ترم أول':(term===2?'ترم ثاني':''), semesterTitle: title };
+    }
+
+    function getCompletionKey(code, details) {
+      if (details && details.year >= 3) return `${code}__${details.dept || 'عام'}`;
+      return code;
+    }
+
+    function getCoursePathKeys(code, pathDept = realDept) {
+      const locations = courseLocationsMap[code] || [];
+      const keys = [];
+      locations.forEach(loc => {
+        if (loc.year <= 2) keys.push(getCompletionKey(code, loc));
+        else if ((pathDept || 'عام') === (loc.dept || 'عام')) keys.push(getCompletionKey(code, loc));
+      });
+      return [...new Set(keys.length ? keys : [code])];
+    }
+
+    function getAllCourseKeys(code) {
+      const locations = courseLocationsMap[code] || [];
+      const keys = locations.map(loc => getCompletionKey(code, loc));
+      return [...new Set(keys.length ? keys : [code])];
+    }
+
+    function isCourseCompleted(code, details) {
+      return completedSet.has(getCompletionKey(code, details));
+    }
+
+    function isPrerequisiteCompleted(code) {
+      return getCoursePathKeys(code).some(key => completedSet.has(key));
+    }
+
     fetch('data/subjects.json')
       .then(res => res.json())
       .then(data => {
         allData = data;
         allData.forEach(sem => {
-          const title = sem.semester;
-          let year = null, term = null, dept = null;
-          if (title.includes('أولى')) year = 1;
-          else if (title.includes('ثانية')) year = 2;
-          else if (title.includes('ثالثة')) year = 3;
-          else if (title.includes('رابعة')) year = 4;
-          if (title.includes('الأول')) term = 1;
-          else if (title.includes('الثاني')) term = 2;
-          if (title.includes('CS')) dept = 'CS';
-          else if (title.includes('IT')) dept = 'IT';
-          else if (title.includes('IS')) dept = 'IS';
-          else if (title.includes('عام')) dept = 'عام';
+          const detailsBase = getSemesterMeta(sem.semester);
 
           (sem.courses || []).forEach(c => {
             courseMap[c.code] = c;
-            const details = { year, term, termLabel: term===1?'ترم أول':(term===2?'ترم ثاني':''), dept: dept||'عام', semesterTitle: title };
+            const details = { ...detailsBase };
             courseDetailsMap[c.code] = details;
             if (!courseLocationsMap[c.code]) courseLocationsMap[c.code] = [];
             const locationKey = `${details.year}|${details.term}|${details.dept}|${details.semesterTitle}`;
@@ -1197,7 +1231,7 @@
       if (s.year) yearSelect.value = s.year;
       realDept = s.dept || '';
       termSelect.value = s.term || 'all';
-      if (yearSelect.value === '3' && !realDept) realDept = 'عام';
+      if ((yearSelect.value === '3' || yearSelect.value === '4') && !realDept) realDept = 'عام';
       updateDepartmentOptions();
     }
 
@@ -1212,9 +1246,9 @@
         if (!realDept || realDept === 'عام') { realDept = 'عام'; deptSelect.value = 'عام'; }
         else deptSelect.value = realDept;
       } else if (y === '4') {
-        deptSelect.disabled = true;
-        Array.from(deptSelect.options).forEach(o => o.hidden = false);
-        if (!realDept || realDept === 'عام') { deptSelect.value = 'عام'; }
+        deptSelect.disabled = false;
+        Array.from(deptSelect.options).forEach(o => o.hidden = (o.value === 'عام'));
+        if (!SPECIALIZED_DEPTS.includes(realDept)) { realDept = 'CS'; deptSelect.value = 'CS'; }
         else deptSelect.value = realDept;
       }
       updateNavButtons();
@@ -1238,25 +1272,16 @@
       const codesToAdd = new Set();
       allData.forEach(sem => {
         const ti = sem.semester;
-        let year = null, term = null, courseDept = null;
-        if (ti.includes('أولى')) year = 1;
-        else if (ti.includes('ثانية')) year = 2;
-        else if (ti.includes('ثالثة')) year = 3;
-        else if (ti.includes('رابعة')) year = 4;
+        const meta = getSemesterMeta(ti);
+        const year = meta.year, term = meta.term, courseDept = meta.dept;
         if (!year) return;
-        if (ti.includes('الأول')) term = 1;
-        else if (ti.includes('الثاني')) term = 2;
         if (!term) return;
-        if (ti.includes('CS')) courseDept = 'CS';
-        else if (ti.includes('IT')) courseDept = 'IT';
-        else if (ti.includes('IS')) courseDept = 'IS';
-        else if (ti.includes('عام')) courseDept = 'عام';
 
         const canAdd = () => currentDept && currentDept !== 'عام' ? (courseDept === currentDept || courseDept === 'عام') : courseDept === 'عام';
         if (year < currentYear) {
-          if (canAdd()) (sem.courses || []).forEach(c => codesToAdd.add(c.code));
+          if (canAdd()) (sem.courses || []).forEach(c => codesToAdd.add(getCompletionKey(c.code, meta)));
         } else if (year === currentYear && currentTerm === '2' && term === 1) {
-          if (canAdd()) (sem.courses || []).forEach(c => codesToAdd.add(c.code));
+          if (canAdd()) (sem.courses || []).forEach(c => codesToAdd.add(getCompletionKey(c.code, meta)));
         }
       });
       if (codesToAdd.size === 0) { showToast('لا توجد مواد سابقة لإضافتها'); return; }
@@ -1290,21 +1315,21 @@
     function getGlobalScopeCourses() {
       const d=realDept; const scope=[];
       allData.forEach(sem=>{
-        const ti=sem.semester; let y=null;
-        if(ti.includes('أولى')) y=1; else if(ti.includes('ثانية')) y=2; else if(ti.includes('ثالثة')) y=3; else if(ti.includes('رابعة')) y=4;
+        const ti=sem.semester; const meta=getSemesterMeta(ti); const y=meta.year;
         if(!y) return;
         (sem.courses||[]).forEach(c=>{
-          if(y===1||y===2) scope.push(c);
-          else if(y===3){ if(d==='عام'&&ti.includes('عام')) scope.push(c); else if(['CS','IT','IS'].includes(d)&&ti.includes(d)) scope.push(c); }
-          else if(y===4){ if(['CS','IT','IS'].includes(d)&&ti.includes(d)) scope.push(c); }
+          const item = { ...c, completionDetails: meta, completionKey: getCompletionKey(c.code, meta) };
+          if(y===1||y===2) scope.push(item);
+          else if(y===3){ if(d==='عام'&&ti.includes('عام')) scope.push(item); else if(SPECIALIZED_DEPTS.includes(d)&&ti.includes(d)) scope.push(item); }
+          else if(y===4){ if(SPECIALIZED_DEPTS.includes(d)&&ti.includes(d)) scope.push(item); }
         });
       });
-      return [...new Map(scope.map(c=>[c.code,c])).values()];
+      return [...new Map(scope.map(c=>[c.completionKey,c])).values()];
     }
 
     function updateOverallProgress() {
       const scope=getGlobalScopeCourses(); const total=scope.length;
-      let comp=0; scope.forEach(c=>{ if(completedSet.has(c.code)) comp++; });
+      let comp=0; scope.forEach(c=>{ if(completedSet.has(c.completionKey)) comp++; });
       overallProgressFill.style.width=(total? (comp/total)*100 :0)+'%';
       overallProgressText.textContent=`${comp} / ${total} مادة مكتملة`;
     }
@@ -1332,13 +1357,14 @@
         container.innerHTML=`<div class="empty-msg">${msg}</div>`; return;
       }
       sems.forEach(sem => {
+        const semDetails = getSemesterMeta(sem.title);
         const block=document.createElement('div'); block.className='semester-block';
-        const allCompleted = sem.courses.every(c => completedSet.has(c.code));
+        const allCompleted = sem.courses.every(c => isCourseCompleted(c.code, semDetails));
         const btnText = allCompleted ? 'مسح الكل' : 'تحديد الكل';
         block.innerHTML=`<div class="semester-title"><span>${sem.title}</span><button class="select-all-btn">${btnText}</button></div><div class="courses-grid"></div>`;
         const grid=block.querySelector('.courses-grid');
         sem.courses.forEach(course=>{
-          const code=course.code, isCompleted=completedSet.has(code);
+          const code=course.code, isCompleted=isCourseCompleted(code, semDetails);
           const hasVisibleDependents = getVisibleDependentsCount(code) > 0;
           const card=document.createElement('div'); card.className=`course-card ${isCompleted?'completed':''}`; card.dataset.code=code;
           card.innerHTML=`
@@ -1352,40 +1378,60 @@
             <span class="completed-badge">&#10003; تم</span>
             ${hasVisibleDependents?`<button class="open-courses-btn" data-code="${code}">يفتح</button>`:''}
           `;
-          card.addEventListener('click', e=>{ if(!e.target.closest('.open-courses-btn')) toggleCompleted(code,card,course); });
+          card.addEventListener('click', e=>{ if(!e.target.closest('.open-courses-btn')) toggleCompleted(code,card,course,semDetails); });
           grid.appendChild(card);
         });
         grid.querySelectorAll('.open-courses-btn').forEach(btn=> btn.addEventListener('click', e=>{ e.stopPropagation(); showOpenCoursesModal(btn.dataset.code); }));
         const selectAllBtn = block.querySelector('.select-all-btn');
-        selectAllBtn.addEventListener('click', e=>{ e.stopPropagation(); toggleAllInSemester(sem.courses, grid, selectAllBtn); });
+        selectAllBtn.addEventListener('click', e=>{ e.stopPropagation(); toggleAllInSemester(sem.courses, grid, selectAllBtn, semDetails); });
         container.appendChild(block);
       });
     }
 
-    function toggleAllInSemester(courses, grid, btnElement) {
-      const allCompleted = courses.every(c => completedSet.has(c.code));
+    function toggleAllInSemester(courses, grid, btnElement, semDetails) {
+      const allCompleted = courses.every(c => isCourseCompleted(c.code, semDetails));
       if (allCompleted) {
-        courses.forEach(c => { if(completedSet.has(c.code)) { completedSet.delete(c.code); cascadeUncheck(c.code); } });
+        courses.forEach(c => {
+          const key = getCompletionKey(c.code, semDetails);
+          if(completedSet.has(key)) { completedSet.delete(key); cascadeUncheck(c.code, semDetails.dept, semDetails.year <= 2); }
+        });
         grid.querySelectorAll('.course-card').forEach(c => c.classList.remove('completed'));
         persistAndUpdate(); showToast('تم إلغاء إكمال جميع المواد');
       } else {
         let changed = false; const added = new Set(); let keep = true;
-        while(keep) { keep=false; courses.forEach(c=>{ if(completedSet.has(c.code)) return; if((c.prerequisites||[]).every(p=>completedSet.has(p)||added.has(p))) { completedSet.add(c.code); added.add(c.code); changed=true; keep=true; } }); }
+        while(keep) { keep=false; courses.forEach(c=>{
+          const key = getCompletionKey(c.code, semDetails);
+          if(completedSet.has(key)) return;
+          if((c.prerequisites||[]).every(p=>isPrerequisiteCompleted(p)||added.has(p))) { completedSet.add(key); added.add(c.code); changed=true; keep=true; }
+        }); }
         if(changed) { grid.querySelectorAll('.course-card').forEach(c=>{ if(added.has(c.dataset.code)) c.classList.add('completed'); }); persistAndUpdate(); showToast('تم تحديد جميع المواد الممكنة'); }
         else showToast('لا توجد مواد إضافية يمكن إكمالها حالياً');
       }
-      const nowAllCompleted = courses.every(c => completedSet.has(c.code));
+      const nowAllCompleted = courses.every(c => isCourseCompleted(c.code, semDetails));
       if (btnElement) btnElement.textContent = nowAllCompleted ? 'مسح الكل' : 'تحديد الكل';
     }
 
-    function updateCardVisual(code){ const c=document.querySelector(`.course-card[data-code="${code}"]`); if(c) c.classList.toggle('completed', completedSet.has(code)); }
-    function cascadeUncheck(code){ (prereqToDependents[code]||[]).forEach(d=>{ if(completedSet.has(d)){ completedSet.delete(d); updateCardVisual(d); cascadeUncheck(d); } }); }
-    function toggleCompleted(code, card, course){
-      if(completedSet.has(code)){
-        completedSet.delete(code); cascadeUncheck(code); updateCardVisual(code); persistAndUpdate(); showToast('تم إلغاء الإكمال');
+    function updateCardVisual(code){
+      document.querySelectorAll(`.course-card[data-code="${code}"]`).forEach(c => {
+        const semTitle = c.closest('.semester-block')?.querySelector('.semester-title span')?.textContent || '';
+        c.classList.toggle('completed', isCourseCompleted(code, getSemesterMeta(semTitle)));
+      });
+    }
+    function cascadeUncheck(code, pathDept = realDept, includeAllPaths = false){
+      (prereqToDependents[code]||[]).forEach(d=>{
+        const dependentKeys = includeAllPaths ? getAllCourseKeys(d) : getCoursePathKeys(d, pathDept);
+        dependentKeys.forEach(key => {
+          if(completedSet.has(key)){ completedSet.delete(key); updateCardVisual(d); cascadeUncheck(d, pathDept, includeAllPaths); }
+        });
+      });
+    }
+    function toggleCompleted(code, card, course, semDetails){
+      const key = getCompletionKey(code, semDetails);
+      if(completedSet.has(key)){
+        completedSet.delete(key); cascadeUncheck(code, semDetails.dept, semDetails.year <= 2); updateCardVisual(code); persistAndUpdate(); showToast('تم إلغاء الإكمال');
       } else {
-        const pre=course.prerequisites||[]; if(pre.length){ const miss=pre.filter(p=>!completedSet.has(p)); if(miss.length){ showToast(`يجب إنهاء: ${formatPrerequisites(miss)}`); return; } }
-        completedSet.add(code); updateCardVisual(code); persistAndUpdate(); showToast('تم الإكمال');
+        const pre=course.prerequisites||[]; if(pre.length){ const miss=pre.filter(p=>!isPrerequisiteCompleted(p)); if(miss.length){ showToast(`يجب إنهاء: ${formatPrerequisites(miss)}`); return; } }
+        completedSet.add(key); updateCardVisual(code); persistAndUpdate(); showToast('تم الإكمال');
       }
       updateCurrentSemesterSelectAllBtn(code);
     }
@@ -1397,7 +1443,8 @@
       const block = grid.closest('.semester-block');
       const btn = block.querySelector('.select-all-btn');
       const courses = Array.from(grid.querySelectorAll('.course-card')).map(c => courseMap[c.dataset.code]);
-      const allComp = courses.every(c => completedSet.has(c.code));
+      const semTitle = block.querySelector('.semester-title span')?.textContent || '';
+      const allComp = courses.every(c => isCourseCompleted(c.code, getSemesterMeta(semTitle)));
       btn.textContent = allComp ? 'مسح الكل' : 'تحديد الكل';
     }
 
@@ -1408,8 +1455,7 @@
       const years={1:{first:[],second:[]},2:{first:[],second:[]},3:{first:[],second:[]},4:{first:[],second:[]}};
       const added={1:{first:new Set(),second:new Set()},2:{first:new Set(),second:new Set()},3:{first:new Set(),second:new Set()},4:{first:new Set(),second:new Set()}};
       allData.forEach(sem=>{
-        const ti=sem.semester; let y=null;
-        if(ti.includes('أولى')) y=1; else if(ti.includes('ثانية')) y=2; else if(ti.includes('ثالثة')) y=3; else if(ti.includes('رابعة')) y=4;
+        const ti=sem.semester; const meta=getSemesterMeta(ti); const y=meta.year;
         if(!y) return;
         let includeSem = false;
         if (y === 1 || y === 2) includeSem = true;
@@ -1420,8 +1466,9 @@
         const tk = isF ? 'first' : (isS ? 'second' : null);
         if(!tk) return;
         (sem.courses||[]).forEach(c=>{
-          if(!completedSet.has(c.code) && !added[y][tk].has(c.code)){
-            added[y][tk].add(c.code);
+          const key = getCompletionKey(c.code, meta);
+          if(!completedSet.has(key) && !added[y][tk].has(key)){
+            added[y][tk].add(key);
             years[y][tk].push({ code:c.code, name:c.arabic_name||c.name, english:c.name });
           }
         });

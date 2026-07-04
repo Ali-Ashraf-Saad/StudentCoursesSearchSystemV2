@@ -51,7 +51,7 @@
     "courses": [
       {
         "name": "Logic Design-1",
-        "arabic_name": "تصميم منطقي - 1",
+        "arabic_name": "تصميم منطقي - 1 / مقدمة إلكترونيات",
         "code": "IT181",
         "prerequisites": ["CS110"]
       },
@@ -87,7 +87,7 @@
       },
       {
         "name": "Human Rights",
-        "arabic_name": "حقوق إنسان",
+        "arabic_name": "قضايا مجتمعية / حقوق إنسان",
         "code": "HM110",
         "prerequisites": []
       }
@@ -98,7 +98,7 @@
     "courses": [
       {
         "name": "Computer Architecture",
-        "arabic_name": "معمارية الحاسب",
+        "arabic_name": "معمارية الحاسب / تنظيم الحاسبات",
         "code": "IT282",
         "prerequisites": ["IT181"]
       },
@@ -425,7 +425,7 @@
       },
       {
         "name": "Selected Topics in IS-1 / Mobile Application Programming",
-        "arabic_name": "موضوعات مختارة - 1",
+        "arabic_name": "موضوعات مختارة - 1 / برمجة تطبيقات المحمول",
         "code": "IS381",
         "prerequisites": []
       },
@@ -494,9 +494,9 @@
         "prerequisites": ["CS362"]
       },
       {
-        "name": "Game Programming",
-        "arabic_name": "برمجة الألعاب",
-        "code": "CS425",
+        "name": "Advanced Computer Programming",
+        "arabic_name": "برمجة حاسبات متقدمة",
+        "code": "CS336",
         "prerequisites": ["CS334"]
       },
       {
@@ -641,7 +641,7 @@
       },
       {
         "name": "Knowledge Management",
-        "arabic_name": "إدارة المعرفة",
+        "arabic_name": "إدارة المعرفة / نظم قواعد المعرفة",
         "code": "IS444",
         "prerequisites": ["IS465"]
       },
