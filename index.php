@@ -823,7 +823,7 @@ header("Expires: 0");
     <div class="toast" id="toast"></div>
 
     <footer>
-      StudentsCourses 2026 &middot; Developed by Ali Ashraf &middot;
+      StudentsCourses 2026 &middot; Developed by <span id="secretStatsTrigger">Ali Ashraf</span> &middot;
       <a href="http://wa.me/+201148727448" target="_blank">ContactMe</a>
     </footer>
 
@@ -848,6 +848,28 @@ header("Expires: 0");
       function refreshPage() {
         location.reload(true);
       }
+
+      (function initSecretStatsShortcut() {
+        const trigger = document.getElementById("secretStatsTrigger");
+        if (!trigger) return;
+
+        let clickCount = 0;
+        let resetTimer = null;
+
+        trigger.addEventListener("click", () => {
+          clickCount++;
+          clearTimeout(resetTimer);
+
+          if (clickCount >= 5) {
+            window.location.href = "/stats";
+            return;
+          }
+
+          resetTimer = setTimeout(() => {
+            clickCount = 0;
+          }, 2000);
+        });
+      })();
 
       let suppressBlurCommit = false;
       const MIN_QUERY_LENGTH = 3;

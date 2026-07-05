@@ -536,6 +536,35 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            padding-top: 64px;
+        }
+
+        .top-nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            min-height: 64px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(12px);
+            display: flex; justify-content: center; align-items: center; gap: 20px;
+            padding: 10px 20px; z-index: 1000;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+            border-bottom: 1px solid rgba(59,130,246,0.3);
+        }
+
+        .top-nav .nav-btn {
+            width: auto; display: flex; align-items: center; gap: 8px;
+            background: transparent; border: none; color: #e2e8f0;
+            font-family: 'Cairo', sans-serif; font-size: 16px; font-weight: 600;
+            padding: 8px 16px; border-radius: 10px; box-shadow: none;
+            cursor: pointer; transition: background 0.3s, color 0.3s, transform 0.2s;
+        }
+
+        .top-nav .nav-btn svg {
+            width: 24px; height: 24px; fill: currentColor;
+        }
+
+        .top-nav .nav-btn:hover {
+            background: rgba(59,130,246,0.2); color: #60a5fa;
+            transform: translateY(-2px); box-shadow: none;
         }
 
         .container {
@@ -586,7 +615,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
         header h1 {
             font-size: 2.8rem; font-weight: 800;
             background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             margin-bottom: 0.75rem; letter-spacing: -0.5px;
         }
         header p { color: var(--text-secondary); font-size: 1.15rem; font-weight: 400; }
@@ -849,6 +878,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             font-size: 0.85rem; color: var(--text-secondary);
         }
         @media (max-width: 768px) {
+            body { padding-top: 60px; }
+            .top-nav { min-height: 60px; gap: 8px; padding: 8px 10px; }
+            .top-nav .nav-btn { font-size: 14px; padding: 7px 10px; gap: 5px; }
+            .top-nav .nav-btn svg { width: 20px; height: 20px; }
             .dashboard-grid { grid-template-columns: 1fr; }
             header h1 { font-size: 2rem; }
             .main-counter { font-size: 3rem; }
@@ -862,6 +895,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
     </style>
     </head>
 <body>
+
+<nav class="top-nav">
+    <button class="nav-btn" onclick="window.location.href='/'">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        <span>العودة</span>
+    </button>
+    <button class="nav-btn" onclick="location.reload()">
+        <svg viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.45.83.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
+        <span>تحديث</span>
+    </button>
+</nav>
 
 <div class="container">
     <header>
@@ -998,11 +1042,34 @@ const countersConfig = [
         };
     }
 
+    function buildStatsActionUrl(action) {
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.searchParams.set('action', action);
+        url.searchParams.set('t', Date.now());
+        return url.toString();
+    }
+
+    async function fetchJsonAction(action) {
+        const response = await fetch(buildStatsActionUrl(action), {
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const contentType = response.headers.get('content-type') || '';
+        const responseText = await response.text();
+        if (!contentType.includes('application/json')) {
+            throw new Error('Expected JSON, got ' + (contentType || 'unknown content type') + ': ' + responseText.slice(0, 80));
+        }
+
+        return JSON.parse(responseText);
+    }
+
     async function fetchAllStats() {
         try {
-            const response = await fetch('stats?action=get_stats&t=' + Date.now());
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return await response.json();
+            return await fetchJsonAction('get_stats');
         } catch (error) {
             console.error('فشل جلب الإحصائيات:', error);
             return null;
@@ -1264,9 +1331,7 @@ function switchChartView(id, view, btnElement) {
 
     async function downloadAllLogs() {
         try {
-            const response = await fetch('stats?action=list_logs&t=' + Date.now());
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            const data = await response.json();
+            const data = await fetchJsonAction('list_logs');
             const files = data.files || [];
             if (files.length === 0) {
                 alert('لا توجد ملفات JSONL داخل مجلد السجلات');
@@ -1274,7 +1339,9 @@ function switchChartView(id, view, btnElement) {
             }
             for (const file of files) {
                 const a = document.createElement('a');
-                a.href = 'stats?action=download_log&file=' + encodeURIComponent(file) + '&t=' + Date.now();
+                const downloadUrl = new URL(buildStatsActionUrl('download_log'));
+                downloadUrl.searchParams.set('file', file);
+                a.href = downloadUrl.toString();
                 a.download = file;
                 document.body.appendChild(a);
                 a.click();
@@ -1289,8 +1356,7 @@ function switchChartView(id, view, btnElement) {
 
 async function resetServerCache() {
     try {
-        const response = await fetch('stats?action=reset_cache');
-        const result = await response.json();
+        const result = await fetchJsonAction('reset_cache');
         if (result.success) {
             // تدمير جميع الرسوم البيانية الحالية
             Object.keys(chartInstances).forEach(function(id) {
@@ -1311,26 +1377,40 @@ async function resetServerCache() {
     }
 }
 
+    let statsRefreshInFlight = false;
+
     async function initDashboard() {
+        if (statsRefreshInFlight) return;
+        statsRefreshInFlight = true;
+
         const dashboard = document.getElementById('dashboard');
-        const allStats = await fetchAllStats();
-        
-        if (!allStats) {
-            dashboard.innerHTML = '<div class="card" style="grid-column: 1/-1; border-color: var(--danger); animation: fadeInUp 0.6s ease-out forwards;"><div class="card-header"><div class="card-title" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> فشل الاتصال بالخادم</div></div><div style="text-align: center; padding: 2rem; color: var(--text-secondary);"><i class="fas fa-server" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; color: var(--danger);"></i><p style="font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">تعذر جلب البيانات من الخادم</p></div></div>';
-            return;
+        try {
+            const allStats = await fetchAllStats();
+            
+            if (!allStats) {
+                if (!dashboard.querySelector('.card[id^="card-wrapper-"]')) {
+                    dashboard.innerHTML = '<div class="card error-card" style="grid-column: 1/-1; border-color: var(--danger); animation: fadeInUp 0.6s ease-out forwards;"><div class="card-header"><div class="card-title" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> فشل الاتصال بالخادم</div></div><div style="text-align: center; padding: 2rem; color: var(--text-secondary);"><i class="fas fa-server" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; color: var(--danger);"></i><p style="font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">تعذر جلب البيانات من الخادم</p></div></div>';
+                }
+                return;
+            }
+            
+            const loader = dashboard.querySelector('.loader-container');
+            if (loader) loader.remove();
+
+            const errorCard = dashboard.querySelector('.error-card');
+            if (errorCard) errorCard.remove();
+            
+            countersConfig.forEach(function(config) {
+                const stats = allStats[config.id];
+                if (stats) createOrUpdateCard(config, stats);
+            });
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('lastUpdateInfo').innerHTML = '<i class="fas fa-clock"></i> آخر تحديث: ' + timeStr;
+        } finally {
+            statsRefreshInFlight = false;
         }
-        
-        const loader = dashboard.querySelector('.loader-container');
-        if (loader) loader.remove();
-        
-        countersConfig.forEach(function(config) {
-            const stats = allStats[config.id];
-            if (stats) createOrUpdateCard(config, stats);
-        });
-        
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        document.getElementById('lastUpdateInfo').innerHTML = '<i class="fas fa-clock"></i> آخر تحديث: ' + timeStr;
     }
 
     document.addEventListener('DOMContentLoaded', function() {

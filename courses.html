@@ -57,6 +57,24 @@
     .progress-bar-wrap { flex: 1; min-width: 150px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); border-radius: 10px; transition: width 0.4s; }
     .progress-text { white-space: nowrap; color: #cbd5e1; font-size: 14px; }
+    .academic-summary {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+      margin: -8px 0 20px;
+      
+    }
+    .summary-item {
+      background: rgba(30,41,59,0.7); border: 1px solid rgba(59,130,246,0.24);
+      border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+      backdrop-filter: blur(10px); box-shadow: 0 10px 24px rgba(2,6,23,0.18);
+      
+    }
+    .summary-icon {
+      width: 42px; height: 42px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(59,130,246,0.18); color: #60a5fa; font-size: 22px; font-weight: 700;
+    }
+    .summary-label { color: #94a3b8; font-size: 13px; margin-bottom: 2px; }
+    .summary-value { color: #f8fafc; font-size: 18px; font-weight: 700; line-height: 1.45; }
 
     .search-section { margin: 0 auto 12px auto; max-width: 500px; display: flex; gap: 8px; }
     .search-input-wrapper { flex: 1; position: relative; }
@@ -357,6 +375,20 @@
       color: #94a3b8; font-size: 12px; padding-right: 32px; display: flex; flex-wrap: wrap; gap: 8px;
     }
     .modal-course-detail span { background: rgba(59,130,246,0.1); padding: 2px 10px; border-radius: 10px; white-space: nowrap; }
+    .modal-course-detail .year-chip {
+      background: rgba(16,185,129,0.16); border: 1px solid rgba(16,185,129,0.34);
+      color: #86efac; font-weight: 700;
+    }
+    .modal-course-detail .term-chip {
+      background: rgba(245,158,11,0.16); border: 1px solid rgba(245,158,11,0.34);
+      color: #fcd34d; font-weight: 700;
+    }
+    .modal-course-detail .year-1 { background: rgba(34,197,94,0.16); border-color: rgba(34,197,94,0.36); color: #86efac; }
+    .modal-course-detail .year-2 { background: rgba(14,165,233,0.16); border-color: rgba(14,165,233,0.36); color: #7dd3fc; }
+    .modal-course-detail .year-3 { background: rgba(168,85,247,0.16); border-color: rgba(168,85,247,0.36); color: #d8b4fe; }
+    .modal-course-detail .year-4 { background: rgba(244,63,94,0.16); border-color: rgba(244,63,94,0.36); color: #fda4af; }
+    .modal-course-detail .term-1 { background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.36); color: #fcd34d; }
+    .modal-course-detail .term-2 { background: rgba(20,184,166,0.16); border-color: rgba(20,184,166,0.36); color: #5eead4; }
     .modal-total {
       text-align: center; margin-top: 18px; font-weight: 700; color: #fbbf24; font-size: 16px;
       padding: 12px; background: rgba(245,158,11,0.08); border-radius: 12px; border: 1px dashed rgba(245,158,11,0.3);
@@ -436,6 +468,10 @@
     @keyframes fadeSlide { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 560px) {
+      .academic-summary { grid-template-columns: 1fr; }
+      .summary-item { padding: 12px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -510,6 +546,40 @@
       <div class="progress-bar-wrap"><div class="progress-fill" id="overallProgressFill" style="width:0%"></div></div>
       <div class="progress-text" id="overallProgressText">0 / 0</div>
     </div>
+    <div class="academic-summary" aria-label="ملخص التقدم الدراسي">
+      <div class="summary-item">
+        <div class="summary-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="9"/>
+  <path d="M12 7v5l3 2"/>
+</svg>
+        </div>
+        <div>
+          <div class="summary-label">الساعات المجتازة</div>
+          <div class="summary-value" id="passedHoursText">0 ساعة</div>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <path d="M12 4L18 7V11C18 15 15.4 17.8 12 19C8.6 17.8 6 15 6 11V7L12 4Z"
+        stroke="currentColor"
+        stroke-width="2.1"
+        stroke-linejoin="round"/>
+  <path d="M9.5 11.5L11.2 13.2L14.8 9.6"
+        stroke="currentColor"
+        stroke-width="2.1"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</svg>
+        </div>
+        <div>
+          <div class="summary-label">المستوى الحالي</div>
+          <div class="summary-value" id="academicLevelText">المستوى الأول</div>
+        </div>
+      </div>
+    </div>
 
     <div class="filters">
       <div class="filter-group">
@@ -554,6 +624,8 @@
     const container = document.getElementById('coursesContainer');
     const overallProgressFill = document.getElementById('overallProgressFill');
     const overallProgressText = document.getElementById('overallProgressText');
+    const passedHoursText = document.getElementById('passedHoursText');
+    const academicLevelText = document.getElementById('academicLevelText');
     const reminderContainer = document.getElementById('reminderContainer');
     const toast = document.getElementById('toast');
     const clearDataBtn = document.getElementById('clearDataBtn');
@@ -836,40 +908,44 @@
         <span class="modal-title-en">${englishName} (${code})</span>
       `;
 
-      const deptGroups = { CS: [], IS: [], IT: [], 'عام': [] };
+      const pathGroups = {};
       const addedCodes = new Set();
       dependents.forEach(depCode => {
         if (addedCodes.has(depCode)) return;
         addedCodes.add(depCode);
-        const depCourse = courseMap[depCode], details = courseDetailsMap[depCode] || {};
-        const dept = details.dept || 'عام';
-        if (!deptGroups[dept]) deptGroups[dept] = [];
-        deptGroups[dept].push({
+        const depCourse = courseMap[depCode], pathInfo = getCoursePathInfo(depCode);
+        const details = pathInfo.details || {};
+        const pathLabel = pathInfo.pathLabel || (details.dept || 'عام');
+        if (!pathGroups[pathLabel]) pathGroups[pathLabel] = [];
+        pathGroups[pathLabel].push({
           code: depCode,
           name: depCourse ? (depCourse.arabic_name || depCourse.name) : depCode,
           english: depCourse ? depCourse.name : '',
           year: details.year || '?',
-          termLabel: details.termLabel || '?'
+          term: details.term || '?'
         });
       });
 
-      const currentDetails = courseDetailsMap[code];
+      const currentDetails = getPreferredCourseLocation(code);
       let filterDept = null;
       if (currentDetails && (currentDetails.year === 3 || currentDetails.year === 4) && realDept && realDept !== 'عام') {
         filterDept = realDept;
       }
 
-      Object.keys(deptGroups).forEach(d => {
-        deptGroups[d].sort((a, b) => a.year - b.year || (a.termLabel === 'ترم أول' ? 1 : 2) - (b.termLabel === 'ترم أول' ? 1 : 2));
+      Object.keys(pathGroups).forEach(d => {
+        pathGroups[d].sort((a, b) => a.year - b.year || a.term - b.term);
       });
 
       let html = '', total = 0;
-      const deptOrder = filterDept ? [filterDept] : ['عام', 'CS', 'IS', 'IT'];
-      deptOrder.forEach(dept => {
-        const courses = deptGroups[dept];
+      let pathOrder = Object.keys(pathGroups).sort(comparePathLabels);
+      if (filterDept) {
+        pathOrder = pathOrder.filter(path => path.split('، ').includes(filterDept) || path.split('، ').includes('عام'));
+      }
+      pathOrder.forEach(pathLabel => {
+        const courses = pathGroups[pathLabel];
         if (!courses || !courses.length) return;
         total += courses.length;
-        html += `<div class="modal-dept-group"><div class="modal-dept-title">من طريق ${dept} (${courses.length} مواد)</div>`;
+        html += `<div class="modal-dept-group"><div class="modal-dept-title">من طريق ${pathLabel} (${courses.length} مواد)</div>`;
         courses.forEach((c, i) => {
           html += `
             <div class="modal-course-item">
@@ -881,7 +957,7 @@
                 </div>
               </div>
               <div class="modal-course-detail">
-                <span>${c.code}</span><span>سنة ${c.year}</span><span>${c.termLabel}</span>
+                <span>${c.code}</span><span class="year-chip year-${c.year}">سنة ${c.year}</span><span class="term-chip term-${c.term}">ترم ${c.term}</span>
               </div>
             </div>`;
         });
@@ -896,6 +972,53 @@
     function closeOpenCoursesModal() {
       openCoursesModal.style.display = 'none';
       unlockScroll();
+    }
+
+    function getPreferredCourseLocation(code, preferredDept = realDept) {
+      const locations = courseLocationsMap[code] || [];
+      if (!locations.length) return courseDetailsMap[code] || null;
+
+      const thirdYearGeneral = locations.find(loc => loc.year === 3 && loc.dept === 'عام');
+      if (thirdYearGeneral) return thirdYearGeneral;
+
+      if (preferredDept && preferredDept !== 'عام') {
+        const deptLocation = locations.find(loc => loc.dept === preferredDept);
+        if (deptLocation) return deptLocation;
+      }
+
+      return locations[0];
+    }
+
+    function getCoursePathInfo(code) {
+      const locations = courseLocationsMap[code] || [];
+      if (!locations.length) return { details: courseDetailsMap[code] || null, pathLabel: '' };
+
+      const preferred = getPreferredCourseLocation(code);
+      const sameTermLocations = locations.filter(loc =>
+        loc.year === preferred.year && loc.term === preferred.term
+      );
+      const deptOrder = ['عام', 'CS', 'IT', 'IS'];
+      const depts = [...new Set(sameTermLocations.map(loc => loc.dept || 'عام'))]
+        .sort((a, b) => deptOrder.indexOf(a) - deptOrder.indexOf(b));
+      const pathLabel = depts.includes('عام') ? 'عام' : depts.join('، ');
+
+      return {
+        details: preferred,
+        pathLabel
+      };
+    }
+
+    function comparePathLabels(a, b) {
+      const order = ['عام', 'CS', 'IT', 'IS'];
+      const partsA = a.split('، ').filter(Boolean);
+      const partsB = b.split('، ').filter(Boolean);
+      const isGeneralA = partsA.includes('عام');
+      const isGeneralB = partsB.includes('عام');
+      if (isGeneralA !== isGeneralB) return isGeneralA ? -1 : 1;
+      if (partsA.length !== partsB.length) return partsB.length - partsA.length;
+      const rankA = partsA.reduce((sum, part, index) => sum + ((order.indexOf(part) + 1) * (index + 1)), 0);
+      const rankB = partsB.reduce((sum, part, index) => sum + ((order.indexOf(part) + 1) * (index + 1)), 0);
+      return rankA - rankB || a.localeCompare(b);
     }
 
     function clearCourseSearchInput() {
@@ -1162,7 +1285,12 @@
       return { year, term, dept: dept || 'عام', termLabel: term===1?'ترم أول':(term===2?'ترم ثاني':''), semesterTitle: title };
     }
 
+    function isThirdYearGeneralCourse(code) {
+      return (courseLocationsMap[code] || []).some(loc => loc.year === 3 && loc.dept === 'عام');
+    }
+
     function getCompletionKey(code, details) {
+      if (details && details.year === 3 && isThirdYearGeneralCourse(code)) return `${code}__عام`;
       if (details && details.year >= 3) return `${code}__${details.dept || 'عام'}`;
       return code;
     }
@@ -1172,6 +1300,7 @@
       const keys = [];
       locations.forEach(loc => {
         if (loc.year <= 2) keys.push(getCompletionKey(code, loc));
+        else if (loc.year === 3 && loc.dept === 'عام') keys.push(getCompletionKey(code, loc));
         else if ((pathDept || 'عام') === (loc.dept || 'عام')) keys.push(getCompletionKey(code, loc));
       });
       return [...new Set(keys.length ? keys : [code])];
@@ -1248,7 +1377,7 @@
       } else if (y === '4') {
         deptSelect.disabled = false;
         Array.from(deptSelect.options).forEach(o => o.hidden = (o.value === 'عام'));
-        if (!SPECIALIZED_DEPTS.includes(realDept)) { realDept = 'CS'; deptSelect.value = 'CS'; }
+        if (!SPECIALIZED_DEPTS.includes(realDept)) { realDept = ''; deptSelect.value = ''; }
         else deptSelect.value = realDept;
       }
       updateNavButtons();
@@ -1306,7 +1435,7 @@
         if(t==='1'&&!ti.includes('الأول')) return; if(t==='2'&&!ti.includes('الثاني')) return;
         let courses=sem.courses||[];
         if(y==='3'){ if(d==='عام'&&!ti.includes('عام')) return; else if(['CS','IT','IS'].includes(d)&&!ti.includes(d)) return; }
-        else if(y==='4'){ if(d==='عام') return; else if(['CS','IT','IS'].includes(d)&&!ti.includes(d)) return; }
+        else if(y==='4'){ if(!SPECIALIZED_DEPTS.includes(d)) return; else if(!ti.includes(d)) return; }
         if(courses.length) res.push({title:ti, courses});
       });
       return res;
@@ -1330,19 +1459,29 @@
     function updateOverallProgress() {
       const scope=getGlobalScopeCourses(); const total=scope.length;
       let comp=0; scope.forEach(c=>{ if(completedSet.has(c.completionKey)) comp++; });
+      const passedHours = scope.reduce((sum, c) => {
+        if (!completedSet.has(c.completionKey)) return sum;
+        return sum + (['HM110', 'GN160'].includes(c.code) ? 0 : 3);
+      }, 0);
+      let level = 'المستوى الأول';
+      if (passedHours >= 102) level = 'المستوى الرابع';
+      else if (passedHours >= 66) level = 'المستوى الثالث';
+      else if (passedHours >= 30) level = 'المستوى الثاني';
       overallProgressFill.style.width=(total? (comp/total)*100 :0)+'%';
       overallProgressText.textContent=`${comp} / ${total} مادة مكتملة`;
+      passedHoursText.textContent=`${passedHours} ساعة`;
+      academicLevelText.textContent=level;
     }
 
     function getVisibleDependentsCount(code) {
       const dependents = prereqToDependents[code] || [];
       if (dependents.length === 0) return 0;
-      const details = courseDetailsMap[code];
+      const details = getPreferredCourseLocation(code);
       if (!details) return dependents.length;
       if ((details.year === 3 || details.year === 4) && realDept && realDept !== 'عام') {
         return dependents.filter(dep => {
-          const depDetails = courseDetailsMap[dep];
-          return depDetails && depDetails.dept === realDept;
+          const depLocations = courseLocationsMap[dep] || [];
+          return depLocations.some(loc => (loc.year === 3 && loc.dept === 'عام') || loc.dept === realDept);
         }).length;
       }
       return dependents.length;
@@ -1353,7 +1492,7 @@
       if(!sems.length) {
         let msg='لا توجد مواد تطابق الفلتر';
         if((yearSelect.value==='3'||yearSelect.value==='4')&&deptSelect.value==='') msg='الرجاء اختيار القسم';
-        else if(yearSelect.value==='4'&&deptSelect.value==='عام') msg='لا توجد مواد للعام في الرابعة';
+        else if(yearSelect.value==='4'&&!deptSelect.value) msg='الرجاء اختيار القسم';
         container.innerHTML=`<div class="empty-msg">${msg}</div>`; return;
       }
       sems.forEach(sem => {
