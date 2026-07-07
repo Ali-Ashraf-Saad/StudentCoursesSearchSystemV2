@@ -290,10 +290,17 @@
     .course-card {
       background: rgba(30, 41, 59, 0.85); border-radius: 16px; padding: 16px 18px;
       display: flex; align-items: center; gap: 16px; border-right: 5px solid #3b82f6;
-      transition: box-shadow 0.3s, background 0.3s; cursor: pointer; position: relative; overflow: hidden;
+      transition: box-shadow 0.3s, background 0.3s, border-color 0.3s, transform 0.3s; cursor: pointer; position: relative; overflow: hidden;
     }
     .course-card:hover { box-shadow: 0 8px 25px rgba(59,130,246,0.3); }
     .course-card.completed { border-right-color: #10b981; background: rgba(30,41,59,0.5); }
+    .course-card.reminder-highlight {
+      border-right-color: #f59e0b;
+      background: rgba(245,158,11,0.14);
+      box-shadow: 0 0 0 2px rgba(245,158,11,0.5), 0 12px 32px rgba(245,158,11,0.28);
+      transform: translateY(-2px);
+      animation: reminderPulse 1.15s ease-in-out 2;
+    }
     .completed-badge {
       position: absolute; top: 8px; right: 16px; font-size: 13px; color: #10b981;
       font-weight: 600; opacity: 0; transition: opacity 0.2s; pointer-events: none;
@@ -449,9 +456,35 @@
     .year-body { padding: 15px 18px; background: rgba(0,0,0,0.2); }
     .term-separator { color: #f59e0b; font-size: 14px; font-weight: 600; margin: 0 0 8px; padding-top: 15px; border-bottom: 1px dashed rgba(245,158,11,0.3); }
     .term-separator:first-of-type { margin-top: 0; padding-top: 0; }
-    .remaining-list { list-style: none; padding: 0; margin: 0; }
-    .remaining-list li { padding: 8px 12px; border-bottom: 1px solid rgba(148,163,184,0.1); color: #cbd5e1; font-size: 14px; display: flex; justify-content: space-between; }
-    .remaining-code { color: #64748b; font-size: 12px; }
+    .remaining-list { list-style: none; padding: 0; margin: 0; counter-reset: remainingCourse; display: flex; flex-direction: column; gap: 8px; }
+    .remaining-list li {
+      counter-increment: remainingCourse; padding: 10px 12px; border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 12px; color: #cbd5e1; font-size: 14px; display: flex; justify-content: space-between;
+      align-items: center; gap: 12px; background: rgba(15,23,42,0.38); cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .remaining-list li:hover, .remaining-list li:focus-visible {
+      background: rgba(59,130,246,0.14); border-color: rgba(96,165,250,0.42);
+      transform: translateY(-1px); box-shadow: 0 8px 20px rgba(15,23,42,0.18); outline: none;
+    }
+    .remaining-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .remaining-main::before {
+      content: counter(remainingCourse); width: 28px; height: 28px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+      background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.4);
+      color: #fbbf24; font-weight: 800; font-size: 13px;
+    }
+    .remaining-status {
+      width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto;
+      box-shadow: 0 0 0 3px rgba(15,23,42,0.75), 0 0 14px currentColor;
+    }
+    .remaining-status.can-register { background: #3b82f6; color: rgba(59,130,246,0.75); }
+    .remaining-status.blocked-register { background: #ef4444; color: rgba(239,68,68,0.75); }
+    .remaining-name { min-width: 0; line-height: 1.5; }
+    .remaining-code {
+      color: #93c5fd; font-size: 12px; font-weight: 700; background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(96,165,250,0.24); padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+    }
 
     footer { text-align: center; padding: 15px; background: rgba(15,23,42,0.9); color: #94a3b8; font-size: 14px; border-top: 1px solid rgba(148,163,184,0.2); }
     footer a { color: #60a5fa; text-decoration: none; }
@@ -468,6 +501,10 @@
     @keyframes fadeSlide { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes reminderPulse {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(245,158,11,0.45), 0 12px 32px rgba(245,158,11,0.22); }
+      50% { box-shadow: 0 0 0 6px rgba(245,158,11,0.18), 0 16px 38px rgba(245,158,11,0.34); }
+    }
     @media (max-width: 560px) {
       .academic-summary { grid-template-columns: 1fr; }
       .summary-item { padding: 12px 14px; }
@@ -1504,8 +1541,10 @@
         const grid=block.querySelector('.courses-grid');
         sem.courses.forEach(course=>{
           const code=course.code, isCompleted=isCourseCompleted(code, semDetails);
+          const completionKey = getCompletionKey(code, semDetails);
           const hasVisibleDependents = getVisibleDependentsCount(code) > 0;
           const card=document.createElement('div'); card.className=`course-card ${isCompleted?'completed':''}`; card.dataset.code=code;
+          card.dataset.completionKey=completionKey;
           card.innerHTML=`
             <div class="checkbox-custom">&#10003;</div>
             <div class="course-info">
@@ -1590,6 +1629,61 @@
     function persistAndUpdate(){ localStorage.setItem(STORAGE_COMPLETED, JSON.stringify([...completedSet])); updateOverallProgress(); buildReminders(); }
     function showToast(m){ toast.innerHTML=m; toast.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>toast.classList.remove('show'),3500); }
 
+    function highlightCourseCard(completionKey, code) {
+      document.querySelectorAll('.course-card.reminder-highlight').forEach(card => {
+        card.classList.remove('reminder-highlight');
+      });
+      const cards = Array.from(document.querySelectorAll('.course-card'));
+      const target = cards.find(card => card.dataset.completionKey === completionKey) ||
+        cards.find(card => card.dataset.code === code);
+      if (!target) return false;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      window.setTimeout(() => {
+        target.classList.add('reminder-highlight');
+        clearTimeout(target._reminderHighlightTimer);
+        target._reminderHighlightTimer = setTimeout(() => {
+          target.classList.remove('reminder-highlight');
+        }, 1200);
+      }, 350);
+      return true;
+    }
+
+    function goToReminderCourse(item) {
+      const year = item.dataset.year;
+      const term = item.dataset.term;
+      const dept = item.dataset.dept || 'عام';
+      const code = item.dataset.code;
+      const completionKey = item.dataset.completionKey;
+
+      yearSelect.value = year;
+      if (year === '3' || year === '4') realDept = dept;
+      else realDept = 'عام';
+      updateDepartmentOptions();
+      termSelect.value = term || 'all';
+      saveFilterState();
+      render();
+      buildReminders();
+
+      requestAnimationFrame(() => {
+        const found = highlightCourseCard(completionKey, code);
+        showToast(found ? 'تم الانتقال للمادة' : 'تعذر العثور على بطاقة المادة في الفلتر الحالي');
+      });
+    }
+
+    function renderRemainingCourse(c) {
+      const statusClass = c.canRegister ? 'can-register' : 'blocked-register';
+      const statusText = c.canRegister ? 'يمكنك تسجيلها' : 'لا يمكنك تسجيلها';
+      const missingText = c.missingPrerequisites?.length ? ` - المتطلبات الناقصة: ${c.missingPrerequisites.join('، ')}` : '';
+      const tooltip = `${statusText}${missingText}`;
+      return `<li class="remaining-course-item" role="button" tabindex="0" title="${escapeHTML(tooltip)}" onclick="goToReminderCourse(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goToReminderCourse(this);}" data-year="${c.year}" data-term="${c.term}" data-dept="${escapeHTML(c.dept)}" data-code="${escapeHTML(c.code)}" data-completion-key="${escapeHTML(c.completionKey)}">
+        <span class="remaining-main">
+          <span class="remaining-status ${statusClass}" title="${escapeHTML(tooltip)}" aria-label="${escapeHTML(statusText)}"></span>
+          <span class="remaining-name">${escapeHTML(c.name)} <span style="font-size:12px;color:#64748b;">(${escapeHTML(c.english)})</span></span>
+        </span>
+        <span class="remaining-code">${escapeHTML(c.code)}</span>
+      </li>`;
+    }
+
     function buildReminders(){
       const years={1:{first:[],second:[]},2:{first:[],second:[]},3:{first:[],second:[]},4:{first:[],second:[]}};
       const added={1:{first:new Set(),second:new Set()},2:{first:new Set(),second:new Set()},3:{first:new Set(),second:new Set()},4:{first:new Set(),second:new Set()}};
@@ -1607,8 +1701,23 @@
         (sem.courses||[]).forEach(c=>{
           const key = getCompletionKey(c.code, meta);
           if(!completedSet.has(key) && !added[y][tk].has(key)){
+            const missingCodes = (c.prerequisites || []).filter(p => !isPrerequisiteCompleted(p));
+            const missingPrerequisites = missingCodes.map(code => {
+              const course = courseMap[code];
+              return `${course ? (course.arabic_name || course.name) : code} (${code})`;
+            });
             added[y][tk].add(key);
-            years[y][tk].push({ code:c.code, name:c.arabic_name||c.name, english:c.name });
+            years[y][tk].push({
+              code:c.code,
+              name:c.arabic_name||c.name,
+              english:c.name,
+              year:y,
+              term:meta.term,
+              dept:meta.dept,
+              completionKey:key,
+              canRegister: missingCodes.length === 0,
+              missingPrerequisites
+            });
           }
         });
       });
@@ -1617,7 +1726,7 @@
       const yn=['','الأولى','الثانية','الثالثة','الرابعة'];
       for(let y=1;y<=4;y++){
         const f=years[y].first, s=years[y].second, t=f.length+s.length;
-        html+=`<div class="year-reminder"><div class="year-header" onclick="toggleReminderYear(this)"><span>الفرقة ${yn[y]} (${t} مادة متبقية)</span><span class="arrow">▼</span></div><div class="year-body-wrapper"><div class="year-body">${t===0?'<p style="color:#10b981;">مكتملة</p>':`${f.length?`<div class="term-separator">ترم أول</div><ul class="remaining-list">${f.map(c=>`<li><span>${c.name} <span style="font-size:12px;color:#64748b;">(${c.english})</span></span><span class="remaining-code">${c.code}</span></li>`).join('')}</ul>`:''}${s.length?`<div class="term-separator">ترم ثاني</div><ul class="remaining-list">${s.map(c=>`<li><span>${c.name} <span style="font-size:12px;color:#64748b;">(${c.english})</span></span><span class="remaining-code">${c.code}</span></li>`).join('')}</ul>`:''}`}</div></div></div>`;
+        html+=`<div class="year-reminder"><div class="year-header" onclick="toggleReminderYear(this)"><span>الفرقة ${yn[y]} (${t} مادة متبقية)</span><span class="arrow">▼</span></div><div class="year-body-wrapper"><div class="year-body">${t===0?'<p style="color:#10b981;">مكتملة</p>':`${f.length?`<div class="term-separator">ترم أول</div><ul class="remaining-list">${f.map(renderRemainingCourse).join('')}</ul>`:''}${s.length?`<div class="term-separator">ترم ثاني</div><ul class="remaining-list">${s.map(renderRemainingCourse).join('')}</ul>`:''}`}</div></div></div>`;
       }
       reminderContainer.innerHTML=html;
     }

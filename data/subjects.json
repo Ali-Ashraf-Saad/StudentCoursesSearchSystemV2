@@ -481,6 +481,12 @@
         "arabic_name": "البرمجة المتوازية",
         "code": "CS443",
         "prerequisites": ["CS334"]
+      },
+      {
+        "name": "Project 1",
+        "arabic_name": "المشروع 1",
+        "code": "CS482",
+        "prerequisites": []
       }
     ]
   },
@@ -516,6 +522,12 @@
         "arabic_name": "الكائنات الآلية",
         "code": "CS426",
         "prerequisites": ["CS321"]
+      },
+      {
+        "name": "Project 2",
+        "arabic_name": "المشروع 2",
+        "code": "CS482.",
+        "prerequisites": []
       }
     ]
   },
@@ -551,6 +563,12 @@
         "arabic_name": "الواقع الافتراضي - 1",
         "code": "IT444",
         "prerequisites": ["IT341"]
+      },
+      {
+        "name": "Project 1",
+        "arabic_name": "المشروع 1",
+        "code": "IT482",
+        "prerequisites": []
       }
     ]
   },
@@ -586,6 +604,12 @@
         "arabic_name": "التطوير المتقدم للويب",
         "code": "IT451",
         "prerequisites": ["IS251"]
+      },
+      {
+        "name": "Project 2",
+        "arabic_name": "المشروع 2",
+        "code": "IT482.",
+        "prerequisites": []
       }
     ]
   },
@@ -621,6 +645,12 @@
         "arabic_name": "أنظمة الشركات",
         "code": "IS344",
         "prerequisites": ["IS372"]
+      },
+      {
+        "name": "Project 1",
+        "arabic_name": "المشروع 1",
+        "code": "IS482",
+        "prerequisites": []
       }
     ]
   },
@@ -656,6 +686,12 @@
         "arabic_name": "إدارة البيانات الموزعة",
         "code": "IS432",
         "prerequisites": ["IS322"]
+      },
+      {
+        "name": "Project 2",
+        "arabic_name": "المشروع 2",
+        "code": "IS482.",
+        "prerequisites": []
       }
     ]
   }

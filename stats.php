@@ -712,6 +712,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
             font-size: 1.3rem; font-weight: 700; color: var(--text-main);
             display: flex; align-items: center; gap: 0.75rem;
         }
+        .card-title a {
+            color: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .card-title a:hover {
+            color: #60a5fa;
+            transform: translateY(-1px);
+        }
         .card-title i { 
             color: var(--primary-blue); font-size: 1.5rem; 
             filter: drop-shadow(0 0 8px var(--primary-glow));
@@ -942,10 +954,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
     
 <script>
 const countersConfig = [
-    { id: 'courses', title: 'زيارات المقررات', icon: 'fa-book-open', color: '#3b82f6' },
-    { id: 'qa', title: 'زيارات سؤال وجواب', icon: 'fa-comments', color: '#10b981' },
-    { id: 'users', title: 'عمليات بحث الطلاب', icon: 'fa-magnifying-glass', color: '#f59e0b' },
-    { id: 'gpa', title: 'استخدام حاسبة المعدل', icon: 'fa-calculator', color: '#8b5cf6' }
+    { id: 'courses', title: 'زيارات المقررات', icon: 'fa-book-open', color: '#3b82f6', url: '/courses' },
+    { id: 'qa', title: 'زيارات سؤال وجواب', icon: 'fa-comments', color: '#10b981', url: '/qa' },
+    { id: 'users', title: 'عمليات بحث الطلاب', icon: 'fa-magnifying-glass', color: '#f59e0b', url: '/' },
+    { id: 'gpa', title: 'استخدام حاسبة المعدل', icon: 'fa-calculator', color: '#8b5cf6', url: '/gpa' }
 ]; // add here New counter
 
     const chartDataStore = {};
@@ -1107,7 +1119,7 @@ function updateCurrentHighlight(chart, isCurrentArray, color) {
 
     function getCardHTML(config, stats) {
         return '<div class="card-header">' +
-                '<div class="card-title"><i class="fas ' + config.icon + '"></i> ' + config.title + '</div>' +
+                '<div class="card-title"><a href="' + config.url + '"><i class="fas ' + config.icon + '"></i> ' + config.title + '</a></div>' +
             '</div>' +
             '<div style="text-align: center;">' +
                 '<div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem; font-weight: 600;">الإجمالي</div>' +

@@ -118,7 +118,7 @@ header("Expires: 0");
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         background: #1e293b;
         padding: 4px;
-        cursor: pointer;
+        /* cursor: pointer; */
       }
 
       .logo-img:hover {
@@ -790,9 +790,9 @@ header("Expires: 0");
 
     <div class="container">
       <div class="logo-wrapper">
-        <a href="https://www.facebook.com/profile.php?id=61569852016021" target="_blank" rel="noopener noreferrer">
+        <!-- <a href="https://www.facebook.com/profile.php?id=61569852016021" target="_blank" rel="noopener noreferrer"> -->
           <img src="images/LogoFCI.jpeg" alt="شعار الكلية" class="logo-img" />
-        </a>
+        <!-- </a> -->
       </div>
 
       <h1>الاستعلام عن المقررات الدراسية</h1>
