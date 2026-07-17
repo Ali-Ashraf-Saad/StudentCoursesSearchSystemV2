@@ -75,6 +75,7 @@
     }
     .summary-label { color: #94a3b8; font-size: 13px; margin-bottom: 2px; }
     .summary-value { color: #f8fafc; font-size: 18px; font-weight: 700; line-height: 1.45; }
+    .summary-hint { color: #94a3b8; font-size: 11px; line-height: 1.5; margin-top: 2px; }
 
     .search-section { margin: 0 auto 12px auto; max-width: 500px; display: flex; gap: 8px; }
     .search-input-wrapper { flex: 1; position: relative; }
@@ -595,6 +596,7 @@
         <div>
           <div class="summary-label">الساعات المجتازة</div>
           <div class="summary-value" id="passedHoursText">0 ساعة</div>
+          <div class="summary-hint" id="graduationRemainingText">متبقي 144 ساعة للتخرج</div>
         </div>
       </div>
       <div class="summary-item">
@@ -614,6 +616,7 @@
         <div>
           <div class="summary-label">المستوى الحالي</div>
           <div class="summary-value" id="academicLevelText">المستوى الأول</div>
+          <div class="summary-hint" id="levelRemainingText">متبقي 30 ساعة على المستوى الثاني</div>
         </div>
       </div>
     </div>
@@ -663,6 +666,8 @@
     const overallProgressText = document.getElementById('overallProgressText');
     const passedHoursText = document.getElementById('passedHoursText');
     const academicLevelText = document.getElementById('academicLevelText');
+    const graduationRemainingText = document.getElementById('graduationRemainingText');
+    const levelRemainingText = document.getElementById('levelRemainingText');
     const reminderContainer = document.getElementById('reminderContainer');
     const toast = document.getElementById('toast');
     const clearDataBtn = document.getElementById('clearDataBtn');
@@ -1508,6 +1513,28 @@
       overallProgressText.textContent=`${comp} / ${total} مادة مكتملة`;
       passedHoursText.textContent=`${passedHours} ساعة`;
       academicLevelText.textContent=level;
+      const graduationRemaining = Math.max(0, 144 - passedHours);
+      graduationRemainingText.textContent = passedHours >= 144
+        ? ''
+        : `متبقي ${graduationRemaining} ساعة للتخرج`;
+
+      let nextLevel = 'المستوى الثاني';
+      let nextLevelHours = 30;
+      if (passedHours >= 102) {
+        levelRemainingText.textContent = '';
+      } else if (passedHours >= 66) {
+        nextLevel = 'المستوى الرابع';
+        nextLevelHours = 102;
+      } else if (passedHours >= 30) {
+        nextLevel = 'المستوى الثالث';
+        nextLevelHours = 66;
+      } else {
+        nextLevel = 'المستوى الثاني';
+        nextLevelHours = 30;
+      }
+      if (passedHours < 102) {
+        levelRemainingText.textContent = `متبقي ${Math.max(0, nextLevelHours - passedHours)} ساعة على ${nextLevel}`;
+      }
     }
 
     function getVisibleDependentsCount(code) {

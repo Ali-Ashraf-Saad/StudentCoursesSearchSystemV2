@@ -594,10 +594,10 @@
         "prerequisites": ["IS221"]
       },
       {
-        "name": "Machine Learning",
-        "arabic_name": "تعليم الآلة",
-        "code": "CS323",
-        "prerequisites": ["CS321"]
+        "name": "Selected Topics in IT-1 / Machine Learning",
+        "arabic_name": "موضوعات مختارة - 1 / تعليم الآلة",
+        "code": "IT485",
+        "prerequisites": ["IT312"]
       },
       {
         "name": "Advanced Web Development",
