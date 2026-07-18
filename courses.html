@@ -1070,50 +1070,24 @@
       hideAutocomplete();
     }
 
-    function getPrerequisiteSignature(codes) {
-      return [...(codes || [])].sort().join('|');
-    }
-
-    function collapseCommonDepartmentLocations(locations) {
-      const source = [...(locations || [])];
-      const used = new Set();
-      const collapsed = [];
-      const specializedDepts = ['CS', 'IT', 'IS'];
+    function groupCourseLocations(locations) {
       const groups = new Map();
+      const deptOrder = ['عام', 'CS', 'IT', 'IS'];
 
-      source.forEach((loc, index) => {
-        if (!specializedDepts.includes(loc.dept)) return;
-        const key = `${loc.year}|${loc.term}|${getPrerequisiteSignature(loc.prerequisites)}`;
+      (locations || []).forEach(loc => {
+        const key = `${loc.year}|${loc.term}`;
         if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push({ loc, index });
+        groups.get(key).push(loc);
       });
 
-      groups.forEach(group => {
-        const depts = new Set(group.map(item => item.loc.dept));
-        if (!specializedDepts.every(dept => depts.has(dept))) return;
+      return [...groups.values()].map(group => {
+        const general = group.find(loc => (loc.dept || 'عام') === 'عام');
+        if (general) return { ...general, dept: 'عام' };
 
-        const first = group[0].loc;
-        collapsed.push({
-          ...first,
-          dept: 'عام',
-          semesterTitle: `مادة عامة - ${first.semesterTitle || ''}`,
-          key: `${first.year}|${first.term}|عام|${getPrerequisiteSignature(first.prerequisites)}`
-        });
-
-        group.forEach(item => used.add(item.index));
-      });
-
-      source.forEach((loc, index) => {
-        const alreadyCollapsedAsGeneral = loc.dept === 'عام' && collapsed.some(item =>
-          item.dept === 'عام' &&
-          item.year === loc.year &&
-          item.term === loc.term &&
-          getPrerequisiteSignature(item.prerequisites) === getPrerequisiteSignature(loc.prerequisites)
-        );
-        if (!used.has(index) && !alreadyCollapsedAsGeneral) collapsed.push(loc);
-      });
-
-      return collapsed.sort((a, b) =>
+        const depts = [...new Set(group.map(loc => loc.dept || 'عام'))]
+          .sort((a, b) => deptOrder.indexOf(a) - deptOrder.indexOf(b));
+        return { ...group[0], dept: depts.join('، ') };
+      }).sort((a, b) =>
         (a.year || 0) - (b.year || 0) ||
         (a.term || 0) - (b.term || 0) ||
         String(a.dept || '').localeCompare(String(b.dept || ''))
@@ -1167,7 +1141,7 @@
           const rawLocations = course.locations && course.locations.length
             ? course.locations
             : [{ ...(course.details || {}), prerequisites: course.prerequisites || [] }];
-          const locations = collapseCommonDepartmentLocations(rawLocations);
+          const locations = groupCourseLocations(rawLocations);
           const locationsHTML = locations.map(loc => {
             const yearText = loc.year === 1 ? 'الأولى' : loc.year === 2 ? 'الثانية' : loc.year === 3 ? 'الثالثة' : loc.year === 4 ? 'الرابعة' : '?';
             const prereqCodes = loc.prerequisites || [];

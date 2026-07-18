@@ -438,7 +438,7 @@
       {
         "name": "Information Retrieval",
         "arabic_name": "استرجاع المعلومات",
-        "code": "IS352",
+        "code": "IS355",
         "prerequisites": ["IS221"]
       },
       {
@@ -459,9 +459,9 @@
         "prerequisites": ["CS334"]
       },
       {
-        "name": "Data Mining",
-        "arabic_name": "تنقيب البيانات",
-        "code": "IS465",
+        "name": "Selected Topics in CS /Data Mining",
+        "arabic_name": "موضوعات مختارة - 1 / تنقيب البيانات",
+        "code": "CS485",
         "prerequisites": ["CS334"]
       },
       {
@@ -617,10 +617,10 @@
     "semester": "مواد سنة رابعة الترم الأول IS",
     "courses": [
       {
-        "name": "Human Computer Interaction",
-        "arabic_name": "اتصال الإنسان بالحاسب",
-        "code": "CS473",
-        "prerequisites": ["CS251"]
+        "name": "Social Informatics / Human Computer Interaction",
+        "arabic_name": "المعلوماتية المجتمعية / اتصال الإنسان بالحاسب",
+        "code": "IS467", 
+        "prerequisites": ["IS322"]
       },
       {
         "name": "Business Intelligence",
