@@ -438,7 +438,7 @@
       {
         "name": "Information Retrieval",
         "arabic_name": "استرجاع المعلومات",
-        "code": "IS355",
+        "code": "IS352",
         "prerequisites": ["IS221"]
       },
       {
@@ -508,7 +508,7 @@
       {
         "name": "Information Retrieval",
         "arabic_name": "استرجاع المعلومات",
-        "code": "IS355",
+        "code": "IS352",
         "prerequisites": ["IS221"]
       },
       {
@@ -590,7 +590,7 @@
       {
         "name": "Information Retrieval",
         "arabic_name": "استرجاع المعلومات",
-        "code": "IS355",
+        "code": "IS352",
         "prerequisites": ["IS221"]
       },
       {

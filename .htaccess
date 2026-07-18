@@ -8,6 +8,13 @@ RewriteRule ^$ /? [R=301,L]
 
 DirectoryIndex index.php index.html
 
+# منع تخزين الصفحات HTML حتى تظهر آخر نسخة عند فتح الرابط النظيف
+<FilesMatch "\.(html|htm)$">
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header always set Pragma "no-cache"
+    Header always set Expires "0"
+</FilesMatch>
+
 # /index أو /index.html أو /index.php -> /
 RewriteCond %{THE_REQUEST} \s/+index(?:\.(?:php|html))?[\s?] [NC]
 RewriteRule ^index(?:\.(?:php|html))?$ / [R=301,L]

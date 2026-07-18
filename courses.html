@@ -1283,7 +1283,31 @@
         .then(d => { document.getElementById("visitCount").innerText = d.count ?? 0; })
         .catch(() => { document.getElementById("visitCount").innerText = "--"; });
     }
-    loadCoursesCounter();
+
+    const COURSE_VISIT_KEY = "course_visit";
+    const COURSE_VISIT_TTL = 1 * 60 * 1000;
+    const lastCourseVisit = Number(sessionStorage.getItem(COURSE_VISIT_KEY));
+    const enteredFromStats = (() => {
+      if (!document.referrer) return false;
+      try {
+        const referrer = new URL(document.referrer);
+        return referrer.origin === location.origin && /^\/stats(?:\.php)?\/?$/.test(referrer.pathname);
+      } catch (_) {
+        return false;
+      }
+    })();
+    const courseVisitPromise = (!enteredFromStats && (!Number.isFinite(lastCourseVisit) || Date.now() - lastCourseVisit > COURSE_VISIT_TTL))
+      ? (() => {
+      sessionStorage.setItem(COURSE_VISIT_KEY, String(Date.now()));
+      return fetch("/counterFiles/counter?action=increment&counter=course", {
+        method: "POST",
+        keepalive: true,
+        cache: "no-store"
+      }).catch(() => {});
+    })()
+      : Promise.resolve();
+
+    courseVisitPromise.finally(loadCoursesCounter);
     setInterval(loadCoursesCounter, 4000);
 
     function getSemesterMeta(title) {

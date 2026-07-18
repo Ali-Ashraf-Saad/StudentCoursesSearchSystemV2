@@ -1909,7 +1909,30 @@ function toggleReorderMode() {
             .catch(() => { document.getElementById("visitCount").innerText = "--"; });
     }
 
-    loadGPACounter();
+    const GPA_VISIT_KEY = "gpa_visit";
+    const GPA_VISIT_TTL = 1 * 60 * 1000;
+    const lastGPAVVisit = Number(sessionStorage.getItem(GPA_VISIT_KEY));
+    const enteredFromStats = (() => {
+        if (!document.referrer) return false;
+        try {
+            const referrer = new URL(document.referrer);
+            return referrer.origin === location.origin && /^\/stats(?:\.php)?\/?$/.test(referrer.pathname);
+        } catch (_) {
+            return false;
+        }
+    })();
+    const gpaVisitPromise = (!enteredFromStats && (!Number.isFinite(lastGPAVVisit) || Date.now() - lastGPAVVisit > GPA_VISIT_TTL))
+        ? (() => {
+        sessionStorage.setItem(GPA_VISIT_KEY, String(Date.now()));
+        return fetch("/counterFiles/counter?action=increment&counter=gpa", {
+            method: "POST",
+            keepalive: true,
+            cache: "no-store"
+        }).catch(() => {});
+    })()
+        : Promise.resolve();
+
+    gpaVisitPromise.finally(loadGPACounter);
     setInterval(loadGPACounter, 4000);
     window.onload = function() { syncHoursModeRadios(); loadData(); };
 

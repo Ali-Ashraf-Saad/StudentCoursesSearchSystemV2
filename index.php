@@ -882,39 +882,15 @@ header("Expires: 0");
       const PINNED_COURSE_KEY = "pinned_course_card_v1";
 
       function goCourses() {
-        fetch("/counterFiles/counter?action=increment&counter=course", {
-          method: "POST",
-          keepalive: true,
-          cache: "no-store"
-        })
-          .catch(() => {})
-          .finally(() => {
-            window.location.href = "/courses";
-          });
+        window.location.href = "/courses";
       }
 
       function goQA() {
-        fetch("/counterFiles/counter?action=increment&counter=qa", {
-          method: "POST",
-          keepalive: true,
-          cache: "no-store"
-        })
-          .catch(() => {})
-          .finally(() => {
-            window.location.href = "/qa";
-          });
+        window.location.href = "/qa";
       }
 
       function goGPA() {
-        fetch("/counterFiles/counter?action=increment&counter=gpa", {
-          method: "POST",
-          keepalive: true,
-          cache: "no-store"
-        })
-          .catch(() => {})
-          .finally(() => {
-            window.location.href = "/gpa";
-          });
+        window.location.href = "/gpa";
       }
 
       function loadHistory() {
