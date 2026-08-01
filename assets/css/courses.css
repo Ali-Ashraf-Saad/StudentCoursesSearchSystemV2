@@ -609,6 +609,7 @@ select:focus {
     min-width: 0;
   }
 
+
   .courses-grid {
     grid-template-columns: 1fr;
   }

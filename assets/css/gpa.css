@@ -44,7 +44,6 @@ button {
   padding: 12px 20px;
   font-size: 15px;
   font-weight: 600;
-  width: 100%;
   font-family: var(--font-family);
   transition: all 0.2s ease;
 }
