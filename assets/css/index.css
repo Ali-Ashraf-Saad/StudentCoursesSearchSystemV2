@@ -1,0 +1,800 @@
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-top: var(--nav-height, 64px);
+  margin: 0;
+}
+
+.container {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 42px) 16px 48px;
+  flex: 1 0 auto;
+}
+
+/* ==========================================
+   الشعار والعنوان وعداد الزوار
+   ========================================== */
+.logo-wrapper {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.logo-img {
+  width: 76px;
+  height: auto;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(96, 165, 250, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: #1e293b;
+  padding: 4px;
+}
+
+.logo-img:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 12px 28px rgba(59, 130, 246, 0.25), 0 0 0 1.5px rgba(96, 165, 250, 0.4);
+}
+
+h1 {
+  text-align: center;
+  margin: 0 0 12px;
+  font-size: clamp(1.55rem, 3.8vw, 2rem);
+  line-height: 1.35;
+  color: var(--text-main, #f8fafc);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.counter {
+  text-align: center;
+  margin: 0 auto 24px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(30, 41, 59, 0.45);
+  padding: 5px 16px;
+  border-radius: 999px;
+  width: fit-content;
+  display: block;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.14));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ==========================================
+   صندوق البحث
+   ========================================== */
+.search-box {
+  position: relative;
+  margin-bottom: 4px;
+}
+
+.search-box input {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px 14px 46px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.18));
+  outline: none;
+  font-size: 15px;
+  font-family: inherit;
+  background: rgba(15, 23, 42, 0.75);
+  color: var(--text-main, #f8fafc);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.search-box input::placeholder {
+  color: #64748b;
+}
+
+.search-box input:focus {
+  border-color: rgba(96, 165, 250, 0.55);
+  background: rgba(15, 23, 42, 0.92);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.search-box .clear-btn {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.search-box .clear-btn svg {
+  pointer-events: none;
+  display: block;
+}
+
+.search-box .clear-btn:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+
+/* ==========================================
+   سجل البحث
+   ========================================== */
+.history {
+  margin-top: 10px;
+  background: rgba(30, 41, 59, 0.45);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: none;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.12));
+  animation: fadeIn 0.25s ease;
+}
+
+.history-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+
+.history-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.history-item {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 8px;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.history-item:hover {
+  background: rgba(30, 58, 95, 0.6);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.history-text {
+  color: #cbd5e1;
+  font-size: 13px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.history-delete {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.history-delete svg {
+  pointer-events: none;
+  display: block;
+}
+
+.history-delete:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.history-clear {
+  display: inline-block;
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.history-clear:hover {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+/* ==========================================
+   المادة المثبتة
+   ========================================== */
+.pinned-course {
+  margin-top: 20px;
+  display: none;
+}
+
+.pinned-course-label {
+  color: #fcd34d;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.pinned-course-card {
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-right: 4px solid #f59e0b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pinned-course-card.pinned-upcoming {
+  border-color: rgba(251, 191, 36, 0.5);
+  border-right-color: #fbbf24;
+  animation: pulse-yellow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-yellow {
+  0%, 100% { box-shadow: 0 0 10px rgba(251, 191, 36, 0.25), 0 8px 24px rgba(0, 0, 0, 0.2); }
+  50% { box-shadow: 0 0 18px rgba(251, 191, 36, 0.45), 0 8px 24px rgba(0, 0, 0, 0.2); }
+}
+
+.pinned-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.pinned-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  overflow-wrap: anywhere;
+}
+
+.pinned-meta {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-top: 3px;
+}
+
+/* ==========================================
+   زر التصدير
+   ========================================== */
+.export-btn-container {
+  display: none;
+  text-align: center;
+  margin: 24px 0 12px;
+}
+
+.export-btn {
+  background: rgba(30, 58, 95, 0.5);
+  color: #93c5fd;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.export-btn:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(96, 165, 250, 0.6);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================
+   بطاقات نتائج الطالب (.card)
+   ========================================== */
+.results {
+  margin-top: 24px;
+}
+
+.card {
+  background: rgba(30, 41, 59, 0.65);
+  padding: 22px;
+  border-radius: 18px;
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.14));
+  box-shadow: var(--shadow-card, 0 4px 20px rgba(0, 0, 0, 0.2));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.card:hover {
+  border-color: rgba(96, 165, 250, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(96, 165, 250, 0.15);
+}
+
+/* الهيكل الأعلى لبطاقة الطالب */
+.student-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.student-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.number {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.student-meta-badge {
+  flex-shrink: 0;
+}
+
+.courses-count {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.student-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* عنصر المادة المسجلة */
+.course-item {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-right: 4px solid #3b82f6;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.course-item.upcoming {
+  border-right-color: #f87171;
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.22);
+  animation: pulse-red 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.15); }
+  50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.38); }
+}
+
+.course-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.course-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #f1f5f9;
+  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.course-actions,
+.pinned-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.course-action-btn {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #93c5fd;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  min-height: 30px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.course-action-btn:hover {
+  background: rgba(59, 130, 246, 0.28);
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, 0.55);
+  transform: translateY(-1px);
+}
+
+.course-action-btn:active {
+  transform: translateY(0);
+}
+
+.course-action-btn.pin-course-btn {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(251, 191, 36, 0.35);
+  color: #fcd34d;
+}
+
+.course-action-btn.pin-course-btn:hover {
+  background: rgba(245, 158, 11, 0.24);
+  color: #ffffff;
+  border-color: rgba(251, 191, 36, 0.6);
+}
+
+.course-action-btn.pin-course-btn.is-pinned,
+.course-action-btn.pinned-remove-btn {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #86efac;
+}
+
+.course-action-btn.pin-course-btn.is-pinned:hover,
+.course-action-btn.pinned-remove-btn:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: #ffffff;
+  border-color: rgba(52, 211, 153, 0.65);
+}
+
+.exam-details {
+  font-size: 13px;
+  color: #cbd5e1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  min-width: 0;
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+.exam-details span {
+  white-space: nowrap;
+}
+
+.location-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 2px 10px;
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.14);
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.location-link:hover,
+.location-link:focus-visible {
+  background: rgba(59, 130, 246, 0.28);
+  border-color: rgba(147, 197, 253, 0.75);
+  color: #ffffff;
+  outline: none;
+}
+
+.no-exam {
+  color: #f59e0b;
+  font-style: italic;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.no-result {
+  text-align: center;
+  color: #94a3b8;
+  margin-top: 28px;
+  font-size: 15px;
+  background: rgba(30, 41, 59, 0.3);
+  padding: 20px;
+  border-radius: 14px;
+  border: 1px solid var(--border-soft, rgba(148, 163, 184, 0.1));
+}
+
+.remaining-time {
+  font-weight: 600;
+  margin-top: 8px;
+  display: block;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.ended {
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status.live {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  animation: pulse-live 2s infinite;
+}
+
+.status.upcoming {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+@keyframes pulse-live {
+  0%, 100% { background: rgba(239, 68, 68, 0.16); }
+  50% { background: rgba(239, 68, 68, 0.32); }
+}
+
+/* ==========================================
+   الإشعارات والتذييل (Toast & Footer)
+   ========================================== */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: rgba(15, 23, 42, 0.95);
+  color: #f8fafc;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 12000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+    footer { text-align: center; padding: 15px; background: rgba(15,23,42,0.9); color: #94a3b8; font-size: 14px; border-top: 1px solid rgba(148,163,184,0.2); }
+    footer a { color: #60a5fa; text-decoration: none; }
+    footer a:hover { color: #93c5fd; }
+
+#secretStatsTrigger {
+  color: inherit;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .container {
+    padding-inline: 12px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .student-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .course-topline,
+  .pinned-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .course-actions,
+  .pinned-actions {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .course-action-btn {
+    flex: 1;
+    min-height: 34px;
+    text-align: center;
+  }
+}
+
+/* ==========================================
+   تنسيق كارت التصدير للصورة (#export-card)
+   (تم الحفاظ عليه بدقة لاستخدامه في html2canvas)
+   ========================================== */
+#export-card {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  width: 650px;
+  padding: 32px;
+  background: #0b1120 !important;
+  background-image: linear-gradient(135deg, #0b1120 0%, #1e293b 100%) !important;
+  border-radius: 24px;
+  color: #f8fafc !important;
+  font-family: var(--font-family, "Cairo", sans-serif);
+  direction: rtl;
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  box-sizing: border-box;
+}
+
+#export-card .export-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.25);
+}
+
+
+#export-card .export-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff !important;
+  margin-bottom: 10px;
+}
+
+#export-card .export-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+#export-card .export-meta strong {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+#export-card .export-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#export-card .export-course {
+  background: rgba(30, 41, 59, 0.75) !important;
+  border-radius: 14px;
+  padding: 16px;
+  border-right: 5px solid #3b82f6;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  border-left: 1px solid rgba(148, 163, 184, 0.12);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+#export-card .export-course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#export-card .export-course-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f1f5f9 !important;
+}
+
+#export-card .export-course-code {
+  font-size: 13px;
+  font-weight: 700;
+  color: #38bdf8 !important;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+#export-card .export-exam-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+}
+
+#export-card .export-badge {
+  background: rgba(15, 23, 42, 0.6) !important;
+  color: #cbd5e1 !important;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  white-space: nowrap;
+}
+
+#export-card .no-exam-export {
+  color: #fbbf24 !important;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.1) !important;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  text-align: center;
+}
+
+#export-card .export-watermark {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}

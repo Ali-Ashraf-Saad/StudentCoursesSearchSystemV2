@@ -154,9 +154,9 @@
   if (isIndex) {
     steps = [
       { selector: '#search', title: 'ابحث باسمك', desc: 'اكتب <b>الاسم</b> (أو جزء منه). يدعم أيضاً الرقم الأكاديمي.', position: 'bottom' },
-      { selector: '.nav-btn[onclick*="goGPA"]',title: 'حاسبة المعدل التراكمي',desc: 'احسب معدلك الفصلي والتراكمي بسهولة بأكثر من طريقة، وتابع تقدمك الأكاديمي مع رسوم بيانية ومعلومات حسب وضعك.',position: 'bottom'},
-      { selector: '.nav-btn[onclick*="goQA"], .nav-btn[onclick*="goQa"], a[href*="qa.html"], a[href*="qa"]', title: 'سؤال وجواب', desc: 'هنا ستجد أشهر الأسئلة التي يسأل عنها الطالب، مع إجابات مختصرة وواضحة تساعدك بسرعة مع أهم الروابط التي ستحتاجها.', position: 'bottom' },
-      { selector: '.nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'الإطلاع على مواد الفرق بكل التخصصات ومتابعة وتحديد ما أنجزته.', position: 'bottom' },
+      { selector: '.nav-btn[data-nav-href*="gpa"], .nav-btn[onclick*="goGPA"]',title: 'حاسبة المعدل التراكمي',desc: 'احسب معدلك الفصلي والتراكمي بسهولة بأكثر من طريقة، وتابع تقدمك الأكاديمي مع رسوم بيانية ومعلومات حسب وضعك.',position: 'bottom'},
+      { selector: '.nav-btn[data-nav-href*="qa"], .nav-btn[onclick*="goQA"], .nav-btn[onclick*="goQa"], a[href*="qa.html"], a[href*="qa"]', title: 'سؤال وجواب', desc: 'هنا ستجد أشهر الأسئلة التي يسأل عنها الطالب، مع إجابات مختصرة وواضحة تساعدك بسرعة مع أهم الروابط التي ستحتاجها.', position: 'bottom' },
+      { selector: '.nav-btn[data-nav-href*="courses"], .nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'الإطلاع على مواد الفرق بكل التخصصات ومتابعة وتحديد ما أنجزته.', position: 'bottom' },
       { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو سؤال، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
     ];
   } else if (isQA) {
