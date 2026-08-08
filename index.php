@@ -31,7 +31,7 @@ header("Expires: 0");
       <button class="nav-menu-toggle" type="button" aria-label="فتح القائمة" aria-expanded="false" aria-controls="primaryNavLinks">
         <span></span><span></span><span></span>
       </button>
-      <span class="site-title">StudentsCourses</span>
+      <a class="site-title" href="/" aria-label="العودة إلى الصفحة الرئيسية"><img class="site-title-logo" src="/images/icons8-student-center-96.png" alt="" /><span>StudentCourses</span></a>
       <div class="nav-links" id="primaryNavLinks">
         <button class="nav-btn active" data-nav-href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5 12 3l8.5 6.5V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1V9.5z"/></svg><span>استعلام الطالب</span></button>
         <button class="nav-btn" data-nav-href="/courses"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8V9zm0 4h6v2h-6v-2z"/></svg><span>المقررات</span></button>
@@ -49,6 +49,13 @@ header("Expires: 0");
       <h1>الاستعلام عن المقررات الدراسية</h1>
       <div class="subtitle">استعلام سريع ومباشر عن الامتحانات، اللجان، والمقررات الدراسية</div>
       <div class="counter">عدد الزوار: <span id="visitCount">...</span></div>
+
+      <div class="year-picker">
+        <label for="academicYear">السنة الدراسية</label>
+        <select id="academicYear" aria-label="اختيار السنة الدراسية">
+          <option value="">جاري تحميل السنوات...</option>
+        </select>
+      </div>
 
       <div class="search-box">
         <input type="text" id="search" placeholder="اكتب الاسم أو الرقم الأكاديمي..." autocomplete="off" />

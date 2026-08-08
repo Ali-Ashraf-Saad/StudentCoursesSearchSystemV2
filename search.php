@@ -25,6 +25,7 @@ function parseDate($dateStr) {
 
 $query   = $_GET['q'] ?? '';
 $query   = trim($query);
+$year    = trim((string)($_GET['year'] ?? ''));
 $commit  = ($_GET['commit'] ?? '') === '1';
 $clientId = $_GET['client_id'] ?? '';
 
@@ -36,9 +37,23 @@ if (!$query) {
 $queryNorm = normalizeArabic($query);
 $isNumberSearch = preg_match('/^\d+$/', $query);
 
-$students = json_decode(file_get_contents("data/students.json"), true);
-$courses  = json_decode(file_get_contents("data/courses.json"), true);
-$exams    = json_decode(file_get_contents("data/exams.json"), true);
+$dataRoot = __DIR__ . '/data';
+if (!preg_match('/^\d{4}_\d{4}_[12]$/', $year) || !is_dir($dataRoot . '/' . $year)) {
+    echo json_encode(["results" => []], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+$dataDir = $dataRoot . '/' . $year;
+
+function readDataFile($dataDir, $filename) {
+    $path = $dataDir . '/' . $filename;
+    if (!is_file($path)) return [];
+    $data = json_decode(file_get_contents($path), true);
+    return is_array($data) ? $data : [];
+}
+
+$students = readDataFile($dataDir, 'students.json');
+$courses  = readDataFile($dataDir, 'courses.json');
+$exams    = readDataFile($dataDir, 'exams.json');
 
 $driveLinks = [
     'CS438' => 'https://drive.google.com/drive/folders/12DyDQkgaPOgR7UiBQN_-vGJsaI2hI77F',

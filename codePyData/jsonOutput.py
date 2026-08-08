@@ -1,10 +1,17 @@
 import os
 import json
 import re
-#run second to generate json
+# run second to generate json
+
+DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
+if not re.fullmatch(r"\d{4}_\d{4}_[12]", DATA_YEAR):
+    raise SystemExit("DATA_YEAR يجب أن يكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2")
+
+folders_root = os.path.join("foldersData", DATA_YEAR)
+output_root = os.path.join("data", DATA_YEAR)
 
 # المجلدات المستهدفة
-folders = ['foldersData/CS', 'foldersData/IT', 'foldersData/IS', 'foldersData/gen']
+folders = [os.path.join(folders_root, department) for department in ['CS', 'IT', 'IS', 'gen']]
 
 # قواميس لتجميع البيانات
 students = {}       # id -> {name, courses_set}
@@ -170,21 +177,21 @@ for code, data in courses.items():
 rooms_list = sorted(list(rooms_set))
 
 # كتابة الملفات
-os.makedirs('data', exist_ok=True)
+os.makedirs(output_root, exist_ok=True)
 
-with open('data/students.json', 'w', encoding='utf-8') as f:
+with open(os.path.join(output_root, 'students.json'), 'w', encoding='utf-8') as f:
     json.dump(students_list, f, ensure_ascii=False, indent=2)
 
-with open('data/courses.json', 'w', encoding='utf-8') as f:
+with open(os.path.join(output_root, 'courses.json'), 'w', encoding='utf-8') as f:
     json.dump(courses_dict, f, ensure_ascii=False, indent=2)
 
-with open('data/exams.json', 'w', encoding='utf-8') as f:
+with open(os.path.join(output_root, 'exams.json'), 'w', encoding='utf-8') as f:
     json.dump(exams, f, ensure_ascii=False, indent=2)
 
-with open('data/rooms.json', 'w', encoding='utf-8') as f:
+with open(os.path.join(output_root, 'rooms.json'), 'w', encoding='utf-8') as f:
     json.dump(rooms_list, f, ensure_ascii=False, indent=2)
 
-print("تم إنشاء الملفات في مجلد data:")
+print(f"تم إنشاء الملفات في مجلد {output_root}:")
 print("- students.json")
 print("- courses.json")
 print("- exams.json")

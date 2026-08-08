@@ -520,6 +520,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
       <button class="nav-menu-toggle" type="button" aria-label="فتح القائمة" aria-expanded="false" aria-controls="primaryNavLinks">
         <span></span><span></span><span></span>
       </button>
+      <a class="site-title" href="/" aria-label="العودة إلى الصفحة الرئيسية"><img class="site-title-logo" src="/images/icons8-student-center-96.png" alt="" /><span>StudentCourses</span></a>
       <div class="nav-links" id="primaryNavLinks">
         <button class="nav-btn" data-nav-href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 1 0 4.69 13.36l4.72 4.72a1 1 0 0 0 1.41-1.41l-4.72-4.72A7.5 7.5 0 0 0 10.5 3zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11z"/></svg><span>استعلام الطالب</span></button>
         <button class="nav-btn" data-nav-href="/courses"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8V9zm0 4h6v2h-6v-2z"/></svg><span>المقررات</span></button>

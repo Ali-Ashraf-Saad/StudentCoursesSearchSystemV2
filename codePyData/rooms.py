@@ -2,12 +2,12 @@ import re
 import math
 import os
 
-department_files = [
-    "txtData/CS.txt",
-    "txtData/IT.txt",
-    "txtData/IS.txt",
-    "txtData/gen.txt"
-]
+DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
+if not re.fullmatch(r"\d{4}_\d{4}_[12]", DATA_YEAR):
+    raise SystemExit("DATA_YEAR يجب أن يكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2")
+
+source_dir = os.path.join("txtData", DATA_YEAR)
+department_files = [os.path.join(source_dir, name) for name in ("CS.txt", "IT.txt", "IS.txt", "gen.txt")]
 
 STUDENTS_PER_ROOM = 30
 
@@ -63,7 +63,7 @@ for file_path in department_files:
 
 # ---- كتابة الملف بالتنسيق الجديد ----
 os.makedirs("draft", exist_ok=True)
-output_path = os.path.abspath("txtData/rooms.txt")
+output_path = os.path.abspath(os.path.join(source_dir, "rooms.txt"))
 
 with open(output_path, "w", encoding="utf-8") as f:
     for i, (code, name, students, rooms) in enumerate(courses):

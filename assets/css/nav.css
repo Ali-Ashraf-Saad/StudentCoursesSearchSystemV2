@@ -121,15 +121,35 @@
 
 .site-title {
   display: none;
-  font-size: 1.15rem !important;
-  font-weight: 800 !important;
-  color: var(--text-main, #f8fafc) !important;
-  margin-right: auto !important;
-  letter-spacing: 0.5px !important;
-  white-space: nowrap !important;
-  flex-shrink: 0 !important;
-  line-height: 1 !important;
-  pointer-events: none !important;
+  direction: ltr;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 5px 0;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.site-title:hover,
+.site-title:focus-visible {
+  color: #bfdbfe;
+  opacity: 0.92;
+  outline: none;
+}
+
+.site-title-logo {
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 @media (max-width: 700px) {
@@ -140,6 +160,7 @@
   .top-nav {
     justify-content: flex-start !important;
     height: 64px !important;
+    gap: 8px !important;
   }
 
   .nav-menu-toggle {
@@ -147,7 +168,12 @@
   }
 
   .site-title {
-    display: inline-block !important;
+    display: inline-flex !important;
+    position: absolute !important;
+    left: clamp(14px, 3vw, 28px) !important;
+    top: 50% !important;
+    margin: 0 !important;
+    transform: translateY(-50%);
   }
 
   .nav-links {

@@ -147,6 +147,7 @@
 
       const searchInput = document.getElementById("search");
       const clearBtn = document.getElementById("clearSearchBtn");
+      const yearSelect = document.getElementById("academicYear");
       const resultsDiv = document.getElementById("results");
       const exportContainer = document.getElementById("export-container");
       const pinnedCourseDiv = document.getElementById("pinned-course");
@@ -160,6 +161,8 @@
       let commitBlocked = false;
       let activeFetchCtrl = null;
       let remainingTimer = null;
+      const YEAR_STORAGE_KEY = "selected_academic_year";
+      let selectedYear = localStorage.getItem(YEAR_STORAGE_KEY) || "";
 
       function loadCounter() {
         fetch("/counterFiles/counter?counter=users", { cache: "no-store" })
@@ -199,6 +202,13 @@
         return room || "-";
       }
 
+      function hasExamValue(value) {
+        const normalized = String(value ?? "").trim();
+        if (!normalized || normalized === "-") return false;
+        if (/غير معروف|غير محدد|المكان غير محدد|^غير$|^معروف$|الاسم|الرقم/.test(normalized)) return false;
+        return normalized.replace(/[()\s]/g, "") !== "";
+      }
+
       function formatCourseDisplayName(name) {
         return String(name || "")
           .replace(/المشروع\s*([0-9٠-٩]+)/g, "المشروع $1")
@@ -220,27 +230,45 @@
       function buildCourseExamHtml(course) {
         if (!course.exam) return `<div class="no-exam">لم تحدد اللجنة بعد</div>`;
 
-        const range = parseExamTimeRange(course.exam.date, course.exam.time, course.exam.period);
-        let statusText = "وقت الامتحان غير معروف";
-        let startISO = "";
-        let endISO = "";
+        const exam = course.exam;
+        const detailLines = [];
+        let range = null;
 
-        if (range) {
-          statusText = getExamStatusText(range.start, range.end);
-          startISO = range.start.toISOString();
-          endISO = range.end.toISOString();
+        if (hasExamValue(exam.committee)) {
+          detailLines.push(`<span>اللجنة: ${escapeHTML(exam.committee)}</span>`);
+        }
+        if (hasExamValue(exam.room)) {
+          detailLines.push(`<span>المكان: ${formatExamRoomHtml(exam.room)}</span>`);
         }
 
+        const dateText = hasExamValue(exam.date)
+          ? [exam.day, exam.date].filter(hasExamValue).join(" ")
+          : "";
+        if (dateText) {
+          detailLines.push(`<span>التاريخ: ${escapeHTML(dateText)}</span>`);
+        }
+
+        const timeText = hasExamValue(exam.time) && hasExamValue(exam.period)
+          ? `${exam.period} ${exam.time}`
+          : hasExamValue(exam.time) ? String(exam.time).trim() : "";
+        if (timeText) {
+          detailLines.push(`<span>الوقت: ${escapeHTML(timeText)}</span>`);
+        }
+
+        range = parseExamTimeRange(exam.date, exam.time, exam.period);
+        if (!detailLines.length && !range) {
+          return `<div class="no-exam">لم تحدد اللجنة بعد</div>`;
+        }
+
+        const statusHtml = range
+          ? `<div class="remaining-time" data-exam-start="${range.start.toISOString()}" data-exam-end="${range.end.toISOString()}">
+              ${getExamStatusText(range.start, range.end)}
+            </div>`
+          : "";
+
         return `
-          <div class="exam-details">
-            <span>اللجنة: ${escapeHTML(course.exam.committee)}</span>
-            <span>المكان: ${formatExamRoomHtml(course.exam.room)}</span>
-            <span>التاريخ: ${escapeHTML(course.exam.day)} ${escapeHTML(course.exam.date)}</span>
-            <span>الوقت: ${escapeHTML(course.exam.period)} (${escapeHTML(course.exam.time)})</span>
-          </div>
-          <div class="remaining-time" data-exam-start="${startISO}" data-exam-end="${endISO}">
-            ${statusText}
-          </div>`;
+          ${detailLines.length ? `<div class="exam-details">${detailLines.join("")}</div>` : ""}
+          ${statusHtml}`;
       }
 
       function getExamPlainStatus(course) {
@@ -263,11 +291,20 @@
         ];
 
         if (course.exam) {
-          lines.push(
-            `التاريخ: ${course.exam.day || ""} ${course.exam.date || ""}`.trim(),
-            `الوقت: ${course.exam.period || ""} (${course.exam.time || ""})`.trim(),
-            `المكان: لجنة ${course.exam.committee || "-"} ${formatExamRoomText(course.exam.room)}`,
-          );
+          const exam = course.exam;
+          const dateText = hasExamValue(exam.date)
+            ? [exam.day, exam.date].filter(hasExamValue).join(" ")
+            : "";
+          const timeText = hasExamValue(exam.time)
+            ? [exam.period, exam.time].filter(hasExamValue).join(" ")
+            : "";
+
+          if (hasExamValue(exam.committee)) lines.push(`اللجنة: ${exam.committee}`);
+          if (dateText) lines.push(`التاريخ: ${dateText}`);
+          if (timeText) lines.push(`الوقت: ${timeText}`);
+          if (hasExamValue(exam.room)) {
+            lines.push(`المكان: ${formatExamRoomText(exam.room)}`);
+          }
         } else {
           lines.push("لم تحدد اللجنة بعد");
         }
@@ -719,7 +756,8 @@
           return;
         }
         activeFetchCtrl = new AbortController();
-        fetch(`search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}`, {
+        const yearParam = selectedYear ? `&year=${encodeURIComponent(selectedYear)}` : "";
+        fetch(`search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}${yearParam}`, {
           signal: activeFetchCtrl.signal,
           cache: "no-store"
         })
@@ -744,8 +782,9 @@
           activeFetchCtrl = null;
         }
         clearTimeout(debounceTimer);
+        const yearParam = selectedYear ? `&year=${encodeURIComponent(selectedYear)}` : "";
         fetch(
-          `search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}`,
+          `search?q=${encodeURIComponent(query)}&limit=${MAX_RESULTS}&commit=1&client_id=${encodeURIComponent(CLIENT_ID)}${yearParam}`,
           { cache: "no-store" }
         )
           .then((r) => r.json())
@@ -908,6 +947,58 @@
         }
       });
 
+      function clearSearchResults() {
+        clearTimeout(debounceTimer);
+        clearTimeout(autoCommitTimer);
+        if (activeFetchCtrl) {
+          activeFetchCtrl.abort();
+          activeFetchCtrl = null;
+        }
+        committedQuery = "";
+        resultsDiv.innerHTML = "";
+        exportContainer.style.display = "none";
+        currentStudentData = null;
+        clearTimeout(remainingTimer);
+        restartPinnedTimerIfNeeded();
+      }
+
+      function loadAcademicYears() {
+        fetch("years", { cache: "no-store" })
+          .then((response) => response.json())
+          .then((data) => {
+            const years = Array.isArray(data.years) ? data.years : [];
+            if (!years.length) {
+              yearSelect.innerHTML = '<option value="">لا توجد سنوات متاحة</option>';
+              yearSelect.disabled = true;
+              selectedYear = "";
+              return;
+            }
+
+            const selectedOption = years.find((year) => year.key === selectedYear);
+            if (!selectedOption) selectedYear = years[0].key;
+            localStorage.setItem(YEAR_STORAGE_KEY, selectedYear);
+            yearSelect.innerHTML = years
+              .map((year) => `<option value="${escapeHTML(year.key)}">${escapeHTML(year.label)}</option>`)
+              .join("");
+            yearSelect.value = selectedYear;
+          })
+          .catch(() => {
+            yearSelect.innerHTML = '<option value="">تعذر تحميل السنوات</option>';
+            yearSelect.disabled = true;
+          });
+      }
+
+      yearSelect?.addEventListener("change", () => {
+        selectedYear = yearSelect.value;
+        localStorage.setItem(YEAR_STORAGE_KEY, selectedYear);
+        clearSearchResults();
+        const query = searchInput.value.trim();
+        if (query.length >= MIN_QUERY_LENGTH) {
+          doLiveSearch(query);
+          scheduleAutoCommit(query);
+        }
+      });
+
       function exportAsImage() {
         if (!currentStudentData) return;
         const exportCard = document.getElementById("export-card");
@@ -920,14 +1011,32 @@
           let examHtml = "";
 
           if (course.exam) {
-            const roomText = typeof formatExamRoomHtml === "function" ? formatExamRoomHtml(course.exam.room) : course.exam.room;
-            examHtml = `
-              <div class="export-exam-row">
-                <span class="export-badge">اللجنة: ${course.exam.committee}</span>
-                <span class="export-badge">المكان: ${roomText}</span>
-                <span class="export-badge">التاريخ: ${course.exam.day} ${course.exam.date}</span>
-                <span class="export-badge">الوقت: ${course.exam.period} (${course.exam.time})</span>
-              </div>`;
+            const exam = course.exam;
+            const exportRows = [];
+            const dateText = hasExamValue(exam.date)
+              ? [exam.day, exam.date].filter(hasExamValue).join(" ")
+              : "";
+            const timeText = hasExamValue(exam.time)
+              ? [exam.period, exam.time].filter(hasExamValue).join(" ")
+              : "";
+
+            if (hasExamValue(exam.committee)) {
+              exportRows.push(`<span class="export-badge">اللجنة: ${escapeHTML(exam.committee)}</span>`);
+            }
+            if (hasExamValue(exam.room)) {
+              const roomText = formatExamRoomHtml(exam.room);
+              exportRows.push(`<span class="export-badge">المكان: ${roomText}</span>`);
+            }
+            if (dateText) {
+              exportRows.push(`<span class="export-badge">التاريخ: ${escapeHTML(dateText)}</span>`);
+            }
+            if (timeText) {
+              exportRows.push(`<span class="export-badge">الوقت: ${escapeHTML(timeText)}</span>`);
+            }
+
+            examHtml = exportRows.length
+              ? `<div class="export-exam-row">${exportRows.join("")}</div>`
+              : `<div class="no-exam-export">لم تحدد لجنة الامتحان بعد</div>`;
           } else {
             examHtml = `<div class="no-exam-export">لم تحدد لجنة الامتحان بعد</div>`;
           }
@@ -985,3 +1094,4 @@
 
       renderHistory();
       renderPinnedCourse();
+      loadAcademicYears();
