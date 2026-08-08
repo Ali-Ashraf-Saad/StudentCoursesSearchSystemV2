@@ -6,7 +6,7 @@ header("Expires: 0");
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
-    <link rel="icon" href="/images/favicon.ico?v=2" />
+    <link rel="icon" href="/images/favicon.ico?v=22" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>الاستعلام عن المقررات الدراسية</title>
@@ -20,10 +20,10 @@ header("Expires: 0");
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <link rel="stylesheet" href="/assets/css/variables.css?v=1">
-    <link rel="stylesheet" href="/assets/css/base.css?v=1">
-    <link rel="stylesheet" href="/assets/css/index.css?v=1">
-    <link rel="stylesheet" href="/assets/css/nav.css?v=1">
+    <link rel="stylesheet" href="/assets/css/variables.css?v=11">
+    <link rel="stylesheet" href="/assets/css/base.css?v=11">
+    <link rel="stylesheet" href="/assets/css/index.css?v=22">
+    <link rel="stylesheet" href="/assets/css/nav.css?v=22">
 </head>
 
   <body>
@@ -90,8 +90,8 @@ header("Expires: 0");
       <a href="http://wa.me/+201148727448" target="_blank" rel="noopener noreferrer">ContactMe</a>
     </footer>
 
-    <script src="/assets/js/nav.js?v=1"></script>
-    <script src="/assets/js/index.js?v=1"></script>
+    <script src="/assets/js/nav.js?v=11"></script>
+    <script src="/assets/js/index.js?v=11"></script>
     <script src="tour-guide.js?v=0"></script>
   </body>
 </html>

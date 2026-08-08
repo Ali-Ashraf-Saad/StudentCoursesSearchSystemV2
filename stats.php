@@ -510,10 +510,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     
-    <link rel="stylesheet" href="/assets/css/variables.css?v=1">
-    <link rel="stylesheet" href="/assets/css/base.css?v=1">
-    <link rel="stylesheet" href="/assets/css/stats.css?v=1">
-    <link rel="stylesheet" href="/assets/css/nav.css?v=1">
+    <link rel="stylesheet" href="/assets/css/variables.css?v=11">
+    <link rel="stylesheet" href="/assets/css/base.css?v=11">
+    <link rel="stylesheet" href="/assets/css/stats.css?v=11">
+    <link rel="stylesheet" href="/assets/css/nav.css?v=22">
 </head>
 <body>
   <nav class="top-nav" aria-label="التنقل الرئيسي">
@@ -565,7 +565,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
       <a href="http://wa.me/+201148727448" target="_blank">ContactMe</a>
     </footer>
 
-  <script src="/assets/js/nav.js?v=1"></script>
-  <script src="/assets/js/stats.js?v=1"></script>
+  <script src="/assets/js/nav.js?v=11"></script>
+  <script src="/assets/js/stats.js?v=11"></script>
 </body>
 </html>
