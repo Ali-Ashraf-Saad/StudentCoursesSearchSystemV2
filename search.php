@@ -38,7 +38,7 @@ $queryNorm = normalizeArabic($query);
 $isNumberSearch = preg_match('/^\d+$/', $query);
 
 $dataRoot = __DIR__ . '/data';
-if (!preg_match('/^\d{4}_\d{4}_[12]$/', $year) || !is_dir($dataRoot . '/' . $year)) {
+if (!preg_match('/^\d{4}_\d{4}_[123]$/', $year) || !is_dir($dataRoot . '/' . $year)) {
     echo json_encode(["results" => []], JSON_UNESCAPED_UNICODE);
     exit;
 }

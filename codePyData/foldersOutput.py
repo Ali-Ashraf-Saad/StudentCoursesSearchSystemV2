@@ -5,8 +5,8 @@ import re
 
 LINES_PER_FILE = 30
 DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
-if not re.fullmatch(r"\d{4}_\d{4}_[12]", DATA_YEAR):
-    raise SystemExit("DATA_YEAR يجب أن يكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2")
+if not re.fullmatch(r"\d{4}_\d{4}_[123]", DATA_YEAR):
+    raise SystemExit("DATA_YEAR يجب أن يكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2 أو YYYY_YYYY_3")
 
 FOLDERS_OUTPUT_ROOT = os.path.join("foldersData", DATA_YEAR)
 source_dir = os.path.join("txtData", DATA_YEAR)

@@ -3,8 +3,8 @@ set -e
 
 # شغّل السكربت مع السنة والترم: ./codePyData/RUN.sh 2025_2026_1
 DATA_YEAR="${1:-}"
-if [[ ! "$DATA_YEAR" =~ ^[0-9]{4}_[0-9]{4}_[12]$ ]]; then
-  echo "السنة يجب أن تكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2" >&2
+if [[ ! "$DATA_YEAR" =~ ^[0-9]{4}_[0-9]{4}_[123]$ ]]; then
+  echo "السنة يجب أن تكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2 أو YYYY_YYYY_3" >&2
   exit 1
 fi
 export DATA_YEAR

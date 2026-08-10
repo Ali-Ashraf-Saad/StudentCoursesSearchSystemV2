@@ -4,8 +4,8 @@ import re
 # run second to generate json
 
 DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
-if not re.fullmatch(r"\d{4}_\d{4}_[12]", DATA_YEAR):
-    raise SystemExit("DATA_YEAR يجب أن يكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2")
+if not re.fullmatch(r"\d{4}_\d{4}_[123]", DATA_YEAR):
+    raise SystemExit("DATA_YEAR يجب أن يكون بصيغة YYYY_YYYY_1 أو YYYY_YYYY_2 أو YYYY_YYYY_3")
 
 folders_root = os.path.join("foldersData", DATA_YEAR)
 output_root = os.path.join("data", DATA_YEAR)
