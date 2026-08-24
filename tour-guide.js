@@ -154,10 +154,10 @@
   if (isIndex) {
     steps = [
       { selector: '#search', title: 'ابحث باسمك', desc: 'اكتب <b>الاسم</b> (أو جزء منه). يدعم أيضاً الرقم الأكاديمي.', position: 'bottom' },
-      { selector: '.nav-btn[data-nav-href*="gpa"], .nav-btn[onclick*="goGPA"]',title: 'حاسبة المعدل التراكمي',desc: 'احسب معدلك الفصلي والتراكمي بسهولة بأكثر من طريقة، وتابع تقدمك الأكاديمي مع رسوم بيانية ومعلومات حسب وضعك.',position: 'bottom'},
-      { selector: '.nav-btn[data-nav-href*="qa"], .nav-btn[onclick*="goQA"], .nav-btn[onclick*="goQa"], a[href*="qa.html"], a[href*="qa"]', title: 'سؤال وجواب', desc: 'هنا ستجد أشهر الأسئلة التي يسأل عنها الطالب، مع إجابات مختصرة وواضحة تساعدك بسرعة مع أهم الروابط التي ستحتاجها.', position: 'bottom' },
-      { selector: '.nav-btn[data-nav-href*="courses"], .nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'الإطلاع على مواد الفرق بكل التخصصات ومتابعة وتحديد ما أنجزته.', position: 'bottom' },
-      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو سؤال، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top' }
+      { selector: '.nav-btn[data-nav-href*="courses"], .nav-btn[onclick*="goCourses"]', title: 'صفحة المقررات', desc: 'الإطلاع على مواد الفرق بكل التخصصات ومتابعة وتحديد ما أنجزته.', position: 'bottom', mobileMenu: 'open' },
+      { selector: '.nav-btn[data-nav-href*="qa"], .nav-btn[onclick*="goQA"], .nav-btn[onclick*="goQa"], a[href*="qa.html"], a[href*="qa"]', title: 'سؤال وجواب', desc: 'هنا ستجد أشهر الأسئلة التي يسأل عنها الطالب، مع إجابات مختصرة وواضحة تساعدك بسرعة مع أهم الروابط التي ستحتاجها.', position: 'bottom', mobileMenu: 'open' },
+      { selector: '.nav-btn[data-nav-href*="gpa"], .nav-btn[onclick*="goGPA"]',title: 'حاسبة المعدل التراكمي',desc: 'احسب معدلك الفصلي والتراكمي بسهولة بأكثر من طريقة، وتابع تقدمك الأكاديمي مع رسوم بيانية ومعلومات حسب وضعك.',position: 'bottom', mobileMenu: 'open'},
+      { selector: 'footer a', title: 'تواصل معي', desc: 'لأي مشكلة أو اقتراح أو سؤال، اضغط هنا. <br><small style="color:#fbbf24;">تذكير: جرّب تحديث الصفحة إذا واجهت خطأ.</small>', position: 'top', mobileMenu: 'close' }
     ];
   } else if (isQA) {
     steps = [
@@ -310,8 +310,34 @@
     }
   }
 
+  function setMobileMenu(state) {
+    if (!isIndex || !window.matchMedia('(max-width: 700px)').matches) return;
+    if (state !== 'open' && state !== 'close') return;
+
+    const nav = document.querySelector('.top-nav');
+    const toggle = nav?.querySelector('.nav-menu-toggle');
+    if (!nav || !toggle) return;
+
+    const applyState = (shouldOpen) => {
+      nav.classList.toggle('menu-open', shouldOpen);
+      // تبقى القائمة مرئية فوق طبقة تعتيم الجولة على الهاتف.
+      nav.style.zIndex = shouldOpen ? '10000' : '';
+      toggle.setAttribute('aria-expanded', String(shouldOpen));
+      toggle.setAttribute('aria-label', shouldOpen ? 'إغلاق القائمة' : 'فتح القائمة');
+    };
+
+    if (state === 'open') {
+      // مستمع التنقل العام يغلق القائمة عند نقر «التالي» خارجها؛
+      // نفتحها بعد اكتمال حدث النقر نفسه.
+      setTimeout(() => applyState(true), 0);
+    } else {
+      applyState(false);
+    }
+  }
+
   function showStep(index) {
     const step = steps[index];
+    setMobileMenu(step.mobileMenu);
     let target = document.querySelector(step.selector);
     if (!target && step.fallbackSelector) target = document.querySelector(step.fallbackSelector);
     if (!target) {
@@ -345,6 +371,7 @@
   }
 
   function endTour() {
+    setMobileMenu('close');
     stopRafLoop();
     document.removeEventListener('click', blockClicksOutside, true);
     overlay.remove();

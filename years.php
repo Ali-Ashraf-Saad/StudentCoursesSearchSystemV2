@@ -19,7 +19,7 @@ usort($years, function ($a, $b) {
     preg_match('/^(\d{4})_(\d{4})_([123])$/', $b, $mb);
     $aKey = [(int)$ma[1], (int)$ma[2], (int)$ma[3]];
     $bKey = [(int)$mb[1], (int)$mb[2], (int)$mb[3]];
-    return $bKey <=> $aKey;
+    return $aKey <=> $bKey;
 });
 
 $yearOptions = array_map(function ($year) {

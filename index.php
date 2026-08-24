@@ -22,7 +22,7 @@ header("Expires: 0");
     
     <link rel="stylesheet" href="/assets/css/variables.css?v=11">
     <link rel="stylesheet" href="/assets/css/base.css?v=11">
-    <link rel="stylesheet" href="/assets/css/index.css?v=22">
+    <link rel="stylesheet" href="/assets/css/index.css?v=23">
     <link rel="stylesheet" href="/assets/css/nav.css?v=22">
 </head>
 
@@ -57,6 +57,10 @@ header("Expires: 0");
         </select>
       </div>
 
+      <small id="summer-term-notice" class="summer-term-notice" role="status" hidden>
+        البيانات المتوفرة هي لمادة نظم تشغيل 2 وحوسبة سحابية فقط.
+      </small>
+
       <div class="search-box">
         <input type="text" id="search" placeholder="اكتب الاسم أو الرقم الأكاديمي..." autocomplete="off" />
         <button class="clear-btn" id="clearSearchBtn" title="مسح البحث" aria-label="مسح البحث">
@@ -90,8 +94,8 @@ header("Expires: 0");
       <a href="http://wa.me/+201148727448" target="_blank" rel="noopener noreferrer">ContactMe</a>
     </footer>
 
-    <script src="/assets/js/nav.js?v=11"></script>
-    <script src="/assets/js/index.js?v=11"></script>
+    <script src="/assets/js/nav.js?v=12"></script>
+    <script src="/assets/js/index.js?v=12"></script>
     <script src="tour-guide.js?v=0"></script>
   </body>
 </html>
