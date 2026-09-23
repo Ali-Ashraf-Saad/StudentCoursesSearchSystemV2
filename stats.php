@@ -562,7 +562,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'reset_cache') {
 </div>
     <footer>
       StudentsCourses 2026 &middot; Developed by Ali Ashraf &middot;
-      <a href="http://wa.me/+201148727448" target="_blank">ContactMe</a>
+      <a href="https://wa.me/+201148727448" target="_blank">ContactMe</a>
     </footer>
 
   <script src="/assets/js/nav.js?v=11"></script>

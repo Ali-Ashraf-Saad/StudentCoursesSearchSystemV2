@@ -9,22 +9,89 @@ header("Expires: 0");
     <link rel="icon" href="/images/favicon.ico?v=22" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>الاستعلام عن المقررات الدراسية</title>
-    
+
+    <!-- SEO -->
     <meta
-    http-equiv="Cache-Control"
-    content="no-cache, no-store, must-revalidate"
+      name="description"
+      content="منصة رقمية متكاملة لطلاب الكلية للاستعلام عن المقررات والامتحانات، تتبع الخطة الدراسية، حساب GPA، ودليل الطالب، مع تجربة سريعة وسهلة."
     />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    
+    <meta name="robots" content="index, follow" />
+
+    <link
+      rel="canonical"
+      href="https://studentscourses.gt.tc/"
+    />
+
+    <!-- Open Graph -->
+    <meta
+      property="og:type"
+      content="website"
+    />
+    <meta
+      property="og:title"
+      content="الاستعلام عن المقررات الدراسية"
+    />
+    <meta
+      property="og:description"
+      content="منصة رقمية متكاملة لطلاب الكلية للاستعلام عن المقررات والامتحانات، تتبع الخطة الدراسية، حساب GPA، ودليل الطالب، مع تجربة سريعة وسهلة."
+    />
+    <meta
+      property="og:url"
+      content="https://studentscourses.gt.tc/"
+    />
+    <meta
+      property="og:locale"
+      content="ar_AR"
+    />
+
+    <!-- Twitter / X -->
+    <meta
+      name="twitter:card"
+      content="summary"
+    />
+    <meta
+      name="twitter:title"
+      content="الاستعلام عن المقررات الدراسية"
+    />
+    <meta
+      name="twitter:description"
+      content="منصة رقمية متكاملة لطلاب الكلية للاستعلام عن المقررات والامتحانات، تتبع الخطة الدراسية، حساب GPA، ودليل الطالب، مع تجربة سريعة وسهلة."
+    />
+
+    <!-- Structured Data - JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "الاستعلام عن المقررات الدراسية",
+      "url": "https://studentscourses.gt.tc/",
+      "inLanguage": "ar",
+      "description": "منصة رقمية متكاملة لطلاب الكلية للاستعلام عن المقررات والامتحانات، تتبع الخطة الدراسية، حساب GPA، ودليل الطالب، مع تجربة سريعة وسهلة."
+    }
+    </script>
+
+    <meta
+      http-equiv="Cache-Control"
+      content="no-cache, no-store, must-revalidate"
+    />
+    <meta
+      http-equiv="Pragma"
+      content="no-cache"
+    />
+    <meta
+      http-equiv="Expires"
+      content="0"
+    />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
+
     <link rel="stylesheet" href="/assets/css/variables.css?v=11">
     <link rel="stylesheet" href="/assets/css/base.css?v=11">
     <link rel="stylesheet" href="/assets/css/index.css?v=23">
     <link rel="stylesheet" href="/assets/css/nav.css?v=22">
-</head>
+  </head>
 
   <body>
     <nav class="top-nav" aria-label="التنقل الرئيسي">
@@ -91,7 +158,7 @@ header("Expires: 0");
 
     <footer>
       StudentsCourses 2026 &middot; Developed by <span id="secretStatsTrigger">Ali Ashraf</span> &middot;
-      <a href="http://wa.me/+201148727448" target="_blank" rel="noopener noreferrer">ContactMe</a>
+      <a href="https://wa.me/+201148727448" target="_blank" rel="noopener noreferrer">ContactMe</a>
     </footer>
 
     <script src="/assets/js/nav.js?v=12"></script>
