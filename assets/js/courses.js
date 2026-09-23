@@ -697,6 +697,46 @@ const STORAGE_FILTER = 'courses_filter';
       return [...new Set(keys.length ? keys : [code])];
     }
 
+    const PROJECT_HOURS_REQUIREMENT = 102;
+
+    function isGraduationProject(course) {
+      if (!course) return false;
+      const arabicName = String(course.arabic_name || '').trim();
+      const code = String(course.code || '').trim().toUpperCase();
+      return ['CS', 'IT', 'IS'].some(dept => code.startsWith(`${dept}482`)) &&
+        (arabicName === 'المشروع 1' || arabicName === 'المشروع 2');
+    }
+
+    function getPassedHours() {
+      return getGlobalScopeCourses().reduce((sum, course) => {
+        if (!completedSet.has(course.completionKey)) return sum;
+        return sum + (['HM110', 'GN160'].includes(course.code) ? 0 : 3);
+      }, 0);
+    }
+
+    function hasProjectHoursRequirement() {
+      return getPassedHours() >= PROJECT_HOURS_REQUIREMENT;
+    }
+
+    function getCourseMissingRequirements(course) {
+      const missing = (course?.prerequisites || []).filter(prerequisite => !isPrerequisiteCompleted(prerequisite));
+      if (isGraduationProject(course) && !hasProjectHoursRequirement()) {
+        missing.push(`تحقيق ${PROJECT_HOURS_REQUIREMENT} ساعة مجتازة`);
+      }
+      return missing;
+    }
+
+    function getCourseRequirementsHTML(course) {
+      const requirements = [];
+      if (course?.prerequisites?.length) requirements.push(formatPrerequisites(course.prerequisites));
+      if (isGraduationProject(course)) {
+        requirements.push(`<span class="prereq-item">تحقيق ${PROJECT_HOURS_REQUIREMENT} ساعة مجتازة</span>`);
+      }
+      return requirements.length
+        ? `<div class="prereq"><span class="prereq-label">متطلبات:</span> ${requirements.join(' ')}</div>`
+        : '';
+    }
+
     function isCourseCompleted(code, details) {
       return completedSet.has(getCompletionKey(code, details));
     }
@@ -921,7 +961,7 @@ const STORAGE_FILTER = 'courses_filter';
               <div class="course-arabic">${course.arabic_name||course.name}</div>
               <div class="course-code">${code}</div>
               <div class="course-english">${course.name}</div>
-              ${course.prerequisites?.length?`<div class="prereq"><span class="prereq-label">متطلبات:</span> ${formatPrerequisites(course.prerequisites)}</div>`:''}
+              ${getCourseRequirementsHTML(course)}
             </div>
             <span class="completed-badge">&#10003; تم</span>
             ${hasVisibleDependents?`<button class="open-courses-btn" data-code="${code}">يفتح</button>`:''}
@@ -950,7 +990,10 @@ const STORAGE_FILTER = 'courses_filter';
         while(keep) { keep=false; courses.forEach(c=>{
           const key = getCompletionKey(c.code, semDetails);
           if(completedSet.has(key)) return;
-          if((c.prerequisites||[]).every(p=>isPrerequisiteCompleted(p)||added.has(p))) { completedSet.add(key); added.add(c.code); changed=true; keep=true; }
+          const hasPrerequisites = (c.prerequisites || []).every(p => isPrerequisiteCompleted(p) || added.has(p));
+          if (hasPrerequisites && (!isGraduationProject(c) || hasProjectHoursRequirement())) {
+            completedSet.add(key); added.add(c.code); changed=true; keep=true;
+          }
         }); }
         if(changed) { grid.querySelectorAll('.course-card').forEach(c=>{ if(added.has(c.dataset.code)) c.classList.add('completed'); }); persistAndUpdate(); showToast('تم تحديد جميع المواد الممكنة'); }
         else showToast('لا توجد مواد إضافية يمكن إكمالها حالياً');
@@ -978,7 +1021,14 @@ const STORAGE_FILTER = 'courses_filter';
       if(completedSet.has(key)){
         completedSet.delete(key); cascadeUncheck(code, semDetails.dept, semDetails.year <= 2); updateCardVisual(code); persistAndUpdate(); showToast('تم إلغاء الإكمال');
       } else {
-        const pre=course.prerequisites||[]; if(pre.length){ const miss=pre.filter(p=>!isPrerequisiteCompleted(p)); if(miss.length){ showToast(`يجب إنهاء: ${formatPrerequisites(miss)}`); return; } }
+        const missingRequirements = getCourseMissingRequirements(course);
+        if (missingRequirements.length) {
+          const missingText = missingRequirements.map(requirement =>
+            requirement.includes('ساعة') ? requirement : formatPrerequisites([requirement])
+          ).join('، ');
+          showToast(`يجب تحقيق: ${missingText}`);
+          return;
+        }
         completedSet.add(key); updateCardVisual(code); persistAndUpdate(); showToast('تم الإكمال');
       }
       updateCurrentSemesterSelectAllBtn(code);
@@ -1076,6 +1126,9 @@ const STORAGE_FILTER = 'courses_filter';
               const course = courseMap[code];
               return `${course ? (course.arabic_name || course.name) : code} (${code})`;
             });
+            if (isGraduationProject(c) && !hasProjectHoursRequirement()) {
+              missingPrerequisites.push(`تحقيق ${PROJECT_HOURS_REQUIREMENT} ساعة مجتازة`);
+            }
             added[y][tk].add(key);
             years[y][tk].push({
               code:c.code,
@@ -1085,7 +1138,7 @@ const STORAGE_FILTER = 'courses_filter';
               term:meta.term,
               dept:meta.dept,
               completionKey:key,
-              canRegister: missingCodes.length === 0,
+              canRegister: missingCodes.length === 0 && (!isGraduationProject(c) || hasProjectHoursRequirement()),
               missingPrerequisites
             });
           }

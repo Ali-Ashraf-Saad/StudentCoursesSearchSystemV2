@@ -9,9 +9,9 @@
         "prerequisites": []
       },
       {
-        "name": "Professional Ethics",
-        "arabic_name": "أخلاقيات المهنة",
-        "code": "GN140",
+        "name": "Creative Thinking",
+        "arabic_name": "التفكير الإبداعي",
+        "code": "GN180",
         "prerequisites": []
       },
       {
@@ -459,8 +459,8 @@
         "prerequisites": ["CS334"]
       },
       {
-        "name": "Selected Topics in CS /Data Mining",
-        "arabic_name": "موضوعات مختارة - 1 / تنقيب البيانات",
+        "name": "Selected Topics in CS",
+        "arabic_name": "موضوعات مختارة - 1",
         "code": "CS485",
         "prerequisites": ["CS334"]
       },
@@ -617,8 +617,8 @@
     "semester": "مواد سنة رابعة الترم الأول IS",
     "courses": [
       {
-        "name": "Social Informatics / Human Computer Interaction",
-        "arabic_name": "المعلوماتية المجتمعية / اتصال الإنسان بالحاسب",
+        "name": "Social Informatics",
+        "arabic_name": "المعلوماتية المجتمعية",
         "code": "IS467", 
         "prerequisites": ["IS322"]
       },
