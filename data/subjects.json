@@ -9,9 +9,9 @@
         "prerequisites": []
       },
       {
-        "name": "Creative Thinking",
-        "arabic_name": "التفكير الإبداعي",
-        "code": "GN180",
+        "name": "Professional Ethics",
+        "arabic_name": "أخلاقيات المهنة",
+        "code": "GN140",
         "prerequisites": []
       },
       {
@@ -321,7 +321,7 @@
       {
         "name": "Enterprise Architecture",
         "arabic_name": "بنية الشركات",
-        "code": "IS449",
+        "code": "IS443",
         "prerequisites": ["IS111"]
       }
     ]
@@ -502,7 +502,7 @@
       {
         "name": "Advanced Computer Programming",
         "arabic_name": "برمجة حاسبات متقدمة",
-        "code": "CS336",
+        "code": "CS437",
         "prerequisites": ["CS334"]
       },
       {
@@ -619,7 +619,7 @@
       {
         "name": "Social Informatics",
         "arabic_name": "المعلوماتية المجتمعية",
-        "code": "IS467", 
+        "code": "IS465", 
         "prerequisites": ["IS322"]
       },
       {
@@ -637,7 +637,7 @@
       {
         "name": "Data Mining",
         "arabic_name": "تنقيب البيانات",
-        "code": "IS465",
+        "code": "IS462",
         "prerequisites": ["IS322"]
       },
       {
@@ -667,13 +667,13 @@
         "name": "IS Innovation and New Technologies",
         "arabic_name": "نظم معلومات مبتكرة وتكنولوجيا جديدة",
         "code": "IS479",
-        "prerequisites": ["IS465"]
+        "prerequisites": ["IS462"]
       },
       {
         "name": "Knowledge Management",
         "arabic_name": "إدارة المعرفة / نظم قواعد المعرفة",
         "code": "IS444",
-        "prerequisites": ["IS465"]
+        "prerequisites": ["IS462"]
       },
       {
         "name": "Big Data",
