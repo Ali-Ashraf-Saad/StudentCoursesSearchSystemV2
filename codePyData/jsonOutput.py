@@ -1,6 +1,7 @@
 import os
 import json
 import re
+from parsers import parse_student_line, parse_subject_line
 # run second to generate json
 
 DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
@@ -77,14 +78,13 @@ for folder in folders:
         if len(lines) < 4:
             continue
 
-        # السطر الأول: ( CS321 ) المقرر  الذكاء الاصطناعي
-        # السماح بوجود نقطة في كود المادة مثل IS482.
-        m = re.match(r'\(\s*([A-Za-z0-9.]+)\s*\)\s*المقرر\s*(.+)', lines[0])
-        if not m:
+        # السطر الأول قد يكون: ( CS321 ) المقرر الذكاء الاصطناعي
+        # أو: المقرر الذكاء الاصطناعي ( CS321 )
+        parsed_subject = parse_subject_line(lines[0])
+        if not parsed_subject:
             continue
 
-        code = m.group(1)
-        course_name = m.group(2).strip()
+        code, course_name = parsed_subject
 
         # السطر الثاني: معالجة الغرفة (يدعم -1 و 0)
         room_name, room_number = parse_room_info(lines[1])
@@ -106,19 +106,11 @@ for folder in folders:
         student_lines = lines[4:]
         exam_student_ids = []
         for stud_line in student_lines:
-            if '\t' in stud_line:
-                name, sid = stud_line.rsplit('\t', 1)
-            else:
-                parts_stud = stud_line.rsplit(maxsplit=1)
-                if len(parts_stud) == 2:
-                    name, sid = parts_stud
-                else:
-                    continue
-
-            name = name.strip()
-            sid = sid.strip()
-            if not sid.isdigit():
+            student = parse_student_line(stud_line)
+            if not student:
                 continue
+
+            name, sid = student
 
             exam_student_ids.append(sid)
 

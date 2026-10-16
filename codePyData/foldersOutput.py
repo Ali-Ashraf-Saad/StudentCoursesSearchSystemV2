@@ -2,6 +2,7 @@
 #run first to generate folders
 import os
 import re
+from parsers import parse_subject_line, is_subject_line
 
 LINES_PER_FILE = 30
 DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
@@ -43,11 +44,12 @@ def normalize_text(text):
     return text.lower().strip()
 
 def extract_subject_name(subject_line):
-    return re.sub(r'^\(\s*[A-Za-z0-9.]+\s*\)\s*المقرر\s*', '', subject_line).strip()
+    parsed = parse_subject_line(subject_line)
+    return parsed[1] if parsed else subject_line.strip()
 
 def extract_subject_code(subject_line):
-    m = re.search(r'\(\s*([A-Za-z0-9.]+)\s*\)', subject_line)
-    return m.group(1).rstrip('.') if m else "UNKNOWN"
+    parsed = parse_subject_line(subject_line)
+    return parsed[0] if parsed else "UNKNOWN"
 
 # تطبيع المفاتيح
 exam_schedule = {normalize_text(k): v for k, v in raw_exam_schedule.items()}
@@ -98,7 +100,7 @@ for department_file in department_files:
         if not stripped:
             continue
 
-        if re.match(r'^\(\s*[A-Za-z0-9.]+\s*\)', stripped):
+        if is_subject_line(stripped):
             if current_subject:
                 subjects.append((current_subject, current_students))
             current_subject = stripped

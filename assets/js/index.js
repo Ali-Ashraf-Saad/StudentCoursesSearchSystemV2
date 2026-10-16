@@ -165,10 +165,16 @@
       const YEAR_STORAGE_KEY = "selected_academic_year";
       let selectedYear = localStorage.getItem(YEAR_STORAGE_KEY) || "";
 
-      function updateSummerTermNotice() {
+      function updateTermNotice() {
         if (!summerTermNotice) return;
-        const isSummerTerm = (yearSelect?.value || selectedYear) === "2025_2026_3";
-        summerTermNotice.hidden = !isSummerTerm;
+        const selectedAcademicYear = yearSelect?.value || selectedYear;
+        const notices = {
+          "2025_2026_3": "البيانات المتوفرة هي لمادة نظم تشغيل 2 وحوسبة سحابية فقط.",
+          "2026_2027_1": "البيانات المتوفرة هي لقسم IT فقط"
+        };
+        const notice = notices[selectedAcademicYear];
+        summerTermNotice.textContent = notice || "";
+        summerTermNotice.hidden = !notice;
       }
 
       function loadCounter() {
@@ -982,13 +988,13 @@
             }
 
             const selectedOption = years.find((year) => year.key === selectedYear);
-            if (!selectedOption) selectedYear = years[0].key;
+            if (!selectedOption) selectedYear = years[years.length - 1].key;
             localStorage.setItem(YEAR_STORAGE_KEY, selectedYear);
             yearSelect.innerHTML = years
               .map((year) => `<option value="${escapeHTML(year.key)}">${escapeHTML(year.label)}</option>`)
               .join("");
             yearSelect.value = selectedYear;
-            updateSummerTermNotice();
+            updateTermNotice();
           })
           .catch(() => {
             yearSelect.innerHTML = '<option value="">تعذر تحميل السنوات</option>';
@@ -999,7 +1005,7 @@
       yearSelect?.addEventListener("change", () => {
         selectedYear = yearSelect.value;
         localStorage.setItem(YEAR_STORAGE_KEY, selectedYear);
-        updateSummerTermNotice();
+        updateTermNotice();
         clearSearchResults();
         const query = searchInput.value.trim();
         if (query.length >= MIN_QUERY_LENGTH) {

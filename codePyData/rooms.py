@@ -1,6 +1,7 @@
 import re
 import math
 import os
+from parsers import is_subject_line, parse_student_line, parse_subject_line
 
 DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
 if not re.fullmatch(r"\d{4}_\d{4}_[123]", DATA_YEAR):
@@ -20,14 +21,10 @@ def count_students(lines, start_index):
     count = 0
     for i in range(start_index + 1, len(lines)):
         line = lines[i].strip()
-        if re.match(r'^\(\s*[A-Z]{2,3}\d{3}\.?\s*\)', line):
+        if is_subject_line(line):
             break
-        if '\t' in line:
-            parts = line.split('\t')
-            if len(parts) >= 2:
-                student_id = parts[-1].strip()
-                if re.fullmatch(r'\d+', student_id):
-                    count += 1
+        if parse_student_line(line):
+            count += 1
     return count
 
 
@@ -40,16 +37,12 @@ for file_path in department_files:
 
     for i, line in enumerate(lines):
         line = line.strip()
-        match = re.match(
-            r'^\(\s*([A-Z]{2,3}\d{3}\.?)\s*\)\s*المقرر\s*(.+)$',
-            line
-        )
-        if not match:
+        parsed_subject = parse_subject_line(line)
+        if not parsed_subject:
             continue
 
-        original_code = match.group(1).strip()
+        original_code, course_name = parsed_subject
         normalized_code = normalize_course_code(original_code)
-        course_name = match.group(2).strip()
 
         student_count = count_students(lines, i)
         room_count = max(1, math.ceil(student_count / STUDENTS_PER_ROOM))

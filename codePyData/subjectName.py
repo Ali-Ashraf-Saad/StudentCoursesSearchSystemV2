@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from parsers import parse_subject_line
 
 DATA_YEAR = os.environ.get("DATA_YEAR", "").strip()
 if not re.fullmatch(r"\d{4}_\d{4}_[123]", DATA_YEAR):
@@ -9,9 +10,6 @@ if not re.fullmatch(r"\d{4}_\d{4}_[123]", DATA_YEAR):
 # مجلد البيانات الخاص بالسنة والترم فقط
 folder_path = os.path.join("txtData", DATA_YEAR)
 files = ["CS.txt", "IT.txt", "IS.txt", "gen.txt"]
-
-# استخراج كود واسم المادة، مع السماح بنقطة في الكود مثل IS482.
-pattern = re.compile(r"^\(\s*([A-Za-z0-9xX.]+)\s*\)\s*المقرر\s*(.+?)\s*$")
 
 # قراءة المواد أولًا لمعرفة الأكواد المتكررة بين الأقسام.
 department_subjects = {}
@@ -28,12 +26,11 @@ for file_name in files:
 
     with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
-            match = pattern.match(line.strip())
-            if not match:
+            parsed_subject = parse_subject_line(line.strip())
+            if not parsed_subject:
                 continue
 
-            code = match.group(1).rstrip(".")
-            name = match.group(2).strip()
+            code, name = parsed_subject
             subject = (name, code)
             if subject in seen:
                 continue

@@ -162,7 +162,7 @@ header("Expires: 0");
     </footer>
 
     <script src="/assets/js/nav.js?v=12"></script>
-    <script src="/assets/js/index.js?v=12"></script>
+    <script src="/assets/js/index.js?v=15"></script>
     <script src="tour-guide.js?v=0"></script>
   </body>
 </html>
