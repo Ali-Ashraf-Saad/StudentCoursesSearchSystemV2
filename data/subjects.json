@@ -355,7 +355,7 @@
       },
       {
         "name": "Machine Learning",
-        "arabic_name": "تعليم الآلة",
+        "arabic_name": "تعلم الآلة",
         "code": "CS323",
         "prerequisites": ["CS321"]
       },
@@ -419,7 +419,7 @@
       },
       {
         "name": "Information Security",
-        "arabic_name": "أمان المعلومات",
+        "arabic_name": "أمن المعلومات",
         "code": "IS463",
         "prerequisites": ["MA112"]
       },
@@ -466,7 +466,7 @@
       },
       {
         "name": "Embedded Systems",
-        "arabic_name": "الأنظمة المدمجة",
+        "arabic_name": "الأنظمة المدمجة / المطمورة",
         "code": "CS463",
         "prerequisites": ["CS362"]
       },
@@ -595,7 +595,7 @@
       },
       {
         "name": "Selected Topics in IT-1 / Machine Learning",
-        "arabic_name": "موضوعات مختارة - 1 / تعليم الآلة",
+        "arabic_name": "موضوعات مختارة - 1 / تعلم الآلة",
         "code": "IT485",
         "prerequisites": ["IT312"]
       },
