@@ -20,7 +20,9 @@ def parse_subject_line(line):
 
     code = match.group("prefix_code") or match.group("suffix_code")
     name = match.group("prefix_name") or match.group("suffix_name")
-    return code.strip().rstrip("."), name.strip()
+    # النقطة اللاحقة جزء من كود بعض المقررات (مثل CS482. للمشروع2)،
+    # لذلك لا نحذفها حتى لا يندمج المقرر مع CS482 (المشروع).
+    return code.strip(), name.strip()
 
 
 def is_subject_line(line):

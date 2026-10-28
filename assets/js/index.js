@@ -170,7 +170,7 @@
         const selectedAcademicYear = yearSelect?.value || selectedYear;
         const notices = {
           "2025_2026_3": "البيانات المتوفرة هي لمادة نظم تشغيل 2 وحوسبة سحابية فقط.",
-          "2026_2027_1": "البيانات المتاحة حاليًا خاصة بقسم IT فقط.\nلإضافة اسمك والمواد المسجّل بها، يُرجى إرسال بياناتك، التواصل في أسفل الصفحة، وسيتم إضافتها بإذن الله."
+          "2026_2027_1": "البيانات المتاحة حاليًا خاصة بقسم IT, CS فقط."
         };
         const notice = notices[selectedAcademicYear];
         summerTermNotice.textContent = notice || "";
