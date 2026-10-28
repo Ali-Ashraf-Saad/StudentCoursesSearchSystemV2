@@ -250,6 +250,9 @@
         if (hasExamValue(exam.committee)) {
           detailLines.push(`<span>اللجنة: ${escapeHTML(exam.committee)}</span>`);
         }
+        if (hasExamValue(exam.section)) {
+          detailLines.push(`<span>السكشن: ${escapeHTML(exam.section)}</span>`);
+        }
         if (hasExamValue(exam.room)) {
           detailLines.push(`<span>المكان: ${formatExamRoomHtml(exam.room)}</span>`);
         }
@@ -313,6 +316,7 @@
             : "";
 
           if (hasExamValue(exam.committee)) lines.push(`اللجنة: ${exam.committee}`);
+          if (hasExamValue(exam.section)) lines.push(`السكشن: ${exam.section}`);
           if (dateText) lines.push(`التاريخ: ${dateText}`);
           if (timeText) lines.push(`الوقت: ${timeText}`);
           if (hasExamValue(exam.room)) {
@@ -361,6 +365,7 @@
           driveLink: course.driveLink || "",
           exam: course.exam ? {
             committee: course.exam.committee || "",
+            section: course.exam.section || "",
             room: course.exam.room || "",
             day: course.exam.day || "",
             date: course.exam.date || "",
@@ -1037,6 +1042,9 @@
 
             if (hasExamValue(exam.committee)) {
               exportRows.push(`<span class="export-badge">اللجنة: ${escapeHTML(exam.committee)}</span>`);
+            }
+            if (hasExamValue(exam.section)) {
+              exportRows.push(`<span class="export-badge">السكشن: ${escapeHTML(exam.section)}</span>`);
             }
             if (hasExamValue(exam.room)) {
               const roomText = formatExamRoomHtml(exam.room);

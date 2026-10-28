@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import runpy
 from parsers import parse_student_line, parse_subject_line
 # run second to generate json
 
@@ -19,6 +20,27 @@ students = {}       # id -> {name, courses_set}
 courses = {}        # code -> {name, day, date, period, rooms: list}
 exams = []          # list of exam dicts
 rooms_set = set()   # جميع أسماء الغرف فريدة (لـ rooms.json)
+
+# عدد السكاشن لكل مادة. يمكن وضع مفتاح خاص بالقسم مثل CS362_CS،
+# وإلا فسيُستخدم المفتاح العام CS362.
+schedule_path = os.path.join('txtData', DATA_YEAR, 'schedule.py')
+schedule_data = runpy.run_path(schedule_path)
+raw_section_schedule = schedule_data.get('raw_section_schedule', {})
+
+def normalize_schedule_key(value):
+    return re.sub(r'\s+', '', str(value).strip().lower())
+
+section_schedule = {
+    normalize_schedule_key(key): max(1, int(value))
+    for key, value in raw_section_schedule.items()
+}
+
+def get_section_count(course_code, department):
+    department_key = normalize_schedule_key(f'{course_code}_{department}')
+    return section_schedule.get(department_key, section_schedule.get(normalize_schedule_key(course_code)))
+
+# ترتيب الطلاب في كل مادة/قسم، لاستخدامه في توزيع السكاشن.
+course_students_order = {}
 
 def parse_room_info(room_text):
     """
@@ -56,6 +78,8 @@ def parse_room_info(room_text):
 for folder in folders:
     if not os.path.isdir(folder):
         continue
+
+    department = os.path.basename(folder)
 
     # ترتيب الملفات لضمان ترتيب اللجان تصاعدياً
     filenames = sorted([f for f in os.listdir(folder) if f.endswith('.txt')])
@@ -113,6 +137,7 @@ for folder in folders:
             name, sid = student
 
             exam_student_ids.append(sid)
+            course_students_order.setdefault((department, code), []).append(sid)
 
             if sid not in students:
                 students[sid] = {
@@ -125,6 +150,7 @@ for folder in folders:
         # إضافة لجنة
         exams.append({
             'course': code,
+            'department': department,
             'committee': committee,
             'room': room_name,
             'day': day,
@@ -146,6 +172,26 @@ for folder in folders:
 
         if room_number is not None:
             courses[code]['rooms'].append(room_number)
+
+# توزيع الطلاب بالتساوي قدر الإمكان: 71 طالبًا و2 سكشن => 35 ثم 36.
+section_by_student = {}
+for (department, code), student_ids in course_students_order.items():
+    section_count = get_section_count(code, department)
+    if section_count is None:
+        continue
+    students_per_section = max(1, len(student_ids) // section_count)
+    for index, sid in enumerate(student_ids):
+        section_number = min(index // students_per_section + 1, section_count)
+        section_by_student[(department, code, sid)] = section_number
+
+for exam in exams:
+    sections = {
+        sid: section_by_student.get((exam['department'], exam['course'], sid), 1)
+        for sid in exam['students']
+        if (exam['department'], exam['course'], sid) in section_by_student
+    }
+    if sections:
+        exam['sections'] = sections
 
 # تجهيز المخرجات النهائية
 students_list = []

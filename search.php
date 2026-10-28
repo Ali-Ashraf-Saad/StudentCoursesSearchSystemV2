@@ -80,6 +80,7 @@ foreach ($exams as $exam) {
     foreach ($exam['students'] as $sid) {
         $examIndex[$code][$sid] = [
             'committee' => $exam['committee'],
+            'section'   => $exam['sections'][$sid] ?? null,
             'room'      => $exam['room'],
             'day'       => $exam['day'],
             'date'      => $exam['date'],
