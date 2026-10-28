@@ -88,6 +88,7 @@ h1 {
   font-size: 10px;
   line-height: 1.5;
   font-weight: 500;
+  white-space: pre-line;
 }
 
 .summer-term-notice[hidden] {
